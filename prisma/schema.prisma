@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Currency {
+  UYU
+  USD
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  name              String?
+  createdAt         DateTime           @default(now())
+  categories        Category[]
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+}
+
+model Category {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  color             String             @default("#64748b")
+  createdAt         DateTime           @default(now())
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+
+  @@unique([userId, name])
+}
+
+model Expense {
+  id                 String            @id @default(cuid())
+  userId             String
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId         String
+  category           Category          @relation(fields: [categoryId], references: [id])
+  amount             Decimal           @db.Decimal(12, 2)
+  currency           Currency
+  date               DateTime
+  description        String?
+  recurringExpenseId String?
+  recurringExpense   RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
+  createdAt          DateTime          @default(now())
+
+  @@index([userId, date])
+}
+
+model RecurringExpense {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  amount      Decimal   @db.Decimal(12, 2)
+  currency    Currency
+  dayOfMonth  Int
+  description String?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  expenses    Expense[]
+
+  @@index([userId, active])
+}

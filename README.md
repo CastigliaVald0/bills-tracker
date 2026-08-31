@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bills Tracker
 
-## Getting Started
+App personal de control de gastos mensuales (Uruguay, UYU/USD), con gastos por categoría y gastos fijos/recurrentes que se cargan solos cada mes.
 
-First, run the development server:
+## Stack
 
+Next.js (App Router) + TypeScript + Tailwind · Prisma + PostgreSQL · Auth.js (Credentials) · pensado para deploy en Vercel + Neon.
+
+## Desarrollo local
+
+1. Copiá `.env.example` a `.env` y completá `DATABASE_URL` y `AUTH_SECRET` (`openssl rand -base64 33`).
+2. Necesitás un Postgres corriendo. Para desarrollo local con Docker:
+   ```bash
+   docker run -d --name bills-tracker-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=bills_tracker -p 5432:5432 postgres:16-alpine
+   ```
+   y usá `DATABASE_URL="postgresql://postgres:postgres@localhost:5432/bills_tracker"`.
+3. Instalá dependencias y aplicá las migraciones:
+   ```bash
+   npm install
+   npx prisma migrate dev
+   ```
+4. Levantá el servidor:
+   ```bash
+   npm run dev
+   ```
+5. Abrí [http://localhost:3000](http://localhost:3000), registrate y empezá a cargar gastos.
+
+## Gastos recurrentes
+
+`/api/cron/generate-recurring` recorre los gastos fijos activos y, si hoy coincide con su día del mes, genera el gasto del mes (una sola vez). En producción lo dispara el cron de Vercel definido en `vercel.json` (todos los días 06:00 UTC). En local podés probarlo pegándole manualmente:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+curl http://localhost:3000/api/cron/generate-recurring
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy a producción
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Creá un proyecto en [Neon](https://neon.tech) (Postgres, free tier) y copiá la connection string.
+2. Importá el repo en [Vercel](https://vercel.com/new).
+3. Configurá las variables de entorno en Vercel: `DATABASE_URL` (la de Neon), `AUTH_SECRET`, y opcionalmente `CRON_SECRET` (si lo definís, Vercel Cron lo manda automáticamente como `Authorization: Bearer <CRON_SECRET>`).
+4. Corré `npx prisma migrate deploy` contra la base de Neon (localmente, apuntando `DATABASE_URL` a Neon, o como build step en Vercel) antes del primer deploy.
