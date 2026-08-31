@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
+import { BrouLink } from "@/components/BrouLink";
 
 export default async function DashboardPage() {
   const userId = await requireUserId();
@@ -39,11 +40,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-lg font-semibold capitalize text-slate-900 dark:text-slate-100">
-          {monthLabel(month)}
-        </h1>
-        <p className="text-sm text-slate-500">Resumen del mes</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-semibold capitalize text-slate-900 dark:text-slate-100">
+            {monthLabel(month)}
+          </h1>
+          <p className="text-sm text-slate-500">Resumen del mes</p>
+        </div>
+        <BrouLink />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
