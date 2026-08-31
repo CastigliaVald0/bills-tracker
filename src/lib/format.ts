@@ -17,3 +17,8 @@ export function monthLabel(month: string) {
   const date = new Date(Date.UTC(year, mon - 1, 1));
   return new Intl.DateTimeFormat("es-UY", { month: "long", year: "numeric", timeZone: "UTC" }).format(date);
 }
+
+export function monthShortLabel(monthIndex: number) {
+  const date = new Date(Date.UTC(2000, monthIndex, 1));
+  return new Intl.DateTimeFormat("es-UY", { month: "short", timeZone: "UTC" }).format(date);
+}
