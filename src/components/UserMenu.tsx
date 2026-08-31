@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 export function UserMenu({
@@ -12,8 +14,15 @@ export function UserMenu({
   email: string | null | undefined;
   menuDirection?: "down" | "up";
 }) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [lastPathname, setLastPathname] = useState(pathname);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setOpen(false);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -52,6 +61,12 @@ export function UserMenu({
             )}
             <p className="truncate text-sm text-slate-500">{email}</p>
           </div>
+          <Link
+            href="/account"
+            className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            Mi cuenta
+          </Link>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/login" })}
