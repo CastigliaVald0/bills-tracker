@@ -1,4 +1,4 @@
-# Bills Tracker
+# Billions Tracker
 
 App personal de control de gastos mensuales (Uruguay, UYU/USD), con gastos por categoría y gastos fijos/recurrentes que se cargan solos cada mes.
 

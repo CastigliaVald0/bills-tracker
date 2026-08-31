@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bills Tracker",
+  title: "Billions Tracker",
   description: "Control de gastos mensuales",
 };
 

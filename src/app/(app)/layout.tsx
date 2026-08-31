@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="hidden border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:block">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="flex items-center gap-6">
-            <span className="font-semibold text-slate-900 dark:text-slate-100">Bills Tracker</span>
+            <span className="font-semibold text-slate-900 dark:text-slate-100">Billions Tracker</span>
             <nav className="flex items-center gap-4">
               <NavLinks menuDirection="down" />
             </nav>
