@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { SignOutButton } from "@/components/SignOutButton";
+import { UserMenu } from "@/components/UserMenu";
 import { NavLinks } from "@/components/NavLinks";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -16,8 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-500">{session?.user?.email}</span>
-            <SignOutButton />
+            <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="down" />
           </div>
         </div>
       </header>
@@ -26,6 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <nav className="fixed inset-x-0 bottom-0 flex items-center justify-around border-t border-slate-200 bg-white py-2 dark:border-slate-800 dark:bg-slate-900 sm:hidden">
         <NavLinks menuDirection="up" />
+        <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="up" />
       </nav>
     </div>
   );
