@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 
 const MENU_LINKS = [
   { href: "/expenses", label: "Gastos" },
-  { href: "/recurring", label: "Fijos" },
+  { href: "/recurring", label: "Gastos fijos" },
   { href: "/categories", label: "Categorías" },
   { href: "/reports", label: "Resumen anual" },
+  { href: "/converter", label: "Conversor UYU/USD" },
 ];
 
 function linkClass(active: boolean) {
