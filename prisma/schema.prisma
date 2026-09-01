@@ -12,14 +12,39 @@ enum Currency {
 }
 
 model User {
-  id                String             @id @default(cuid())
-  email             String             @unique
-  passwordHash      String
-  name              String?
-  createdAt         DateTime           @default(now())
-  categories        Category[]
-  expenses          Expense[]
-  recurringExpenses RecurringExpense[]
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  passwordHash        String
+  name                String?
+  createdAt           DateTime             @default(now())
+  categories          Category[]
+  expenses            Expense[]
+  recurringExpenses   RecurringExpense[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+/// Ventana fija de intentos por clave (ej. "login:mail@x.com", "register-ip:1.2.3.4").
+model RateLimit {
+  key         String   @id
+  count       Int      @default(1)
+  windowStart DateTime @default(now())
+
+  @@index([windowStart])
+}
+
+/// Token de recuperación de contraseña. Se guarda solo el hash: si alguien lee la
+/// base, no puede reconstruir el link de reseteo.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Category {

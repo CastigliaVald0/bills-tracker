@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
+import { checkRateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
@@ -12,6 +13,10 @@ const changePasswordSchema = z.object({
 export async function POST(request: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Evita que alguien con la sesión abierta adivine la contraseña actual a fuerza bruta.
+  const limit = await checkRateLimit(`change-password:${userId}`, 10, 15 * 60);
+  if (!limit.allowed) return tooManyRequests(limit.retryAfterSeconds);
 
   const parsed = changePasswordSchema.safeParse(await request.json());
   if (!parsed.success) {

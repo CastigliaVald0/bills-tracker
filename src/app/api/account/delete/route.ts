@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
+import { checkRateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 const deleteAccountSchema = z.object({
   password: z.string().min(1),
@@ -11,6 +12,9 @@ const deleteAccountSchema = z.object({
 export async function POST(request: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const limit = await checkRateLimit(`delete-account:${userId}`, 10, 15 * 60);
+  if (!limit.allowed) return tooManyRequests(limit.retryAfterSeconds);
 
   const parsed = deleteAccountSchema.safeParse(await request.json());
   if (!parsed.success) {

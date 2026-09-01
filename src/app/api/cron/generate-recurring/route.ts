@@ -55,5 +55,18 @@ export async function GET(request: Request) {
     created++;
   }
 
-  return NextResponse.json({ checked: due.length, created });
+  // Limpieza: tokens de recuperación vencidos y ventanas de rate limit viejas.
+  // Se hace acá para que las tablas no crezcan sin control.
+  const [deletedTokens, deletedLimits] = await Promise.all([
+    prisma.passwordResetToken.deleteMany({ where: { expiresAt: { lt: now } } }),
+    prisma.rateLimit.deleteMany({
+      where: { windowStart: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
+    }),
+  ]);
+
+  return NextResponse.json({
+    checked: due.length,
+    created,
+    cleaned: { resetTokens: deletedTokens.count, rateLimits: deletedLimits.count },
+  });
 }

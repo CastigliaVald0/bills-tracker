@@ -26,7 +26,11 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Email o contraseña incorrectos");
+      setError(
+        result.code === "rate_limited"
+          ? "Demasiados intentos fallidos. Esperá unos minutos antes de volver a probar."
+          : "Email o contraseña incorrectos"
+      );
       return;
     }
 
@@ -54,7 +58,12 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="rotulo">Contraseña</label>
+          <div className="flex items-baseline justify-between gap-3">
+            <label htmlFor="password" className="rotulo">Contraseña</label>
+            <Link href="/forgot-password" className="text-xs text-suave hover:text-texto">
+              ¿La olvidaste?
+            </Link>
+          </div>
           <input
             id="password"
             type="password"
