@@ -1,13 +1,13 @@
 import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
-import { getLatestUsdRate } from "@/lib/bcu";
+import { getUsdRate } from "@/lib/exchange-rate";
 import { CurrencyConverter } from "@/components/CurrencyConverter";
 
 export default async function ConverterPage() {
   const userId = await requireUserId();
   if (!userId) redirect("/login");
 
-  const rate = await getLatestUsdRate();
+  const rate = await getUsdRate();
 
   return (
     <div className="flex flex-col gap-6">

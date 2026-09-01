@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { formatMoney } from "@/lib/format";
-import type { BcuRate } from "@/lib/bcu";
+import type { UsdRate } from "@/lib/exchange-rate";
 
-export function CurrencyConverter({ rate }: { rate: BcuRate | null }) {
+export function CurrencyConverter({ rate }: { rate: UsdRate | null }) {
   const [amount, setAmount] = useState("");
   const [direction, setDirection] = useState<"USD_TO_UYU" | "UYU_TO_USD">("USD_TO_UYU");
 
   if (!rate) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900">
-        No se pudo obtener la cotización del BCU en este momento.
+        No se pudo obtener la cotización del dólar en este momento.
       </div>
     );
   }
@@ -24,9 +24,11 @@ export function CurrencyConverter({ rate }: { rate: BcuRate | null }) {
       : numericAmount / rate.venta
     : null;
 
-  const dateLabel = new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "2-digit", year: "numeric" }).format(
-    new Date(`${rate.date}T00:00:00`)
-  );
+  const dateLabel = rate.date
+    ? new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "2-digit", year: "numeric" }).format(
+        new Date(`${rate.date}T00:00:00`)
+      )
+    : null;
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -40,8 +42,11 @@ export function CurrencyConverter({ rate }: { rate: BcuRate | null }) {
           {direction === "USD_TO_UYU" ? "USD → UYU" : "UYU → USD"} ⇄
         </button>
       </div>
+
       <p className="mt-1 text-xs text-slate-500">
-        Cotización oficial BCU al {dateLabel}: {formatMoney(rate.venta, "UYU")} por dólar
+        Cotización {rate.source}
+        {dateLabel ? ` al ${dateLabel}` : ""}: compra {formatMoney(rate.compra, "UYU")} · venta{" "}
+        {formatMoney(rate.venta, "UYU")}
       </p>
 
       <div className="mt-3 flex items-center gap-2">
@@ -65,8 +70,9 @@ export function CurrencyConverter({ rate }: { rate: BcuRate | null }) {
       </div>
 
       <p className="mt-3 text-xs text-slate-400">
-        Es la cotización oficial de referencia del BCU, no un valor exacto: tu banco o tarjeta puede aplicar un tipo
-        de cambio levemente distinto al convertir una compra en dólares.
+        {rate.source === "BROU"
+          ? "Calculado con la cotización de venta de la pizarra del BROU, sujeta a confirmación: no es un valor exacto y tu banco o tarjeta puede aplicar un tipo de cambio distinto."
+          : "No se pudo leer la pizarra del BROU, así que se muestra la cotización oficial del BCU (se publica con atraso). No es un valor exacto: tu banco o tarjeta puede aplicar un tipo de cambio distinto."}
       </p>
     </div>
   );
