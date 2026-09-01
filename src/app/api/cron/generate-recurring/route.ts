@@ -1,9 +1,28 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * Solo el cron puede disparar esto: genera gastos para todos los usuarios.
+ * Si no hay CRON_SECRET configurado se rechaza siempre (falla cerrado), para que
+ * un despliegue mal configurado no deje el endpoint abierto a cualquiera.
+ */
+function isAuthorizedCron(request: Request): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+
+  const received = request.headers.get("authorization");
+  if (!received) return false;
+
+  const expectedBuf = Buffer.from(`Bearer ${secret}`);
+  const receivedBuf = Buffer.from(received);
+  if (expectedBuf.length !== receivedBuf.length) return false;
+
+  return timingSafeEqual(expectedBuf, receivedBuf);
+}
+
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isAuthorizedCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
