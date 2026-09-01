@@ -3,15 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 import { formatMoney, monthShortLabel } from "@/lib/format";
+import { Pizarra } from "@/components/Pizarra";
 
-function Bar({ value, max, color }: { value: number; max: number; color?: string }) {
+function Bar({ value, max, color }: { value: number; max: number; color: string }) {
   const widthPct = max > 0 ? Math.max((value / max) * 100, value > 0 ? 3 : 0) : 0;
   return (
-    <div className="h-2.5 shrink-0 grow overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-      <div
-        className={color ? "h-full rounded-full" : "h-full rounded-full bg-[#2a78d6] dark:bg-[#3987e5]"}
-        style={color ? { width: `${widthPct}%`, backgroundColor: color } : { width: `${widthPct}%` }}
-      />
+    <div className="barra-pista">
+      <div className="barra-valor" style={{ width: `${widthPct}%`, backgroundColor: color }} />
     </div>
   );
 }
@@ -67,107 +65,102 @@ export default async function ReportsPage({
 
   const hasExpenses = expenses.length > 0;
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Resumen anual</h1>
-          <p className="text-sm text-slate-500">Total gastado y en qué se fue, mes a mes.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href={`/reports?year=${year - 1}`}
-            className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm text-slate-500 hover:text-slate-900 dark:border-slate-800 dark:hover:text-slate-100"
-            aria-label="Año anterior"
-          >
-            ←
-          </Link>
-          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{year}</span>
-          <Link
-            href={`/reports?year=${year + 1}`}
-            className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm text-slate-500 hover:text-slate-900 dark:border-slate-800 dark:hover:text-slate-100"
-            aria-label="Año siguiente"
-          >
-            →
-          </Link>
-        </div>
-      </div>
+  const navAnios = (
+    <div className="flex shrink-0 items-center gap-1">
+      <Link
+        href={`/reports?year=${year - 1}`}
+        className="flex h-8 w-8 items-center justify-center rounded border border-pizarra-borde text-pizarra-suave transition-colors hover:border-peso-luz hover:text-pizarra-texto"
+        aria-label={`Ir a ${year - 1}`}
+      >
+        ←
+      </Link>
+      <span className="monto px-2 text-sm font-light text-pizarra-texto">{year}</span>
+      <Link
+        href={`/reports?year=${year + 1}`}
+        className="flex h-8 w-8 items-center justify-center rounded border border-pizarra-borde text-pizarra-suave transition-colors hover:border-dolar-luz hover:text-pizarra-texto"
+        aria-label={`Ir a ${year + 1}`}
+      >
+        →
+      </Link>
+    </div>
+  );
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">Total del año en pesos</p>
-          <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
-            {formatMoney(yearTotals.UYU, "UYU")}
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">Total del año en dólares</p>
-          <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
-            {formatMoney(yearTotals.USD, "USD")}
-          </p>
-        </div>
-      </div>
+  return (
+    <div className="flex flex-col gap-8">
+      <Pizarra
+        rotulo="Gastado en el año"
+        titulo="Resumen anual"
+        accion={navAnios}
+        pesos={formatMoney(yearTotals.UYU, "UYU")}
+        dolares={formatMoney(yearTotals.USD, "USD")}
+      />
 
       {!hasExpenses ? (
-        <p className="text-sm text-slate-500">No hay gastos cargados en {year}.</p>
+        <p className="tarjeta px-4 py-8 text-center text-sm text-suave">
+          No hay gastos cargados en {year}.
+        </p>
       ) : (
         <>
-          <div>
-            <h2 className="mb-3 text-sm font-medium text-slate-900 dark:text-slate-100">Por mes (pesos)</h2>
-            <div className="flex flex-col gap-2">
+          <section>
+            <h2 className="rotulo mb-3">
+              Mes a mes <span className="text-peso">· pesos</span>
+            </h2>
+            <div className="tarjeta flex flex-col gap-2.5 p-4">
               {monthlyTotals.map((month, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <span className="w-8 shrink-0 text-xs capitalize text-slate-500">{monthShortLabel(i)}</span>
-                  <Bar value={month.UYU} max={maxMonthUYU} />
-                  <span className="w-24 shrink-0 text-right text-xs tabular-nums text-slate-700 dark:text-slate-300">
+                  <span className="rotulo w-8 shrink-0">{monthShortLabel(i).replace(".", "")}</span>
+                  <Bar value={month.UYU} max={maxMonthUYU} color="var(--peso)" />
+                  <span className="monto w-28 shrink-0 text-right text-xs text-suave">
                     {month.UYU > 0 ? formatMoney(month.UYU, "UYU") : "—"}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
           {maxMonthUSD > 0 && (
-            <div>
-              <h2 className="mb-3 text-sm font-medium text-slate-900 dark:text-slate-100">Por mes (dólares)</h2>
-              <div className="flex flex-col gap-2">
+            <section>
+              <h2 className="rotulo mb-3">
+                Mes a mes <span className="text-dolar">· dólares</span>
+              </h2>
+              <div className="tarjeta flex flex-col gap-2.5 p-4">
                 {monthlyTotals.map((month, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <span className="w-8 shrink-0 text-xs capitalize text-slate-500">{monthShortLabel(i)}</span>
-                    <Bar value={month.USD} max={maxMonthUSD} />
-                    <span className="w-24 shrink-0 text-right text-xs tabular-nums text-slate-700 dark:text-slate-300">
+                    <span className="rotulo w-8 shrink-0">{monthShortLabel(i).replace(".", "")}</span>
+                    <Bar value={month.USD} max={maxMonthUSD} color="var(--dolar)" />
+                    <span className="monto w-28 shrink-0 text-right text-xs text-suave">
                       {month.USD > 0 ? formatMoney(month.USD, "USD") : "—"}
                     </span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          <div>
-            <h2 className="mb-3 text-sm font-medium text-slate-900 dark:text-slate-100">
-              A qué corresponde el gasto del año
-            </h2>
-            <div className="flex flex-col gap-3">
+          <section>
+            <h2 className="rotulo mb-3">A qué se fue el año</h2>
+            <div className="tarjeta flex flex-col gap-4 p-4">
               {categoryTotals.map((cat) => (
-                <div key={cat.name} className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                      {cat.name}
+                <div key={cat.name} className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="flex min-w-0 items-center gap-2.5 text-texto">
+                      <span className="punto" style={{ backgroundColor: cat.color }} />
+                      <span className="truncate">{cat.name}</span>
                     </span>
-                    <span className="text-slate-900 dark:text-slate-100">
+                    <span className="monto shrink-0 text-texto">
                       {cat.UYU > 0 && <span>{formatMoney(cat.UYU, "UYU")}</span>}
-                      {cat.UYU > 0 && cat.USD > 0 && <span className="mx-1 text-slate-400">·</span>}
+                      {cat.UYU > 0 && cat.USD > 0 && <span className="mx-1.5 text-tenue">·</span>}
                       {cat.USD > 0 && <span>{formatMoney(cat.USD, "USD")}</span>}
                     </span>
                   </div>
                   {cat.UYU > 0 && <Bar value={cat.UYU} max={maxCategoryUYU} color={cat.color} />}
-                  {cat.UYU === 0 && cat.USD > 0 && <Bar value={cat.USD} max={maxCategoryUSD} color={cat.color} />}
+                  {cat.UYU === 0 && cat.USD > 0 && (
+                    <Bar value={cat.USD} max={maxCategoryUSD} color={cat.color} />
+                  )}
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         </>
       )}
     </div>

@@ -76,111 +76,141 @@ export default function RecurringPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Gastos fijos</h1>
-        <p className="text-sm text-slate-500">Se cargan solos cada mes en el día que elijas.</p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <header>
+        <p className="rotulo">Se cargan solos cada mes</p>
+        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Gastos fijos</h1>
+      </header>
 
-      <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex gap-2">
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Monto"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-          />
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value as "UYU" | "USD")}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-          >
-            <option value="UYU">UYU</option>
-            <option value="USD">USD</option>
-          </select>
+      <form onSubmit={handleCreate} className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
+        <p className="rotulo">Nuevo gasto fijo</p>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="monto-fijo" className="rotulo">Monto</label>
+            <div className="flex gap-2">
+              <input
+                id="monto-fijo"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                className="campo monto"
+              />
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as "UYU" | "USD")}
+                aria-label="Moneda"
+                className="campo monto w-auto shrink-0"
+              >
+                <option value="UYU">UYU</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="dia" className="rotulo">Día del mes</label>
+            <input
+              id="dia"
+              type="number"
+              min="1"
+              max="28"
+              value={dayOfMonth}
+              onChange={(e) => setDayOfMonth(e.target.value)}
+              required
+              className="campo monto w-24"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="categoria-fijo" className="rotulo">Categoría</label>
+            <select
+              id="categoria-fijo"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              required
+              className="campo"
+            >
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="descripcion-fijo" className="rotulo">Descripción</label>
+            <input
+              id="descripcion-fijo"
+              type="text"
+              placeholder="Ej: Alquiler"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="campo"
+            />
+          </div>
         </div>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          required
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        >
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-500">Día del mes</label>
-          <input
-            type="number"
-            min="1"
-            max="28"
-            value={dayOfMonth}
-            onChange={(e) => setDayOfMonth(e.target.value)}
-            required
-            className="w-20 rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-          />
+
+        {error && <p className="text-sm text-alerta">{error}</p>}
+
+        <div className="flex justify-end border-t border-borde pt-4">
+          <button type="submit" disabled={categories.length === 0} className="boton">
+            Agregar gasto fijo
+          </button>
         </div>
-        <input
-          type="text"
-          placeholder="Descripción (ej: Alquiler)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={categories.length === 0}
-          className="self-start rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
-          Agregar gasto fijo
-        </button>
       </form>
 
-      {loading ? (
-        <p className="text-sm text-slate-500">Cargando...</p>
-      ) : recurring.length === 0 ? (
-        <p className="text-sm text-slate-500">Todavía no tenés gastos fijos configurados.</p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {recurring.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.category.color }} />
-                <div>
-                  <p className={`text-sm ${item.active ? "text-slate-900 dark:text-slate-100" : "text-slate-400 line-through"}`}>
-                    {item.description || item.category.name}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Día {item.dayOfMonth} · {item.category.name}
-                  </p>
+      <section>
+        <h2 className="rotulo mb-3">Activos y pausados</h2>
+        {loading ? (
+          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
+        ) : recurring.length === 0 ? (
+          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
+            Todavía no tenés gastos fijos configurados.
+          </p>
+        ) : (
+          <div className="lista">
+            {recurring.map((item) => (
+              <div key={item.id} className={`fila ${item.active ? "" : "opacity-55"}`}>
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                  <span className="punto" style={{ backgroundColor: item.category.color }} />
+                  <div className="min-w-0">
+                    <p
+                      className={`truncate text-sm ${
+                        item.active ? "text-texto" : "text-suave line-through"
+                      }`}
+                    >
+                      {item.description || item.category.name}
+                    </p>
+                    <p className="rotulo mt-1 truncate normal-case tracking-normal">
+                      Día {item.dayOfMonth} · {item.category.name}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+                  <span className="monto text-sm text-texto">
+                    {formatMoney(item.amount, item.currency)}
+                  </span>
+                  <button onClick={() => handleToggle(item)} className="boton-mini">
+                    {item.active ? "Pausar" : "Reactivar"}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="boton-mini boton-mini-peligro"
+                  >
+                    Eliminar
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {formatMoney(item.amount, item.currency)}
-                </span>
-                <button onClick={() => handleToggle(item)} className="text-xs text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
-                  {item.active ? "Pausar" : "Reactivar"}
-                </button>
-                <button onClick={() => handleDelete(item.id)} className="text-xs text-slate-400 hover:text-red-600">
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

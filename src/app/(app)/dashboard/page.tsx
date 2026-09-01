@@ -3,6 +3,7 @@ import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
 import { BrouLink } from "@/components/BrouLink";
+import { Pizarra } from "@/components/Pizarra";
 
 export default async function DashboardPage() {
   const userId = await requireUserId();
@@ -39,86 +40,67 @@ export default async function DashboardPage() {
   const categoryTotals = Array.from(byCategory.values()).sort((a, b) => b.UYU + b.USD * 40 - (a.UYU + a.USD * 40));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-semibold capitalize text-slate-900 dark:text-slate-100">
-            {monthLabel(month)}
-          </h1>
-          <p className="text-sm text-slate-500">Resumen del mes</p>
-        </div>
-        <BrouLink />
-      </div>
+    <div className="flex flex-col gap-8">
+      <Pizarra
+        rotulo="Gastado este mes"
+        titulo={monthLabel(month)}
+        accion={<BrouLink />}
+        pesos={formatMoney(totals.UYU, "UYU")}
+        dolares={formatMoney(totals.USD, "USD")}
+      />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">Total en pesos</p>
-          <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
-            {formatMoney(totals.UYU, "UYU")}
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-xs text-slate-500">Total en dólares</p>
-          <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
-            {formatMoney(totals.USD, "USD")}
-          </p>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="mb-3 text-sm font-medium text-slate-900 dark:text-slate-100">Por categoría</h2>
+      <section>
+        <h2 className="rotulo mb-3">Por categoría</h2>
         {categoryTotals.length === 0 ? (
-          <p className="text-sm text-slate-500">Todavía no cargaste gastos este mes.</p>
+          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
+            Todavía no cargaste gastos este mes.
+          </p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="lista">
             {categoryTotals.map((cat) => (
-              <div
-                key={cat.name}
-                className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">{cat.name}</span>
+              <div key={cat.name} className="fila">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="punto" style={{ backgroundColor: cat.color }} />
+                  <span className="truncate text-sm text-texto">{cat.name}</span>
                 </div>
-                <div className="text-sm text-slate-900 dark:text-slate-100">
+                <div className="monto shrink-0 text-sm text-texto">
                   {cat.UYU > 0 && <span>{formatMoney(cat.UYU, "UYU")}</span>}
-                  {cat.UYU > 0 && cat.USD > 0 && <span className="mx-1 text-slate-400">·</span>}
+                  {cat.UYU > 0 && cat.USD > 0 && <span className="mx-1.5 text-tenue">·</span>}
                   {cat.USD > 0 && <span>{formatMoney(cat.USD, "USD")}</span>}
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      <div>
-        <h2 className="mb-3 text-sm font-medium text-slate-900 dark:text-slate-100">Últimos gastos</h2>
+      <section>
+        <h2 className="rotulo mb-3">Últimos gastos</h2>
         {expenses.length === 0 ? (
-          <p className="text-sm text-slate-500">Nada cargado todavía.</p>
+          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
+            Nada cargado todavía.
+          </p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="lista">
             {expenses.slice(0, 8).map((expense) => (
-              <div
-                key={expense.id}
-                className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div>
-                  <p className="text-sm text-slate-900 dark:text-slate-100">
+              <div key={expense.id} className="fila">
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-texto">
                     {expense.description || expense.category.name}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="rotulo mt-1 truncate normal-case tracking-normal">
                     {new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "short" }).format(expense.date)} ·{" "}
                     {expense.category.name}
                   </p>
                 </div>
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                <span className="monto shrink-0 text-sm text-texto">
                   {formatMoney(expense.amount.toString(), expense.currency)}
                 </span>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

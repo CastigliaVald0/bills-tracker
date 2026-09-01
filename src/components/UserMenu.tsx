@@ -43,7 +43,7 @@ export function UserMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-sm font-medium text-white dark:bg-slate-100 dark:text-slate-900"
+        className="monto flex h-8 w-8 items-center justify-center rounded-full bg-accion text-[13px] font-medium text-accion-texto transition-opacity hover:opacity-85"
         aria-label="Cuenta"
       >
         {initial}
@@ -51,26 +51,26 @@ export function UserMenu({
 
       {open && (
         <div
-          className={`absolute right-0 z-10 flex w-56 flex-col gap-1 rounded-lg border border-slate-200 bg-white p-1.5 shadow-md dark:border-slate-800 dark:bg-slate-900 ${
-            menuDirection === "up" ? "bottom-full mb-2" : "top-full mt-2"
+          className={`absolute right-0 z-30 flex w-60 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10 ${
+            menuDirection === "up" ? "bottom-full mb-3" : "top-full mt-3"
           }`}
         >
-          <div className="truncate px-3 py-1.5">
+          <div className="truncate border-b border-borde px-3 pb-2.5 pt-2 mb-0.5">
             {trimmedName && (
-              <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{trimmedName}</p>
+              <p className="truncate text-sm font-medium text-texto">{trimmedName}</p>
             )}
-            <p className="truncate text-sm text-slate-500">{email}</p>
+            <p className="monto truncate text-xs text-tenue">{email}</p>
           </div>
           <Link
             href="/account"
-            className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="rounded px-3 py-2 text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
           >
             Mi cuenta
           </Link>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="rounded-md px-3 py-1.5 text-left text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="rounded px-3 py-2 text-left text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
           >
             Cerrar sesión
           </button>

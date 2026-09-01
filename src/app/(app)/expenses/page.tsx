@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Category, Expense } from "@/lib/types";
-import { formatMoney, currentMonth } from "@/lib/format";
+import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -70,109 +70,140 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Gastos del mes</h1>
+    <div className="flex flex-col gap-8">
+      <header>
+        <p className="rotulo">{monthLabel(currentMonth())}</p>
+        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Gastos del mes</h1>
+      </header>
 
-      <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex gap-2">
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Monto"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-          />
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value as "UYU" | "USD")}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-          >
-            <option value="UYU">UYU</option>
-            <option value="USD">USD</option>
-          </select>
+      <form onSubmit={handleCreate} className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
+        <p className="rotulo">Nuevo gasto</p>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="monto" className="rotulo">Monto</label>
+            <div className="flex gap-2">
+              <input
+                id="monto"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                className="campo monto"
+              />
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as "UYU" | "USD")}
+                aria-label="Moneda"
+                className="campo monto w-auto shrink-0"
+              >
+                <option value="UYU">UYU</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="fecha" className="rotulo">Fecha</label>
+            <input
+              id="fecha"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              className="campo monto"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="categoria" className="rotulo">Categoría</label>
+            <select
+              id="categoria"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              required
+              className="campo"
+            >
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="descripcion" className="rotulo">Descripción</label>
+            <input
+              id="descripcion"
+              type="text"
+              placeholder="Opcional"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="campo"
+            />
+          </div>
         </div>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          required
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        >
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        <input
-          type="text"
-          placeholder="Descripción (opcional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={categories.length === 0}
-          className="self-start rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
-          Cargar gasto
-        </button>
-        {categories.length === 0 && !loading && (
-          <p className="text-xs text-slate-500">Creá primero una categoría para poder cargar gastos.</p>
-        )}
+
+        {error && <p className="text-sm text-alerta">{error}</p>}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-borde pt-4">
+          {categories.length === 0 && !loading ? (
+            <p className="text-sm text-suave">Creá primero una categoría para poder cargar gastos.</p>
+          ) : (
+            <span />
+          )}
+          <button type="submit" disabled={categories.length === 0} className="boton">
+            Cargar gasto
+          </button>
+        </div>
       </form>
 
-      {loading ? (
-        <p className="text-sm text-slate-500">Cargando...</p>
-      ) : expenses.length === 0 ? (
-        <p className="text-sm text-slate-500">Todavía no cargaste gastos este mes.</p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {expenses.map((expense) => (
-            <div
-              key={expense.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: expense.category.color }} />
-                <div>
-                  <p className="text-sm text-slate-900 dark:text-slate-100">
-                    {expense.description || expense.category.name}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "short" }).format(new Date(expense.date))}
-                    {" · "}
-                    {expense.category.name}
-                    {expense.recurringExpenseId && " · fijo"}
-                  </p>
+      <section>
+        <h2 className="rotulo mb-3">Cargados este mes</h2>
+        {loading ? (
+          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
+        ) : expenses.length === 0 ? (
+          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
+            Todavía no cargaste gastos este mes.
+          </p>
+        ) : (
+          <div className="lista">
+            {expenses.map((expense) => (
+              <div key={expense.id} className="fila">
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                  <span className="punto" style={{ backgroundColor: expense.category.color }} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-texto">
+                      {expense.description || expense.category.name}
+                    </p>
+                    <p className="rotulo mt-1 truncate normal-case tracking-normal">
+                      {new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "short" }).format(new Date(expense.date))}
+                      {" · "}
+                      {expense.category.name}
+                      {expense.recurringExpenseId && " · fijo"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+                  <span className="monto text-sm text-texto">
+                    {formatMoney(expense.amount, expense.currency)}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(expense.id)}
+                    className="boton-mini boton-mini-peligro"
+                  >
+                    Eliminar
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {formatMoney(expense.amount, expense.currency)}
-                </span>
-                <button
-                  onClick={() => handleDelete(expense.id)}
-                  className="text-xs text-slate-400 hover:text-red-600"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

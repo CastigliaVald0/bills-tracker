@@ -47,62 +47,87 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Categorías</h1>
+    <div className="flex flex-col gap-8">
+      <header>
+        <p className="rotulo">El color identifica cada gasto en las listas</p>
+        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Categorías</h1>
+      </header>
 
-      <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <input
-          type="text"
-          placeholder="Nombre de la categoría"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        <div className="flex flex-wrap gap-2">
-          {COLOR_PRESET.map((c) => (
-            <button
-              type="button"
-              key={c}
-              onClick={() => setColor(c)}
-              className={`h-7 w-7 rounded-full ${color === c ? "ring-2 ring-offset-2 ring-slate-900 dark:ring-slate-100" : ""}`}
-              style={{ backgroundColor: c }}
-              aria-label={c}
-            />
-          ))}
+      <form onSubmit={handleCreate} className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
+        <p className="rotulo">Nueva categoría</p>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="nombre-categoria" className="rotulo">Nombre</label>
+          <input
+            id="nombre-categoria"
+            type="text"
+            placeholder="Ej: Alimentación"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="campo"
+          />
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          className="self-start rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-slate-100 dark:text-slate-900"
-        >
-          Agregar
-        </button>
+
+        <div className="flex flex-col gap-2">
+          <span className="rotulo">Color</span>
+          <div className="flex flex-wrap gap-2">
+            {COLOR_PRESET.map((c) => (
+              <button
+                type="button"
+                key={c}
+                onClick={() => setColor(c)}
+                className={`h-8 w-8 rounded transition-transform hover:scale-105 ${
+                  color === c ? "ring-2 ring-texto ring-offset-2 ring-offset-superficie" : ""
+                }`}
+                style={{ backgroundColor: c }}
+                aria-label={`Color ${c}`}
+                aria-pressed={color === c}
+              />
+            ))}
+          </div>
+        </div>
+
+        {error && <p className="text-sm text-alerta">{error}</p>}
+
+        <div className="flex items-center justify-between gap-3 border-t border-borde pt-4">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <span className="punto" style={{ backgroundColor: color }} />
+            <span className="truncate text-sm text-suave">{name || "Sin nombre"}</span>
+          </span>
+          <button type="submit" className="boton">
+            Agregar
+          </button>
+        </div>
       </form>
 
-      {loading ? (
-        <p className="text-sm text-slate-500">Cargando...</p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {categories.map((cat) => (
-            <div
-              key={cat.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                <span className="text-sm text-slate-700 dark:text-slate-300">{cat.name}</span>
+      <section>
+        <h2 className="rotulo mb-3">Tus categorías</h2>
+        {loading ? (
+          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
+        ) : categories.length === 0 ? (
+          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
+            Todavía no creaste ninguna categoría.
+          </p>
+        ) : (
+          <div className="lista">
+            {categories.map((cat) => (
+              <div key={cat.id} className="fila">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="punto" style={{ backgroundColor: cat.color }} />
+                  <span className="truncate text-sm text-texto">{cat.name}</span>
+                </div>
+                <button
+                  onClick={() => handleDelete(cat.id)}
+                  className="boton-mini boton-mini-peligro shrink-0"
+                >
+                  Eliminar
+                </button>
               </div>
-              <button
-                onClick={() => handleDelete(cat.id)}
-                className="text-xs text-slate-400 hover:text-red-600"
-              >
-                Eliminar
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

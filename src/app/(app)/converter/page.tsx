@@ -10,13 +10,14 @@ export default async function ConverterPage() {
   const rate = await getUsdRate();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Conversor UYU / USD</h1>
-        <p className="text-sm text-slate-500">
-          Útil para estimar a cuántos pesos te va a salir una compra en dólares (por ejemplo, en MercadoLibre).
+    <div className="flex flex-col gap-8">
+      <header>
+        <p className="rotulo">Cotización del día</p>
+        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Conversor UYU / USD</h1>
+        <p className="mt-2 max-w-prose text-sm text-suave">
+          Para estimar a cuántos pesos te va a salir una compra en dólares, por ejemplo en MercadoLibre.
         </p>
-      </div>
+      </header>
 
       <CurrencyConverter rate={rate} />
     </div>

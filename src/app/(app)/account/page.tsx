@@ -68,106 +68,130 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Mi cuenta</h1>
-        <p className="text-sm text-slate-500">Cambiar contraseña</p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <header>
+        <p className="rotulo">Acceso y datos</p>
+        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Mi cuenta</h1>
+      </header>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex max-w-sm flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
-      >
-        <input
-          type="password"
-          placeholder="Contraseña actual"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          required
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        <input
-          type="password"
-          placeholder="Nueva contraseña (mín. 8 caracteres)"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-          minLength={8}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        <input
-          type="password"
-          placeholder="Confirmar nueva contraseña"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-          minLength={8}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {success && <p className="text-sm text-green-600">Contraseña actualizada.</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="self-start rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
-          {loading ? "Guardando..." : "Guardar cambios"}
-        </button>
-      </form>
-
-      <div>
-        <h2 className="text-lg font-semibold text-red-600">Zona de peligro</h2>
-        <p className="text-sm text-slate-500">
-          Eliminar tu cuenta borra permanentemente todos tus gastos, categorías y gastos fijos. No se puede deshacer.
-        </p>
-      </div>
-
-      <div className="max-w-sm rounded-xl border border-red-200 bg-white p-4 dark:border-red-900/50 dark:bg-slate-900">
-        {!deleteOpen ? (
-          <button
-            type="button"
-            onClick={() => setDeleteOpen(true)}
-            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950/30"
-          >
-            Eliminar cuenta
-          </button>
-        ) : (
-          <form onSubmit={handleDelete} className="flex flex-col gap-4">
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              Ingresá tu contraseña para confirmar que querés eliminar tu cuenta de forma permanente.
-            </p>
+      <section>
+        <h2 className="rotulo mb-3">Cambiar contraseña</h2>
+        <form onSubmit={handleSubmit} className="tarjeta flex max-w-sm flex-col gap-4 p-4 sm:p-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="pass-actual" className="rotulo">Contraseña actual</label>
             <input
+              id="pass-actual"
               type="password"
-              placeholder="Contraseña"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
+              className="campo"
             />
-            {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={deleteLoading}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                {deleteLoading ? "Eliminando..." : "Sí, eliminar mi cuenta"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDeleteOpen(false);
-                  setDeletePassword("");
-                  setDeleteError(null);
-                }}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="pass-nueva" className="rotulo">Nueva contraseña</label>
+            <input
+              id="pass-nueva"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Mínimo 8 caracteres"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              minLength={8}
+              className="campo"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="pass-confirmar" className="rotulo">Repetir nueva contraseña</label>
+            <input
+              id="pass-confirmar"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={8}
+              className="campo"
+            />
+          </div>
+
+          {error && <p className="text-sm text-alerta">{error}</p>}
+          {success && <p className="text-sm text-ok">Contraseña actualizada.</p>}
+
+          <div className="flex justify-end border-t border-borde pt-4">
+            <button type="submit" disabled={loading} className="boton">
+              {loading ? "Guardando..." : "Guardar cambios"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <h2 className="rotulo mb-3 text-alerta">Zona de peligro</h2>
+        <div className="max-w-sm rounded-md border border-alerta/40 bg-alerta-fondo p-4 sm:p-5">
+          <p className="text-sm leading-relaxed text-suave">
+            Eliminar tu cuenta borra permanentemente todos tus gastos, categorías y gastos fijos.
+            No se puede deshacer.
+          </p>
+
+          {!deleteOpen ? (
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              className="mt-4 rounded-[5px] border border-alerta/50 px-4 py-2 text-sm font-medium text-alerta transition-colors hover:bg-alerta hover:text-superficie"
+            >
+              Eliminar cuenta
+            </button>
+          ) : (
+            <form onSubmit={handleDelete} className="mt-4 flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="pass-eliminar" className="rotulo">
+                  Confirmá con tu contraseña
+                </label>
+                <input
+                  id="pass-eliminar"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  required
+                  className="campo"
+                />
+              </div>
+
+              {deleteError && <p className="text-sm text-alerta">{deleteError}</p>}
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="submit"
+                  disabled={deleteLoading}
+                  className="rounded-[5px] bg-alerta px-4 py-2 text-sm font-medium text-superficie transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  {deleteLoading ? "Eliminando..." : "Sí, eliminar mi cuenta"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteOpen(false);
+                    setDeletePassword("");
+                    setDeleteError(null);
+                  }}
+                  className="boton-linea"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

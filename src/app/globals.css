@@ -1,26 +1,393 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ==========================================================================
+   Billions Tracker — sistema visual "Pizarra"
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+   Dos materiales, una idea: lo que el mundo te informa (totales, cotización)
+   va sobre pizarra de tinta; lo que vos cargás va sobre papel. Las dos monedas
+   nunca se suman, así que nunca comparten color: el peso es celeste, el dólar
+   es verde.
+   ========================================================================== */
+
+:root {
+  /* papel */
+  --fondo: #eaede7;
+  --superficie: #fafbf8;
+  --superficie-alta: #f1f3ee;
+  --borde: #d6dbd3;
+  --borde-fuerte: #bcc4b9;
+
+  /* tinta sobre papel */
+  --texto: #15242e;
+  --texto-suave: #556970;
+  --texto-tenue: #7c8b8a;
+
+  /* la pizarra es una superficie propia: casi no cambia entre temas */
+  --pizarra: #132430;
+  --pizarra-alta: #1c3341;
+  --pizarra-borde: #2b4351;
+  --pizarra-texto: #edf1ec;
+  --pizarra-suave: #91a7b2;
+
+  /* las dos monedas */
+  --peso: #1f6f96;
+  --dolar: #2f6e46;
+  --peso-luz: #6ec3e8;
+  --dolar-luz: #7ec894;
+
+  /* acción y estado */
+  --accion: #132430;
+  --accion-alta: #23394a;
+  --accion-texto: #f6f8f4;
+  --alerta: #b23a28;
+  --alerta-fondo: #f7ebe8;
+  --ok: #2f6e46;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --fondo: #0e161b;
+    --superficie: #16222a;
+    --superficie-alta: #1d2b34;
+    --borde: #26363f;
+    --borde-fuerte: #36484f;
+
+    --texto: #e7ece6;
+    --texto-suave: #9aacb2;
+    --texto-tenue: #6d7f85;
+
+    --pizarra: #08161f;
+    --pizarra-alta: #12242f;
+    --pizarra-borde: #24363f;
+
+    --peso: #6fbee4;
+    --dolar: #7fc895;
+
+    --accion: #dfe7e0;
+    --accion-alta: #ffffff;
+    --accion-texto: #101c22;
+    --alerta: #e4705c;
+    --alerta-fondo: #2c1b18;
+    --ok: #7fc895;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-superficie-alta: var(--superficie-alta);
+  --color-borde: var(--borde);
+  --color-borde-fuerte: var(--borde-fuerte);
+
+  --color-texto: var(--texto);
+  --color-suave: var(--texto-suave);
+  --color-tenue: var(--texto-tenue);
+
+  --color-pizarra: var(--pizarra);
+  --color-pizarra-alta: var(--pizarra-alta);
+  --color-pizarra-borde: var(--pizarra-borde);
+  --color-pizarra-texto: var(--pizarra-texto);
+  --color-pizarra-suave: var(--pizarra-suave);
+
+  --color-peso: var(--peso);
+  --color-dolar: var(--dolar);
+  --color-peso-luz: var(--peso-luz);
+  --color-dolar-luz: var(--dolar-luz);
+
+  --color-accion: var(--accion);
+  --color-accion-alta: var(--accion-alta);
+  --color-accion-texto: var(--accion-texto);
+
+  --color-alerta: var(--alerta);
+  --color-alerta-fondo: var(--alerta-fondo);
+  --color-ok: var(--ok);
+
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-num);
+}
+
+@layer base {
+  body {
+    background-color: var(--fondo);
+    color: var(--texto);
+    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  input,
+  select,
+  button,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--peso);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  ::selection {
+    background-color: var(--peso);
+    color: var(--superficie);
+  }
+
+  /* el ícono nativo del date picker desaparece sobre fondo oscuro */
+  @media (prefers-color-scheme: dark) {
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) opacity(0.6);
+    }
+  }
+}
+
+@layer components {
+  /* --- tipografía de servicio ---------------------------------------- */
+
+  /* rótulo: el mono en versalitas que nombra cada bloque */
+  .rotulo {
+    font-family: var(--font-num), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--texto-tenue);
+  }
+
+  /* monto: cifras tabulares, siempre en mono, siempre alineadas */
+  .monto {
+    font-family: var(--font-num), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* --- superficies ---------------------------------------------------- */
+
+  .tarjeta {
+    background-color: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+  }
+
+  .lista {
+    background-color: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .lista > * + * {
+    border-top: 1px solid var(--borde);
+  }
+
+  .fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6875rem 0.875rem;
+    transition: background-color 0.15s ease;
+  }
+
+  .fila:hover {
+    background-color: var(--superficie-alta);
+  }
+
+  /* la pizarra: el único elemento que se permite gritar */
+  .pizarra-panel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: var(--pizarra);
+    box-shadow: inset 0 0 0 1px var(--pizarra-borde);
+    color: var(--pizarra-texto);
+  }
+
+  /* el filo bicolor: mitad peso, mitad dólar. Se traza al cargar. */
+  .pizarra-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--peso-luz) 0 50%,
+      var(--dolar-luz) 50% 100%
+    );
+    transform-origin: left center;
+    animation: trazar 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* el mismo filo bicolor, sobre papel: para superficies claras */
+  .filo {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .filo::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--peso) 0 50%, var(--dolar) 50% 100%);
+    transform-origin: left center;
+    animation: trazar 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* --- controles ------------------------------------------------------ */
+
+  .campo {
+    width: 100%;
+    border: 1px solid var(--borde);
+    border-radius: 5px;
+    background-color: var(--fondo);
+    padding: 0.5rem 0.6875rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s ease, background-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .campo::placeholder {
+    color: var(--texto-tenue);
+  }
+
+  .campo:hover {
+    border-color: var(--borde-fuerte);
+  }
+
+  .campo:focus-visible {
+    outline: none;
+    border-color: var(--peso);
+    background-color: var(--superficie);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--peso) 18%, transparent);
+  }
+
+  .boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background-color: var(--accion);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--accion-texto);
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .boton:hover:not(:disabled) {
+    background-color: var(--accion-alta);
+  }
+
+  .boton:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .boton-linea {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid var(--borde);
+    border-radius: 5px;
+    background-color: transparent;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    color: var(--texto-suave);
+    transition: color 0.15s ease, border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .boton-linea:hover {
+    color: var(--texto);
+    border-color: var(--borde-fuerte);
+    background-color: var(--superficie-alta);
+  }
+
+  /* acciones secundarias de fila: mono, chicas, sin peso visual */
+  .boton-mini {
+    font-family: var(--font-num), ui-monospace, monospace;
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--texto-tenue);
+    transition: color 0.15s ease;
+  }
+
+  .boton-mini:hover {
+    color: var(--texto);
+  }
+
+  .boton-mini-peligro:hover {
+    color: var(--alerta);
+  }
+
+  /* --- datos ---------------------------------------------------------- */
+
+  .barra-pista {
+    height: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 2px;
+    background-color: var(--borde);
+  }
+
+  .barra-valor {
+    height: 100%;
+    border-radius: 2px;
+  }
+
+  /* el punto de color de cada categoría */
+  .punto {
+    height: 0.5rem;
+    width: 0.5rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+  }
+}
+
+@layer utilities {
+  .aparece {
+    animation: aparece 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+
+@keyframes trazar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes aparece {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pizarra-panel::before,
+  .filo::before,
+  .aparece {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

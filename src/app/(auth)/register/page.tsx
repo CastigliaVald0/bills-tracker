@@ -45,46 +45,61 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
-        Crear cuenta
-      </h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          type="text"
-          placeholder="Nombre (opcional)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        <input
-          type="password"
-          placeholder="Contraseña (mín. 8 caracteres)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={8}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
-        >
+      <h1 className="text-lg font-semibold tracking-tight text-texto">Crear cuenta</h1>
+
+      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="nombre" className="rotulo">Nombre</label>
+          <input
+            id="nombre"
+            type="text"
+            autoComplete="name"
+            placeholder="Opcional"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="campo"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className="rotulo">Email</label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="vos@ejemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="campo"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="password" className="rotulo">Contraseña</label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            placeholder="Mínimo 8 caracteres"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={8}
+            className="campo"
+          />
+        </div>
+
+        {error && <p className="text-sm text-alerta">{error}</p>}
+
+        <button type="submit" disabled={loading} className="boton mt-1 w-full">
           {loading ? "Creando..." : "Crear cuenta"}
         </button>
       </form>
-      <p className="mt-4 text-sm text-slate-500">
+
+      <p className="mt-6 border-t border-borde pt-4 text-sm text-suave">
         ¿Ya tenés cuenta?{" "}
-        <Link href="/login" className="font-medium text-slate-900 dark:text-slate-100">
+        <Link href="/login" className="font-medium text-texto underline decoration-peso decoration-2 underline-offset-4">
           Iniciar sesión
         </Link>
       </p>

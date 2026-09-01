@@ -19,7 +19,7 @@ export function BrouLink() {
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
-      className="flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
+      className="rotulo flex shrink-0 items-center gap-1.5 rounded border border-pizarra-borde px-2.5 py-1.5 text-pizarra-suave transition-colors hover:border-peso-luz hover:text-pizarra-texto"
     >
       Cotización BROU
       <span aria-hidden>↗</span>
