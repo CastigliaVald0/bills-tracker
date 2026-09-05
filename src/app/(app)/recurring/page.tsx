@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import type { Category, RecurringExpense } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
+import {
+  monthYearLabel,
+  monthInputToDate,
+  dateToMonthInput,
+  countInstallments,
+  currentMonthStart,
+} from "@/lib/month";
 
 export default function RecurringPage() {
   const [recurring, setRecurring] = useState<RecurringExpense[]>([]);
@@ -15,6 +22,7 @@ export default function RecurringPage() {
   const [categoryId, setCategoryId] = useState("");
   const [dayOfMonth, setDayOfMonth] = useState("1");
   const [description, setDescription] = useState("");
+  const [endsOn, setEndsOn] = useState("");
 
   async function load() {
     const [recurringRes, categoriesRes] = await Promise.all([
@@ -47,6 +55,7 @@ export default function RecurringPage() {
         categoryId,
         dayOfMonth: Number(dayOfMonth),
         description: description || undefined,
+        endsOn: endsOn || null,
       }),
     });
     if (!res.ok) {
@@ -57,6 +66,7 @@ export default function RecurringPage() {
     setAmount("");
     setDescription("");
     setDayOfMonth("1");
+    setEndsOn("");
     load();
   }
 
@@ -74,6 +84,15 @@ export default function RecurringPage() {
     await fetch(`/api/recurring/${id}`, { method: "DELETE" });
     load();
   }
+
+  // Ayuda en vivo: traduce el mes elegido a una cantidad de cuotas.
+  const fechaFin = endsOn ? monthInputToDate(endsOn) : null;
+  const cuotas = fechaFin ? countInstallments(fechaFin, Number(dayOfMonth) || 1) : 0;
+  const textoCuotas = !fechaFin
+    ? "Vacío = se repite sin fin, como un alquiler."
+    : cuotas > 0
+      ? `${cuotas} ${cuotas === 1 ? "cuota" : "cuotas"}, la última en ${monthYearLabel(fechaFin)}.`
+      : "Ese mes ya pasó.";
 
   return (
     <div className="flex flex-col gap-8">
@@ -154,6 +173,19 @@ export default function RecurringPage() {
               className="campo"
             />
           </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="hasta-fijo" className="rotulo">Hasta (opcional)</label>
+            <input
+              id="hasta-fijo"
+              type="month"
+              min={dateToMonthInput(currentMonthStart())}
+              value={endsOn}
+              onChange={(e) => setEndsOn(e.target.value)}
+              className="campo monto"
+            />
+            <p className="text-xs text-tenue">{textoCuotas}</p>
+          </div>
         </div>
 
         {error && <p className="text-sm text-alerta">{error}</p>}
@@ -175,39 +207,51 @@ export default function RecurringPage() {
           </p>
         ) : (
           <div className="lista">
-            {recurring.map((item) => (
-              <div key={item.id} className={`fila ${item.active ? "" : "opacity-55"}`}>
-                <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                  <span className="punto" style={{ backgroundColor: item.category.color }} />
-                  <div className="min-w-0">
-                    <p
-                      className={`truncate text-sm ${
-                        item.active ? "text-texto" : "text-suave line-through"
-                      }`}
+            {recurring.map((item) => {
+              const finaliza = item.endsOn ? new Date(item.endsOn) : null;
+              const finalizado = finaliza !== null && finaliza < currentMonthStart();
+              const atenuado = !item.active || finalizado;
+
+              return (
+                <div key={item.id} className={`fila ${atenuado ? "opacity-55" : ""}`}>
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <span className="punto" style={{ backgroundColor: item.category.color }} />
+                    <div className="min-w-0">
+                      <p
+                        className={`truncate text-sm ${
+                          atenuado ? "text-suave line-through" : "text-texto"
+                        }`}
+                      >
+                        {item.description || item.category.name}
+                      </p>
+                      <p className="rotulo mt-1 truncate normal-case tracking-normal">
+                        Día {item.dayOfMonth} · {item.category.name}
+                        {finaliza &&
+                          (finalizado
+                            ? " · finalizado"
+                            : ` · hasta ${monthYearLabel(finaliza)}`)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+                    <span className="monto text-sm text-texto">
+                      {formatMoney(item.amount, item.currency)}
+                    </span>
+                    {!finalizado && (
+                      <button onClick={() => handleToggle(item)} className="boton-mini">
+                        {item.active ? "Pausar" : "Reactivar"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="boton-mini boton-mini-peligro"
                     >
-                      {item.description || item.category.name}
-                    </p>
-                    <p className="rotulo mt-1 truncate normal-case tracking-normal">
-                      Día {item.dayOfMonth} · {item.category.name}
-                    </p>
+                      Eliminar
+                    </button>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-                  <span className="monto text-sm text-texto">
-                    {formatMoney(item.amount, item.currency)}
-                  </span>
-                  <button onClick={() => handleToggle(item)} className="boton-mini">
-                    {item.active ? "Pausar" : "Reactivar"}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="boton-mini boton-mini-peligro"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

@@ -24,6 +24,8 @@ export type RecurringExpense = {
   dayOfMonth: number;
   description: string | null;
   active: boolean;
+  /** Último mes que se cobra (ISO). Null = sin fin. */
+  endsOn: string | null;
   categoryId: string;
   category: Category;
 };

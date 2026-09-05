@@ -88,6 +88,9 @@ model RecurringExpense {
   dayOfMonth  Int
   description String?
   active      Boolean   @default(true)
+  /// Último mes que se genera, inclusive (se guarda el día 1 en UTC).
+  /// Null = sin fin, como un alquiler. Con valor = cuotas.
+  endsOn      DateTime?
   createdAt   DateTime  @default(now())
   expenses    Expense[]
 

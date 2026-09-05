@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
+import { monthInputToDate, currentMonthStart } from "@/lib/month";
 
 const createSchema = z.object({
   categoryId: z.string(),
@@ -9,6 +10,8 @@ const createSchema = z.object({
   currency: z.enum(["UYU", "USD"]),
   dayOfMonth: z.number().int().min(1).max(28),
   description: z.string().max(200).optional(),
+  /** "YYYY-MM": último mes que se cobra. Sin esto, el gasto fijo no tiene fin. */
+  endsOn: z.string().regex(/^\d{4}-\d{2}$/).nullish(),
 });
 
 export async function GET() {
@@ -38,8 +41,19 @@ export async function POST(request: Request) {
   });
   if (!category) return NextResponse.json({ error: "Categoría inválida" }, { status: 400 });
 
+  const { endsOn: endsOnInput, ...rest } = parsed.data;
+
+  let endsOn: Date | null = null;
+  if (endsOnInput) {
+    endsOn = monthInputToDate(endsOnInput);
+    if (!endsOn) return NextResponse.json({ error: "Mes final inválido" }, { status: 400 });
+    if (endsOn < currentMonthStart()) {
+      return NextResponse.json({ error: "El mes final ya pasó" }, { status: 400 });
+    }
+  }
+
   const recurring = await prisma.recurringExpense.create({
-    data: { ...parsed.data, userId },
+    data: { ...rest, endsOn, userId },
     include: { category: true },
   });
 

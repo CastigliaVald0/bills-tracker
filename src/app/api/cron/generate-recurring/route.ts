@@ -31,7 +31,13 @@ export async function GET(request: Request) {
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
   const due = await prisma.recurringExpense.findMany({
-    where: { active: true, dayOfMonth: today },
+    where: {
+      active: true,
+      dayOfMonth: today,
+      // Los que están en cuotas dejan de generarse pasado su mes final.
+      // endsOn guarda el día 1 del último mes que corresponde cobrar.
+      OR: [{ endsOn: null }, { endsOn: { gte: monthStart } }],
+    },
   });
 
   let created = 0;
