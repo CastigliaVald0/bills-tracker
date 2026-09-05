@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CampoContrasena } from "@/components/CampoContrasena";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,15 +65,12 @@ export default function LoginPage() {
               ¿La olvidaste?
             </Link>
           </div>
-          <input
+          <CampoContrasena
             id="password"
-            type="password"
             autoComplete="current-password"
-            placeholder="••••••••"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             required
-            className="campo"
           />
         </div>
 

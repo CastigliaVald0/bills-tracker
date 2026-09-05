@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { CampoContrasena } from "@/components/CampoContrasena";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -75,31 +76,26 @@ function ResetPasswordForm() {
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="password" className="rotulo">Nueva contraseña</label>
-          <input
+          <CampoContrasena
             id="password"
-            type="password"
             autoComplete="new-password"
             placeholder="Mínimo 8 caracteres"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             required
             minLength={8}
-            className="campo"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="confirm" className="rotulo">Repetir contraseña</label>
-          <input
+          <CampoContrasena
             id="confirm"
-            type="password"
             autoComplete="new-password"
-            placeholder="••••••••"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={setConfirmPassword}
             required
             minLength={8}
-            className="campo"
           />
         </div>
 

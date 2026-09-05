@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { CampoContrasena } from "@/components/CampoContrasena";
 
 export default function AccountPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -79,45 +80,37 @@ export default function AccountPage() {
         <form onSubmit={handleSubmit} className="tarjeta flex max-w-sm flex-col gap-4 p-4 sm:p-5">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="pass-actual" className="rotulo">Contraseña actual</label>
-            <input
+            <CampoContrasena
               id="pass-actual"
-              type="password"
               autoComplete="current-password"
-              placeholder="••••••••"
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
+              onChange={setCurrentPassword}
               required
-              className="campo"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="pass-nueva" className="rotulo">Nueva contraseña</label>
-            <input
+            <CampoContrasena
               id="pass-nueva"
-              type="password"
               autoComplete="new-password"
               placeholder="Mínimo 8 caracteres"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={setNewPassword}
               required
               minLength={8}
-              className="campo"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="pass-confirmar" className="rotulo">Repetir nueva contraseña</label>
-            <input
+            <CampoContrasena
               id="pass-confirmar"
-              type="password"
               autoComplete="new-password"
-              placeholder="••••••••"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={setConfirmPassword}
               required
               minLength={8}
-              className="campo"
             />
           </div>
 
@@ -154,15 +147,12 @@ export default function AccountPage() {
                 <label htmlFor="pass-eliminar" className="rotulo">
                   Confirmá con tu contraseña
                 </label>
-                <input
+                <CampoContrasena
                   id="pass-eliminar"
-                  type="password"
                   autoComplete="current-password"
-                  placeholder="••••••••"
                   value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
+                  onChange={setDeletePassword}
                   required
-                  className="campo"
                 />
               </div>
 

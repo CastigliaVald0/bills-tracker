@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CampoContrasena } from "@/components/CampoContrasena";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -77,16 +78,14 @@ export default function RegisterPage() {
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="password" className="rotulo">Contraseña</label>
-          <input
+          <CampoContrasena
             id="password"
-            type="password"
             autoComplete="new-password"
             placeholder="Mínimo 8 caracteres"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             required
             minLength={8}
-            className="campo"
           />
         </div>
 
