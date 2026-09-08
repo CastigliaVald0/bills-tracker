@@ -55,3 +55,14 @@ export function countInstallments(endsOn: Date, dayOfMonth: number): number {
 
   return Math.max(0, months);
 }
+
+/**
+ * ¿El día de cobro de este mes ya pasó (o es hoy)?
+ *
+ * Importa al dar de alta un gasto fijo: el cron de este mes ya corrió ese día
+ * y el gasto todavía no existía, así que nadie lo va a generar hasta el mes
+ * que viene. En ese caso hay que generarlo en el momento.
+ */
+export function diaDeCobroYaPaso(dayOfMonth: number, now = new Date()): boolean {
+  return dayOfMonth <= now.getUTCDate();
+}

@@ -9,6 +9,7 @@ import {
   dateToMonthInput,
   countInstallments,
   currentMonthStart,
+  diaDeCobroYaPaso,
 } from "@/lib/month";
 
 export default function RecurringPage() {
@@ -85,6 +86,9 @@ export default function RecurringPage() {
     load();
   }
 
+  // El día elegido ya pasó, así que al guardar se genera el gasto de este mes.
+  const cobraEsteMes = diaDeCobroYaPaso(Number(dayOfMonth) || 0);
+
   // Ayuda en vivo: traduce el mes elegido a una cantidad de cuotas.
   const fechaFin = endsOn ? monthInputToDate(endsOn) : null;
   const cuotas = fechaFin ? countInstallments(fechaFin, Number(dayOfMonth) || 1) : 0;
@@ -143,6 +147,11 @@ export default function RecurringPage() {
               required
               className="campo monto w-24"
             />
+            {cobraEsteMes && (
+              <p className="text-xs text-tenue">
+                Ese día ya pasó: el gasto de este mes se carga al guardar.
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

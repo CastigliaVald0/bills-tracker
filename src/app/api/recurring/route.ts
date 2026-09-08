@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
 import { monthInputToDate, currentMonthStart } from "@/lib/month";
+import { generarGastoDelMes, diaDeCobroYaPaso } from "@/lib/recurring";
 
 const createSchema = z.object({
   categoryId: z.string(),
@@ -57,5 +58,12 @@ export async function POST(request: Request) {
     include: { category: true },
   });
 
-  return NextResponse.json(recurring, { status: 201 });
+  // Si el día de cobro de este mes ya pasó, el cron no lo va a levantar hasta
+  // el mes que viene y el gasto quedaría invisible en el mes corriente y en el
+  // resumen anual. Lo generamos ahora.
+  const generado = diaDeCobroYaPaso(recurring.dayOfMonth)
+    ? await generarGastoDelMes(recurring)
+    : false;
+
+  return NextResponse.json({ ...recurring, generado }, { status: 201 });
 }

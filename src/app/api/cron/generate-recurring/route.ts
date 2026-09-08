@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { generarGastoDelMes } from "@/lib/recurring";
 
 /**
  * Solo el cron puede disparar esto: genera gastos para todos los usuarios.
@@ -42,23 +43,7 @@ export async function GET(request: Request) {
 
   let created = 0;
   for (const template of due) {
-    const alreadyGenerated = await prisma.expense.findFirst({
-      where: { recurringExpenseId: template.id, date: { gte: monthStart } },
-    });
-    if (alreadyGenerated) continue;
-
-    await prisma.expense.create({
-      data: {
-        userId: template.userId,
-        categoryId: template.categoryId,
-        amount: template.amount,
-        currency: template.currency,
-        date: now,
-        description: template.description,
-        recurringExpenseId: template.id,
-      },
-    });
-    created++;
+    if (await generarGastoDelMes(template, now)) created++;
   }
 
   // Limpieza: tokens de recuperación vencidos y ventanas de rate limit viejas.
