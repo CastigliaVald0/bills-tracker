@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
 import { BrouLink } from "@/components/BrouLink";
 import { Pizarra } from "@/components/Pizarra";
+import { AtajoGasto } from "@/components/AtajoGasto";
 
 export default async function DashboardPage() {
   const userId = await requireUserId();
@@ -101,6 +102,8 @@ export default async function DashboardPage() {
           </div>
         )}
       </section>
+
+      <AtajoGasto />
     </div>
   );
 }

@@ -308,6 +308,29 @@
     background-color: var(--superficie-alta);
   }
 
+  /* el atajo flotante: la única acción que sigue al scroll */
+  .boton-flotante {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 3.25rem;
+    width: 3.25rem;
+    border-radius: 9999px;
+    background-color: var(--accion);
+    color: var(--accion-texto);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.14), 0 8px 20px rgb(0 0 0 / 0.12);
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .boton-flotante:hover {
+    background-color: var(--accion-alta);
+    transform: translateY(-1px);
+  }
+
+  .boton-flotante:active {
+    transform: translateY(0);
+  }
+
   /* acciones secundarias de fila: mono, chicas, sin peso visual */
   .boton-mini {
     font-family: var(--font-num), ui-monospace, monospace;
