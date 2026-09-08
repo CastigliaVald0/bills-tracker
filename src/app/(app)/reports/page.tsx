@@ -4,6 +4,7 @@ import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 import { formatMoney, monthShortLabel } from "@/lib/format";
 import { Pizarra } from "@/components/Pizarra";
+import { TortaMeses } from "@/components/TortaMeses";
 
 function Bar({ value, max, color }: { value: number; max: number; color: string }) {
   const widthPct = max > 0 ? Math.max((value / max) * 100, value > 0 ? 3 : 0) : 0;
@@ -65,6 +66,15 @@ export default async function ReportsPage({
 
   const hasExpenses = expenses.length > 0;
 
+  // Solo los meses que tuvieron gasto entran a la torta. Cada moneda arma la
+  // suya: pesos y dólares nunca se suman, así que no comparten un mismo 100%.
+  const gajosUYU = monthlyTotals
+    .map((m, mes) => ({ mes, monto: m.UYU }))
+    .filter((g) => g.monto > 0);
+  const gajosUSD = monthlyTotals
+    .map((m, mes) => ({ mes, monto: m.USD }))
+    .filter((g) => g.monto > 0);
+
   const navAnios = (
     <div className="flex shrink-0 items-center gap-1">
       <Link
@@ -101,6 +111,28 @@ export default async function ReportsPage({
         </p>
       ) : (
         <>
+          {gajosUYU.length > 0 && (
+            <section>
+              <h2 className="rotulo mb-3">
+                Reparto del año <span className="text-peso">· pesos</span>
+              </h2>
+              <div className="tarjeta p-4 sm:p-5">
+                <TortaMeses datos={gajosUYU} moneda="UYU" tono="var(--peso)" />
+              </div>
+            </section>
+          )}
+
+          {gajosUSD.length > 0 && (
+            <section>
+              <h2 className="rotulo mb-3">
+                Reparto del año <span className="text-dolar">· dólares</span>
+              </h2>
+              <div className="tarjeta p-4 sm:p-5">
+                <TortaMeses datos={gajosUSD} moneda="USD" tono="var(--dolar)" />
+              </div>
+            </section>
+          )}
+
           <section>
             <h2 className="rotulo mb-3">
               Mes a mes <span className="text-peso">· pesos</span>
