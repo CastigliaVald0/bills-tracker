@@ -45,7 +45,7 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
   return (
     <>
       <Link href="/dashboard" className={linkClass(pathname.startsWith("/dashboard"))}>
-        Dashboard
+        Inicio
       </Link>
 
       <div ref={containerRef} className="relative">
