@@ -4,7 +4,9 @@ import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 import { formatMoney, monthShortLabel } from "@/lib/format";
 import { Pizarra } from "@/components/Pizarra";
-import { TortaMeses } from "@/components/TortaMeses";
+import { TortaCombinada } from "@/components/TortaCombinada";
+import { getUsdRate } from "@/lib/exchange-rate";
+import { combinarPorMes } from "@/lib/combinar-monedas";
 
 function Bar({ value, max, color }: { value: number; max: number; color: string }) {
   const widthPct = max > 0 ? Math.max((value / max) * 100, value > 0 ? 3 : 0) : 0;
@@ -66,14 +68,15 @@ export default async function ReportsPage({
 
   const hasExpenses = expenses.length > 0;
 
-  // Solo los meses que tuvieron gasto entran a la torta. Cada moneda arma la
-  // suya: pesos y dólares nunca se suman, así que no comparten un mismo 100%.
-  const gajosUYU = monthlyTotals
-    .map((m, mes) => ({ mes, monto: m.UYU }))
-    .filter((g) => g.monto > 0);
-  const gajosUSD = monthlyTotals
-    .map((m, mes) => ({ mes, monto: m.USD }))
-    .filter((g) => g.monto > 0);
+  // Único lugar de la app que suma las dos monedas. Cada gasto en dólares se
+  // convierte con la cotización que quedó guardada el día que se cargó, así el
+  // pasado no se mueve cuando cambia el dólar. La de hoy solo cubre los gastos
+  // que no tienen la suya.
+  const cotizacion = await getUsdRate();
+  const combinado = cotizacion ? combinarPorMes(expenses, cotizacion.venta) : null;
+  const gajosCombinados = combinado
+    ? combinado.porMes.map((monto, mes) => ({ mes, monto })).filter((g) => g.monto > 0)
+    : [];
 
   const navAnios = (
     <div className="flex shrink-0 items-center gap-1">
@@ -111,28 +114,6 @@ export default async function ReportsPage({
         </p>
       ) : (
         <>
-          {gajosUYU.length > 0 && (
-            <section>
-              <h2 className="rotulo mb-3">
-                Reparto del año <span className="text-peso">· pesos</span>
-              </h2>
-              <div className="tarjeta p-4 sm:p-5">
-                <TortaMeses datos={gajosUYU} moneda="UYU" tono="var(--peso)" />
-              </div>
-            </section>
-          )}
-
-          {gajosUSD.length > 0 && (
-            <section>
-              <h2 className="rotulo mb-3">
-                Reparto del año <span className="text-dolar">· dólares</span>
-              </h2>
-              <div className="tarjeta p-4 sm:p-5">
-                <TortaMeses datos={gajosUSD} moneda="USD" tono="var(--dolar)" />
-              </div>
-            </section>
-          )}
-
           <section>
             <h2 className="rotulo mb-3">
               Mes a mes <span className="text-peso">· pesos</span>
@@ -191,6 +172,37 @@ export default async function ReportsPage({
                   )}
                 </div>
               ))}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="rotulo mb-3">Todo junto · % por mes</h2>
+            <div className="tarjeta p-4 sm:p-5">
+              {gajosCombinados.length > 0 && cotizacion && combinado ? (
+                <>
+                  <TortaCombinada datos={gajosCombinados} />
+                  <p className="mt-5 border-t border-borde pt-3 text-center text-xs text-tenue">
+                    Único gráfico que suma pesos y dólares. Cada gasto en dólares se
+                    convierte con la cotización del día en que lo cargaste.
+                    {combinado.conCotizacionDeHoy > 0 && (
+                      <>
+                        {" "}
+                        {combinado.conCotizacionDeHoy}{" "}
+                        {combinado.conCotizacionDeHoy === 1
+                          ? "gasto no tiene la suya guardada y usa"
+                          : "gastos no tienen la suya guardada y usan"}{" "}
+                        la de hoy ({cotizacion.source}, venta{" "}
+                        <span className="monto">{cotizacion.venta}</span>).
+                      </>
+                    )}
+                  </p>
+                </>
+              ) : (
+                <p className="py-4 text-center text-sm text-suave">
+                  No se pudo obtener la cotización del dólar, así que no se pueden
+                  combinar las dos monedas ahora.
+                </p>
+              )}
             </div>
           </section>
         </>

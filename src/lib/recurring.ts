@@ -1,6 +1,7 @@
 import type { RecurringExpense } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { diaDeCobroYaPaso } from "@/lib/month";
+import { rateParaGuardar } from "@/lib/exchange-rate";
 
 export { diaDeCobroYaPaso };
 
@@ -29,6 +30,10 @@ export async function generarGastoDelMes(
   });
   if (yaExiste) return false;
 
+  // Un gasto fijo en dólares se cotiza el día que se genera, igual que uno
+  // cargado a mano: por eso la cuota de marzo no queda atada al dólar de hoy.
+  const usdRate = await rateParaGuardar(template.currency);
+
   await prisma.expense.create({
     data: {
       userId: template.userId,
@@ -39,6 +44,7 @@ export async function generarGastoDelMes(
       date: new Date(Date.UTC(year, month, template.dayOfMonth)),
       description: template.description,
       recurringExpenseId: template.id,
+      usdRate,
     },
   });
 

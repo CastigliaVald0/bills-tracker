@@ -129,3 +129,20 @@ async function getBcuUsdRate(): Promise<UsdRate | null> {
 export async function getUsdRate(): Promise<UsdRate | null> {
   return (await getBrouUsdRate()) ?? (await getBcuUsdRate());
 }
+
+/**
+ * Cotización a guardar junto a un gasto en dólares, en el momento de crearlo.
+ *
+ * Devuelve null en gastos en pesos (no hay nada que convertir) y también si la
+ * fuente no responde: cargar un gasto nunca puede fallar porque BROU esté
+ * caído. Un gasto sin cotización propia se convierte después con la de hoy.
+ */
+export async function rateParaGuardar(currency: "UYU" | "USD"): Promise<number | null> {
+  if (currency !== "USD") return null;
+  try {
+    const rate = await getUsdRate();
+    return rate && rate.venta > 0 ? rate.venta : null;
+  } catch {
+    return null;
+  }
+}

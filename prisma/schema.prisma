@@ -73,6 +73,11 @@ model Expense {
   recurringExpenseId String?
   recurringExpense   RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
   createdAt          DateTime          @default(now())
+  /// Cotización del dólar (venta) del día en que se cargó el gasto. Solo se
+  /// guarda en gastos en USD: es lo que costaba ese dólar entonces, y queda
+  /// congelado para siempre. Null en gastos en pesos, en los anteriores a esta
+  /// columna, y cuando no se pudo leer la cotización al crearlos.
+  usdRate            Decimal?          @db.Decimal(12, 4)
 
   @@index([userId, date])
 }

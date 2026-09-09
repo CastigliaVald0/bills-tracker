@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
+import { rateParaGuardar } from "@/lib/exchange-rate";
 
 const createSchema = z.object({
   categoryId: z.string(),
@@ -53,6 +54,10 @@ export async function POST(request: Request) {
   });
   if (!category) return NextResponse.json({ error: "Categoría inválida" }, { status: 400 });
 
+  // La cotización del día queda congelada en el gasto: después el resumen la
+  // usa para convertir ESTE gasto, sin importar cuánto se mueva el dólar.
+  const usdRate = await rateParaGuardar(parsed.data.currency);
+
   const expense = await prisma.expense.create({
     data: {
       userId,
@@ -61,6 +66,7 @@ export async function POST(request: Request) {
       currency: parsed.data.currency,
       date: new Date(parsed.data.date),
       description: parsed.data.description,
+      usdRate,
     },
     include: { category: true },
   });
