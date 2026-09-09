@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    La marca de Billions Tracker: los dos puntos son las dos monedas que la app
+    nunca suma. Van sobre el fondo de la pizarra, no sueltos, porque a 16px un
+    par de puntos sin fondo se pierde contra la barra del navegador — y así el
+    ícono se recorta igual de bien en tema claro que en oscuro.
+
+    Se usan las variantes luminosas (peso-luz y dolar-luz) porque son las que
+    contrastan contra la pizarra, igual que en el filo del panel.
+  -->
+  <rect width="32" height="32" rx="7" fill="#132430"/>
+  <circle cx="10" cy="16" r="5" fill="#6ec3e8"/>
+  <circle cx="22" cy="16" r="5" fill="#7ec894"/>
+</svg>

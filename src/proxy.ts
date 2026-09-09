@@ -21,5 +21,11 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // Los íconos y el manifiesto quedan fuera del control de sesión: el navegador
+  // y el sistema operativo los piden sin cookies y antes de cualquier login,
+  // así que si pasaran por acá se irían redirigidos a /login y la pestaña
+  // quedaría sin logo, o el celular sin ícono al agregarlo al inicio.
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|icon-|apple-icon|manifest.webmanifest).*)",
+  ],
 };
