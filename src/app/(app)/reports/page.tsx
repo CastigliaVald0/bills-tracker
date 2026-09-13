@@ -9,15 +9,6 @@ import { BarrasMes } from "@/components/BarrasMes";
 import { getUsdRate } from "@/lib/exchange-rate";
 import { combinarPorMes } from "@/lib/combinar-monedas";
 
-function Bar({ value, max, color }: { value: number; max: number; color: string }) {
-  const widthPct = max > 0 ? Math.max((value / max) * 100, value > 0 ? 3 : 0) : 0;
-  return (
-    <div className="barra-pista">
-      <div className="barra-valor" style={{ width: `${widthPct}%`, backgroundColor: color }} />
-    </div>
-  );
-}
-
 export default async function ReportsPage({
   searchParams,
 }: {
@@ -84,8 +75,6 @@ export default async function ReportsPage({
     .slice(0, mesesVisibles)
     .map((m, mes) => ({ mes, monto: m.USD }));
   const hayUSD = barrasUSD.some((b) => b.monto > 0);
-  const maxCategoryUYU = Math.max(...categoryTotals.map((c) => c.UYU), 0);
-  const maxCategoryUSD = Math.max(...categoryTotals.map((c) => c.USD), 0);
 
   const hasExpenses = expenses.length > 0;
 
@@ -158,28 +147,55 @@ export default async function ReportsPage({
           )}
 
           <section>
-            <h2 className="rotulo mb-3">A qué se fue el año</h2>
-            <div className="tarjeta flex flex-col gap-4 p-4">
-              {categoryTotals.map((cat) => (
-                <div key={cat.name} className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="flex min-w-0 items-center gap-2.5 text-texto">
-                      <span className="punto" style={{ backgroundColor: cat.color }} />
-                      <span className="truncate">{cat.name}</span>
+            <h2 className="rotulo mb-3">Categorías del año</h2>
+            <ul className="flex flex-col gap-2.5">
+              {categoryTotals.map((cat) => {
+                // El porcentaje se mide en la moneda principal de la categoría:
+                // pesos si tiene, dólares si solo gastó en dólares. Las dos
+                // monedas no se suman, así que cada una tiene su propio 100%.
+                const moneda = cat.UYU > 0 ? "UYU" : "USD";
+                const monto = moneda === "UYU" ? cat.UYU : cat.USD;
+                const total = yearTotals[moneda];
+                const porcentaje = total > 0 ? Math.round((monto / total) * 100) : 0;
+
+                return (
+                  <li
+                    key={cat.name}
+                    className="flex items-center gap-3 rounded-md border border-borde bg-superficie px-3 py-2.5"
+                  >
+                    {/* Hace de "logo": el color de la categoría sobre un fondo
+                        tenue de ese mismo color. */}
+                    <span
+                      aria-hidden
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
+                      style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 18%, transparent)` }}
+                    >
+                      <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: cat.color }} />
                     </span>
-                    <span className="monto shrink-0 text-texto">
-                      {cat.UYU > 0 && <span>{formatMoney(cat.UYU, "UYU")}</span>}
-                      {cat.UYU > 0 && cat.USD > 0 && <span className="mx-1.5 text-tenue">·</span>}
-                      {cat.USD > 0 && <span>{formatMoney(cat.USD, "USD")}</span>}
+
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-texto sm:text-base">
+                      {cat.name}
                     </span>
-                  </div>
-                  {cat.UYU > 0 && <Bar value={cat.UYU} max={maxCategoryUYU} color={cat.color} />}
-                  {cat.UYU === 0 && cat.USD > 0 && (
-                    <Bar value={cat.USD} max={maxCategoryUSD} color={cat.color} />
-                  )}
-                </div>
-              ))}
-            </div>
+
+                    <span className="flex shrink-0 flex-col items-end">
+                      <span className="monto text-sm text-texto">{formatMoney(monto, moneda)}</span>
+                      {moneda === "UYU" && cat.USD > 0 && (
+                        <span className="monto text-xs text-suave">+ {formatMoney(cat.USD, "USD")}</span>
+                      )}
+                    </span>
+
+                    <span
+                      // Ancho fijo: si la etiqueta se ajusta al número (4% vs 47%),
+                      // los montos de cada fila terminan en lugares distintos.
+                      className="monto w-11 shrink-0 rounded-sm border border-borde bg-superficie-alta py-0.5 text-center text-xs text-suave"
+                      title={`${porcentaje}% de lo gastado en ${moneda === "UYU" ? "pesos" : "dólares"}`}
+                    >
+                      {porcentaje}%
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
 
           <section>
