@@ -12,6 +12,7 @@
     "@auth/prisma-adapter": "^2.11.3",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "apexcharts": "7.3.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "next": "16.3.3",
@@ -20,6 +21,7 @@
     "pg": "^8.23.0",
     "prisma": "^7.10.0",
     "react": "19.2.8",
+    "react-apexcharts": "2.1.1",
     "react-dom": "19.2.8",
     "zod": "^4.5.4"
   },

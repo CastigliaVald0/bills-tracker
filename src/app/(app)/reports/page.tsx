@@ -2,9 +2,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
-import { formatMoney, monthShortLabel } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { Pizarra } from "@/components/Pizarra";
 import { TortaCombinada } from "@/components/TortaCombinada";
+import { BarrasMes } from "@/components/BarrasMes";
 import { getUsdRate } from "@/lib/exchange-rate";
 import { combinarPorMes } from "@/lib/combinar-monedas";
 
@@ -61,8 +62,28 @@ export default async function ReportsPage({
     (a, b) => b.UYU + b.USD * 40 - (a.UYU + a.USD * 40)
   );
 
-  const maxMonthUYU = Math.max(...monthlyTotals.map((m) => m.UYU), 0);
-  const maxMonthUSD = Math.max(...monthlyTotals.map((m) => m.USD), 0);
+  // Los meses que todavía no llegaron no se muestran. En un año pasado se ven
+  // los 12; en el año en curso, hasta el mes actual inclusive; en uno futuro,
+  // ninguno. Se compara en la hora de Uruguay: el 31 a las 22 hs en Montevideo
+  // ya es el mes siguiente en UTC.
+  const ahora = new Date();
+  const [anioActual, mesActual] = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Montevideo",
+    year: "numeric",
+    month: "numeric",
+  })
+    .format(ahora)
+    .split("-")
+    .map(Number);
+  const mesesVisibles = year < anioActual ? 12 : year === anioActual ? mesActual : 0;
+
+  const barrasUYU = monthlyTotals
+    .slice(0, mesesVisibles)
+    .map((m, mes) => ({ mes, monto: m.UYU }));
+  const barrasUSD = monthlyTotals
+    .slice(0, mesesVisibles)
+    .map((m, mes) => ({ mes, monto: m.USD }));
+  const hayUSD = barrasUSD.some((b) => b.monto > 0);
   const maxCategoryUYU = Math.max(...categoryTotals.map((c) => c.UYU), 0);
   const maxCategoryUSD = Math.max(...categoryTotals.map((c) => c.USD), 0);
 
@@ -114,38 +135,24 @@ export default async function ReportsPage({
         </p>
       ) : (
         <>
-          <section>
-            <h2 className="rotulo mb-3">
-              Mes a mes <span className="text-peso">· pesos</span>
-            </h2>
-            <div className="tarjeta flex flex-col gap-2.5 p-4">
-              {monthlyTotals.map((month, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="rotulo w-8 shrink-0">{monthShortLabel(i).replace(".", "")}</span>
-                  <Bar value={month.UYU} max={maxMonthUYU} color="var(--peso)" />
-                  <span className="monto w-28 shrink-0 text-right text-xs text-suave">
-                    {month.UYU > 0 ? formatMoney(month.UYU, "UYU") : "—"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+          {mesesVisibles > 0 && (
+            <section>
+              <h2 className="rotulo mb-3">
+                Mes a mes <span className="text-peso">· pesos</span>
+              </h2>
+              <div className="tarjeta px-2 pt-3 pb-1 sm:px-3">
+                <BarrasMes meses={barrasUYU} moneda="UYU" />
+              </div>
+            </section>
+          )}
 
-          {maxMonthUSD > 0 && (
+          {mesesVisibles > 0 && hayUSD && (
             <section>
               <h2 className="rotulo mb-3">
                 Mes a mes <span className="text-dolar">· dólares</span>
               </h2>
-              <div className="tarjeta flex flex-col gap-2.5 p-4">
-                {monthlyTotals.map((month, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="rotulo w-8 shrink-0">{monthShortLabel(i).replace(".", "")}</span>
-                    <Bar value={month.USD} max={maxMonthUSD} color="var(--dolar)" />
-                    <span className="monto w-28 shrink-0 text-right text-xs text-suave">
-                      {month.USD > 0 ? formatMoney(month.USD, "USD") : "—"}
-                    </span>
-                  </div>
-                ))}
+              <div className="tarjeta px-2 pt-3 pb-1 sm:px-3">
+                <BarrasMes meses={barrasUSD} moneda="USD" />
               </div>
             </section>
           )}
