@@ -117,7 +117,7 @@ export default function CategoriesPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="rotulo">Color</span>
+          <span className="rotulo">seleccion de color</span>
           <div className="flex flex-wrap items-center gap-3">
             {/* El input nativo va invisible encima de la muestra: tocarla abre
                 la paleta del sistema, también en el celular. */}
