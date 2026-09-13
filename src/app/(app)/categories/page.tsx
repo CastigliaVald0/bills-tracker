@@ -3,12 +3,44 @@
 import { useEffect, useState } from "react";
 import type { Category } from "@/lib/types";
 
-const COLOR_PRESET = ["#f97316", "#3b82f6", "#8b5cf6", "#06b6d4", "#ec4899", "#22c55e", "#64748b", "#ef4444"];
+/** Con qué color arranca el formulario. Tiene que ser un #rrggbb válido: la API
+ *  rechaza cualquier otra cosa y el selector nativo no acepta un valor vacío. */
+const COLOR_INICIAL = "#3b82f6";
+
+const HEX_VALIDO = /^#[0-9a-f]{6}$/;
+
+/** Luminancia relativa WCAG de un color #rrggbb. */
+function luminancia(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contraste(a: string, b: string) {
+  const [claro, oscuro] = [luminancia(a), luminancia(b)].sort((x, y) => y - x);
+  return (claro + 0.05) / (oscuro + 0.05);
+}
+
+/**
+ * Con colores libres existe el riesgo de elegir uno que se confunda con el
+ * fondo. El color vive en puntos y barras finas, así que se
+ * avisa cuando no llega a 1,5:1 contra la superficie clara o la oscura.
+ */
+function avisoDeContraste(hex: string) {
+  if (contraste(hex, "#fafbf8") < 1.5) return "Muy claro: en tema claro casi no se va a ver.";
+  if (contraste(hex, "#16222a") < 1.5) return "Muy oscuro: en tema oscuro casi no se va a ver.";
+  return null;
+}
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState("");
-  const [color, setColor] = useState(COLOR_PRESET[0]);
+  const [color, setColor] = useState(COLOR_INICIAL);
+  // Lo que el usuario va escribiendo en el campo hex, aunque todavía no sea
+  // un color completo. El color real solo cambia cuando el texto es válido.
+  const [hexTexto, setHexTexto] = useState(COLOR_INICIAL);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,8 +69,23 @@ export default function CategoriesPage() {
       return;
     }
     setName("");
+    elegirColor(COLOR_INICIAL);
     load();
   }
+
+  function elegirColor(nuevo: string) {
+    const normalizado = nuevo.toLowerCase();
+    setColor(normalizado);
+    setHexTexto(normalizado);
+  }
+
+  function escribirHex(texto: string) {
+    const conNumeral = (texto.startsWith("#") ? texto : `#${texto}`).toLowerCase().slice(0, 7);
+    setHexTexto(conNumeral);
+    if (HEX_VALIDO.test(conNumeral)) setColor(conNumeral);
+  }
+
+  const aviso = avisoDeContraste(color);
 
   async function handleDelete(id: string) {
     if (!confirm("¿Eliminar esta categoría? Los gastos asociados no se borran.")) return;
@@ -71,21 +118,39 @@ export default function CategoriesPage() {
 
         <div className="flex flex-col gap-2">
           <span className="rotulo">Color</span>
-          <div className="flex flex-wrap gap-2">
-            {COLOR_PRESET.map((c) => (
-              <button
-                type="button"
-                key={c}
-                onClick={() => setColor(c)}
-                className={`h-8 w-8 rounded transition-transform hover:scale-105 ${
-                  color === c ? "ring-2 ring-texto ring-offset-2 ring-offset-superficie" : ""
-                }`}
-                style={{ backgroundColor: c }}
-                aria-label={`Color ${c}`}
-                aria-pressed={color === c}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* El input nativo va invisible encima de la muestra: tocarla abre
+                la paleta del sistema, también en el celular. */}
+            <label
+              className="relative h-10 w-14 shrink-0 cursor-pointer overflow-hidden rounded border border-borde transition-transform hover:scale-105"
+              style={{ backgroundColor: color }}
+              title="Elegir color"
+            >
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => elegirColor(e.target.value)}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                aria-label="Elegir color"
               />
-            ))}
+            </label>
+
+            <input
+              type="text"
+              value={hexTexto}
+              onChange={(e) => escribirHex(e.target.value)}
+              onBlur={() => setHexTexto(color)}
+              maxLength={7}
+              spellCheck={false}
+              aria-label="Código hexadecimal del color"
+              className={`campo monto w-24 uppercase ${
+                HEX_VALIDO.test(hexTexto) ? "" : "border-alerta"
+              }`}
+            />
           </div>
+          <p className="text-xs text-tenue">
+            {aviso ?? "Tocá el cuadro para abrir la paleta, o escribí el código."}
+          </p>
         </div>
 
         {error && <p className="text-sm text-alerta">{error}</p>}
