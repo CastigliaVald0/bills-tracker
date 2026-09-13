@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_CATEGORIES } from "@/lib/categories";
 import { checkRateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
+import { sendMail, newUserNotificationEmail } from "@/lib/mailer";
 
 // Holgado a propósito: muchos usuarios móviles comparten IP (CGNAT), así que un
 // límite bajo bloquearía a gente legítima. Alcanza para frenar el spam automatizado.
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email,
       name,
@@ -53,6 +54,28 @@ export async function POST(request: Request) {
       },
     },
   });
+
+  // Aviso al dueño de la app. Va en after() para que la persona que se registra
+  // no espere al SMTP, y cualquier falla queda en el log: el registro ya está
+  // hecho y no puede romperse por un mail. En Vercel, after() mantiene viva la
+  // función hasta que el envío termina, cosa que un fetch suelto no garantiza.
+  const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
+  if (adminEmail) {
+    after(async () => {
+      try {
+        const totalUsers = await prisma.user.count();
+        const mail = newUserNotificationEmail({
+          name: user.name,
+          email: user.email,
+          createdAt: user.createdAt,
+          totalUsers,
+        });
+        await sendMail({ to: adminEmail, ...mail });
+      } catch (error) {
+        console.error("[register] no se pudo avisar del nuevo usuario:", error);
+      }
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

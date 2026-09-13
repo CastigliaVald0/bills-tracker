@@ -86,3 +86,59 @@ export function passwordResetEmail(resetUrl: string, expiresInMinutes: number) {
 
   return { text, html };
 }
+
+/** El nombre lo escribe quien se registra: nunca va al HTML sin escapar. */
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export function newUserNotificationEmail({
+  name,
+  email,
+  createdAt,
+  totalUsers,
+}: {
+  name: string | null | undefined;
+  email: string;
+  createdAt: Date;
+  totalUsers: number;
+}) {
+  const fecha = new Intl.DateTimeFormat("es-UY", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "America/Montevideo",
+  }).format(createdAt);
+  const nombre = name?.trim() || "(sin nombre)";
+
+  // Sin saltos de línea: el nombre termina en el asunto del mail.
+  const subject = `Nuevo usuario en Billions Tracker: ${nombre.replace(/[\r\n]+/g, " ")}`;
+
+  const text = [
+    "Se registró una persona nueva en Billions Tracker.",
+    "",
+    `Nombre: ${nombre}`,
+    `Email: ${email}`,
+    `Fecha: ${fecha}`,
+    "",
+    `Usuarios en total: ${totalUsers}`,
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 15px; color: #1a1a1a; line-height: 1.6;">
+      <p>Se registró una persona nueva en <strong>Billions Tracker</strong>.</p>
+      <table style="border-collapse: collapse; font-size: 14px;">
+        <tr><td style="color: #666; padding: 2px 16px 2px 0;">Nombre</td><td>${escapeHtml(nombre)}</td></tr>
+        <tr><td style="color: #666; padding: 2px 16px 2px 0;">Email</td><td>${escapeHtml(email)}</td></tr>
+        <tr><td style="color: #666; padding: 2px 16px 2px 0;">Fecha</td><td>${escapeHtml(fecha)}</td></tr>
+      </table>
+      <p style="color: #666; font-size: 13px;">Usuarios en total: ${totalUsers}</p>
+    </div>
+  `;
+
+  return { subject, text, html };
+}
