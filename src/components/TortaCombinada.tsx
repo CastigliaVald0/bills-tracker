@@ -1,167 +1,174 @@
 "use client";
 
-import { useState } from "react";
-import { monthShortLabel } from "@/lib/format";
-
-type Gajo = { mes: number; monto: number };
-
-const RADIO = 100;
-/** Cuánto se separa cada gajo del centro. */
-const SEPARACION = 7;
-/** Debajo de este porcentaje el gajo no tiene ancho para alojar el número. */
-const MINIMO_PARA_ROTULO = 0.06;
+import { useState, type ReactNode } from "react";
+import estilos from "./TortaCombinada.module.css";
 
 /**
- * Misma rampa que la torta por moneda: el color dice en qué parte del año cae
- * el mes, no qué mes es. Doce tonos no pueden distinguirse entre sí, así que la
- * identidad la cargan la leyenda y el rótulo. Arranca en 47% de mezcla, el piso
- * que despeja 2:1 contra la tarjeta.
- */
-function colorDelMes(mes: number) {
-  const proporcion = 0.47 + (1 - 0.47) * (mes / 11);
-  return `color-mix(in srgb, var(--peso) ${(proporcion * 100).toFixed(1)}%, var(--superficie))`;
-}
-
-/**
- * Redondea la coordenada antes de que llegue al SVG.
+ * Torta "Gasto combinado por mes": pesos y dólares (convertidos) en un solo
+ * total por mes. El diseño es el del artefacto aprobado, sin cambios; acá solo
+ * se reemplazan los datos de ejemplo por los reales.
  *
- * Math.sin y Math.cos no dan resultados idénticos bit a bit entre el Node que
- * renderiza en el servidor y el motor del navegador: difieren en el último
- * dígito (-18.163685097943645 contra -18.16368509794364). React compara los
- * atributos carácter a carácter y eso alcanza para romper la hidratación.
- * Con radio 100 la tercera decimal ya es muchísimo más fina que un píxel.
+ * Cada mes tiene su color fijo, así que si un mes no tuvo gasto y no aparece,
+ * los demás conservan el suyo.
+ */
+const MESES = [
+  { nombre: "Enero", color: "#c96f4a" },
+  { nombre: "Febrero", color: "#4a7c8c" },
+  { nombre: "Marzo", color: "#8a9a5b" },
+  { nombre: "Abril", color: "#b98fc9" },
+  { nombre: "Mayo", color: "#d4a94a" },
+  { nombre: "Junio", color: "#5b8a7a" },
+  { nombre: "Julio", color: "#a15b8c" },
+  { nombre: "Agosto", color: "#4a8fc9" },
+  { nombre: "Setiembre", color: "#c98a4a" },
+  { nombre: "Octubre", color: "#6b9a5b" },
+  { nombre: "Noviembre", color: "#8c5ba1" },
+  { nombre: "Diciembre", color: "#c94a5b" },
+];
+
+const CX = 130;
+const CY = 130;
+const R_INTERIOR = 66;
+const R_EXTERIOR = 100;
+/** Separación entre porciones, en grados. */
+const SEPARACION = 3;
+/** Cuánto se aleja la porción al pasar el mouse. */
+const DESPLAZAMIENTO = 10;
+
+/**
+ * Math.sin y Math.cos difieren en el último dígito entre Node y el navegador, y
+ * React compara los atributos del SVG carácter a carácter al hidratar. Con tres
+ * decimales la diferencia desaparece y sigue siendo mucho más fino que un píxel.
  */
 function redondear(n: number) {
   return Math.round(n * 1000) / 1000;
 }
 
-function punto(anguloRad: number, radio: number) {
-  return {
-    x: redondear(Math.cos(anguloRad) * radio),
-    y: redondear(Math.sin(anguloRad) * radio),
-  };
+function polar(cx: number, cy: number, r: number, grados: number): [number, number] {
+  const rad = ((grados - 90) * Math.PI) / 180;
+  return [redondear(cx + r * Math.cos(rad)), redondear(cy + r * Math.sin(rad))];
 }
 
-export function TortaCombinada({ datos }: { datos: Gajo[] }) {
+function caminoDelArco(inicio: number, fin: number) {
+  const [x1, y1] = polar(CX, CY, R_EXTERIOR, inicio);
+  const [x2, y2] = polar(CX, CY, R_EXTERIOR, fin);
+  const [x3, y3] = polar(CX, CY, R_INTERIOR, fin);
+  const [x4, y4] = polar(CX, CY, R_INTERIOR, inicio);
+  const arcoLargo = fin - inicio > 180 ? 1 : 0;
+  return [
+    `M ${x1} ${y1}`,
+    `A ${R_EXTERIOR} ${R_EXTERIOR} 0 ${arcoLargo} 1 ${x2} ${y2}`,
+    `L ${x3} ${y3}`,
+    `A ${R_INTERIOR} ${R_INTERIOR} 0 ${arcoLargo} 0 ${x4} ${y4}`,
+    "Z",
+  ].join(" ");
+}
+
+type Gajo = { mes: number; monto: number };
+
+export function TortaCombinada({ datos, nota }: { datos: Gajo[]; nota: ReactNode }) {
   const [activo, setActivo] = useState<number | null>(null);
 
-  const total = datos.reduce((suma, g) => suma + g.monto, 0);
+  const total = datos.reduce((suma, d) => suma + d.monto, 0);
   if (total <= 0) return null;
 
-  const gajos: (Gajo & { porcion: number; desde: number; hasta: number; medio: number })[] = [];
-  let angulo = -Math.PI / 2;
-  for (const g of datos) {
-    const porcion = g.monto / total;
-    const desde = angulo;
-    const hasta = angulo + porcion * Math.PI * 2;
-    angulo = hasta;
-    gajos.push({ ...g, porcion, desde, hasta, medio: (desde + hasta) / 2 });
+  const porciones: (Gajo & {
+    nombre: string;
+    color: string;
+    camino: string;
+    dx: number;
+    dy: number;
+    porcentaje: string;
+  })[] = [];
+
+  let angulo = 0;
+  for (const d of datos) {
+    const barrido = (d.monto / total) * 360;
+    const inicio = angulo + SEPARACION / 2;
+    // Un mes muy chico (menos de 3°) quedaría con el fin antes del inicio y el
+    // arco se dibujaría al revés; se le deja una astilla mínima visible.
+    const fin = Math.max(angulo + barrido - SEPARACION / 2, inicio + 0.6);
+    const medio = (inicio + fin) / 2;
+    const [dx, dy] = polar(0, 0, DESPLAZAMIENTO, medio);
+
+    porciones.push({
+      ...d,
+      nombre: MESES[d.mes].nombre,
+      color: MESES[d.mes].color,
+      camino: caminoDelArco(inicio, fin),
+      dx,
+      dy,
+      porcentaje: ((d.monto / total) * 100).toFixed(1),
+    });
+    angulo += barrido;
   }
 
-  const soloUno = gajos.length === 1;
+  const seleccionada = porciones.find((p) => p.mes === activo) ?? null;
 
   return (
-    <div className="flex flex-col items-center gap-5">
-      {/* Leyenda arriba. Lleva el porcentaje además del mes: el número de
-          adentro del gajo queda así duplicado en texto plano, y nadie depende
-          de leerlo sobre el color. */}
-      <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-        {gajos.map((g) => (
-          <li
-            key={g.mes}
-            className="flex cursor-default items-center gap-1.5 transition-opacity"
-            style={{ opacity: activo === null || activo === g.mes ? 1 : 0.4 }}
-            onMouseEnter={() => setActivo(g.mes)}
-            onMouseLeave={() => setActivo(null)}
+    <div className={estilos.card}>
+      <h3 className={estilos.titulo}>Gasto combinado por mes</h3>
+      <p className={estilos.sub}>Pasá el mouse o tocá una porción para ver el detalle</p>
+
+      <div className={estilos.layout}>
+        <div className={estilos.chartWrap}>
+          <svg
+            width="260"
+            height="260"
+            viewBox="0 0 260 260"
+            role="img"
+            aria-label="Gasto combinado de pesos y dólares, por mes"
           >
-            <span
-              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-              style={{ backgroundColor: colorDelMes(g.mes) }}
-              aria-hidden
-            />
-            <span className="text-xs text-texto">
-              {monthShortLabel(g.mes).replace(".", "")}
-            </span>
-            <span className="monto text-xs text-tenue">
-              {Math.round(g.porcion * 100)}%
-            </span>
-          </li>
-        ))}
-      </ul>
+            {porciones.map((p) => {
+              const esActiva = activo === p.mes;
+              return (
+                <path
+                  key={p.mes}
+                  d={p.camino}
+                  fill={p.color}
+                  className={estilos.slice}
+                  style={{
+                    transform: esActiva ? `translate(${p.dx}px, ${p.dy}px)` : "translate(0,0)",
+                    opacity: activo === null || esActiva ? 1 : 0.45,
+                  }}
+                  onMouseEnter={() => setActivo(p.mes)}
+                  onMouseLeave={() => setActivo(null)}
+                  onTouchStart={() => setActivo(p.mes)}
+                />
+              );
+            })}
+          </svg>
 
-      <svg
-        viewBox="-118 -118 236 236"
-        className="h-64 w-64 sm:h-72 sm:w-72"
-        role="img"
-        aria-label="Reparto del gasto del año por mes, pesos y dólares combinados"
-      >
-        {gajos.map((g) => {
-          const atenuado = activo !== null && activo !== g.mes;
-          // Cada gajo se corre hacia afuera por su bisectriz: es la separación
-          // del formato pedido y de paso despega gajos vecinos parecidos.
-          const centro = punto(g.medio, SEPARACION);
-          const a = punto(g.desde, RADIO);
-          const b = punto(g.hasta, RADIO);
-          const arcoLargo = g.hasta - g.desde > Math.PI ? 1 : 0;
-          const d = `M 0 0 L ${a.x} ${a.y} A ${RADIO} ${RADIO} 0 ${arcoLargo} 1 ${b.x} ${b.y} Z`;
+          <div className={estilos.centerLabel}>
+            <div className={estilos.month}>{seleccionada ? seleccionada.nombre : "Total"}</div>
+            <div className={estilos.pct}>
+              {seleccionada ? `${seleccionada.porcentaje}%` : "100%"}
+            </div>
+            <div className={estilos.hint}>
+              {seleccionada
+                ? "$" + Math.round(seleccionada.monto).toLocaleString("es-UY")
+                : "del año"}
+            </div>
+          </div>
+        </div>
 
-          return (
-            <g
-              key={g.mes}
-              transform={`translate(${centro.x} ${centro.y})`}
-              className="transition-opacity"
-              opacity={atenuado ? 0.35 : 1}
-              onMouseEnter={() => setActivo(g.mes)}
+        <div className={estilos.legend}>
+          {porciones.map((p) => (
+            <div
+              key={p.mes}
+              className={`${estilos.legendRow} ${activo === p.mes ? estilos.active : ""}`}
+              onMouseEnter={() => setActivo(p.mes)}
               onMouseLeave={() => setActivo(null)}
-              onFocus={() => setActivo(g.mes)}
-              onBlur={() => setActivo(null)}
-              tabIndex={0}
-              aria-label={`${monthShortLabel(g.mes)}: ${Math.round(g.porcion * 100)}%`}
             >
-              {soloUno ? (
-                <circle cx={0} cy={0} r={RADIO} style={{ fill: colorDelMes(g.mes) }} />
-              ) : (
-                <path d={d} style={{ fill: colorDelMes(g.mes) }} />
-              )}
-            </g>
-          );
-        })}
+              <span className={estilos.legendDot} style={{ background: p.color }} />
+              <span className={estilos.legendMonth}>{p.nombre}</span>
+              <span className={estilos.legendPct}>{p.porcentaje}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Los rótulos van al final para quedar por encima de todos los gajos. */}
-        {gajos
-          .filter((g) => g.porcion >= MINIMO_PARA_ROTULO)
-          .map((g) => {
-            const centro = punto(g.medio, SEPARACION);
-            const p = punto(g.medio, RADIO * 0.62);
-            const atenuado = activo !== null && activo !== g.mes;
-            return (
-              <text
-                key={g.mes}
-                x={redondear(centro.x + p.x)}
-                y={redondear(centro.y + p.y)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                opacity={atenuado ? 0.35 : 1}
-                className="pointer-events-none text-[11px] font-semibold"
-                style={{
-                  fontFamily: "var(--font-num), ui-monospace, monospace",
-                  fill: "var(--texto)",
-                  /* El contorno es lo que sostiene la lectura: sobre la franja
-                     media de la rampa ninguna tinta plana llega a 4,5:1, así
-                     que el número se recorta contra la superficie. Acompaña al
-                     tamaño del texto: con un grosor fijo, al achicar la cifra
-                     el contorno se la come. */
-                  stroke: "var(--superficie)",
-                  strokeWidth: 2.75,
-                  strokeLinejoin: "round",
-                  paintOrder: "stroke",
-                }}
-              >
-                {Math.round(g.porcion * 100)}%
-              </text>
-            );
-          })}
-      </svg>
+      <div className={estilos.foot}>{nota}</div>
     </div>
   );
 }

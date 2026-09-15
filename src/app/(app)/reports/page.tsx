@@ -200,11 +200,11 @@ export default async function ReportsPage({
 
           <section>
             <h2 className="rotulo mb-3">Todo junto · % por mes</h2>
-            <div className="tarjeta p-4 sm:p-5">
-              {gajosCombinados.length > 0 && cotizacion && combinado ? (
-                <>
-                  <TortaCombinada datos={gajosCombinados} />
-                  <p className="mt-5 border-t border-borde pt-3 text-center text-xs text-tenue">
+            {gajosCombinados.length > 0 && cotizacion && combinado ? (
+              <TortaCombinada
+                datos={gajosCombinados}
+                nota={
+                  <>
                     Único gráfico que suma pesos y dólares. Cada gasto en dólares se
                     convierte con la cotización del día en que lo cargaste.
                     {combinado.conCotizacionDeHoy > 0 && (
@@ -214,19 +214,18 @@ export default async function ReportsPage({
                         {combinado.conCotizacionDeHoy === 1
                           ? "gasto no tiene la suya guardada y usa"
                           : "gastos no tienen la suya guardada y usan"}{" "}
-                        la de hoy ({cotizacion.source}, venta{" "}
-                        <span className="monto">{cotizacion.venta}</span>).
+                        la de hoy ({cotizacion.source}, venta {cotizacion.venta}).
                       </>
                     )}
-                  </p>
-                </>
-              ) : (
-                <p className="py-4 text-center text-sm text-suave">
-                  No se pudo obtener la cotización del dólar, así que no se pueden
-                  combinar las dos monedas ahora.
-                </p>
-              )}
-            </div>
+                  </>
+                }
+              />
+            ) : (
+              <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
+                No se pudo obtener la cotización del dólar, así que no se pueden
+                combinar las dos monedas ahora.
+              </p>
+            )}
           </section>
         </>
       )}
