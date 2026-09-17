@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import { CampoContrasena } from "@/components/CampoContrasena";
 
@@ -16,6 +16,143 @@ export default function AccountPage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [prefs, setPrefs] = useState<Preferencias | null>(null);
+  // La preferencia es por usuario, pero la suscripción es por dispositivo: el
+  // interruptor muestra si ESTE navegador va a recibir la notificación.
+  const [pushEnEsteDispositivo, setPushEnEsteDispositivo] = useState(false);
+  const [guardandoNotif, setGuardandoNotif] = useState<"mail" | "push" | "prueba" | null>(null);
+  const [avisoNotif, setAvisoNotif] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      const res = await fetch("/api/account/notifications");
+      if (!res.ok) return;
+      const datos: Preferencias = await res.json();
+
+      let suscripto = false;
+      if ("serviceWorker" in navigator) {
+        const registro = await navigator.serviceWorker.getRegistration("/");
+        suscripto = Boolean(await registro?.pushManager?.getSubscription());
+      }
+
+      if (cancelado) return;
+      setPrefs(datos);
+      setPushEnEsteDispositivo(datos.monthlyPush && suscripto);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  async function guardarPreferencia(cambio: { monthlyEmail?: boolean; monthlyPush?: boolean }) {
+    const res = await fetch("/api/account/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cambio),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? "No se pudo guardar la preferencia");
+    }
+    setPrefs((p) => (p ? { ...p, ...cambio } : p));
+  }
+
+  async function cambiarMail(activo: boolean) {
+    setGuardandoNotif("mail");
+    setAvisoNotif(null);
+    try {
+      await guardarPreferencia({ monthlyEmail: activo });
+    } catch (error) {
+      setAvisoNotif({ tipo: "error", texto: mensajeDeError(error) });
+    }
+    setGuardandoNotif(null);
+  }
+
+  async function cambiarPush(activo: boolean) {
+    setGuardandoNotif("push");
+    setAvisoNotif(null);
+    try {
+      if (activo) {
+        if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+          throw new Error(
+            "Este navegador no admite notificaciones. En iPhone, primero agregá la app a la pantalla de inicio."
+          );
+        }
+        if (!prefs?.vapidPublicKey) throw new Error("Las notificaciones todavía no están configuradas.");
+
+        const permiso = await Notification.requestPermission();
+        if (permiso !== "granted") {
+          throw new Error(
+            "No se dio permiso para mostrar notificaciones. Podés habilitarlo desde la configuración del navegador."
+          );
+        }
+
+        const registro = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+          updateViaCache: "none",
+        });
+        await navigator.serviceWorker.ready;
+        const suscripcion =
+          (await registro.pushManager.getSubscription()) ??
+          (await registro.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: claveABytes(prefs.vapidPublicKey),
+          }));
+
+        const datos = suscripcion.toJSON();
+        const res = await fetch("/api/account/notifications/push", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: datos.endpoint, keys: datos.keys }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error ?? "No se pudo registrar este dispositivo");
+        }
+
+        await guardarPreferencia({ monthlyPush: true });
+        setPushEnEsteDispositivo(true);
+      } else {
+        const registro = await navigator.serviceWorker?.getRegistration("/");
+        const suscripcion = await registro?.pushManager.getSubscription();
+        if (suscripcion) {
+          await fetch("/api/account/notifications/push", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint: suscripcion.endpoint }),
+          });
+          await suscripcion.unsubscribe();
+        }
+        await guardarPreferencia({ monthlyPush: false });
+        setPushEnEsteDispositivo(false);
+      }
+    } catch (error) {
+      setAvisoNotif({ tipo: "error", texto: mensajeDeError(error) });
+    }
+    setGuardandoNotif(null);
+  }
+
+  async function enviarPrueba() {
+    setGuardandoNotif("prueba");
+    setAvisoNotif(null);
+    const res = await fetch("/api/account/notifications/test", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setAvisoNotif({ tipo: "error", texto: data.error ?? "No se pudo enviar la prueba" });
+    } else {
+      const partes: string[] = [];
+      if (data.mail === true) partes.push("el mail");
+      if (typeof data.push === "number" && data.push > 0) partes.push("la notificación");
+      setAvisoNotif(
+        partes.length > 0
+          ? { tipo: "ok", texto: `Listo: te mandamos ${partes.join(" y ")} de prueba.` }
+          : { tipo: "error", texto: "No se pudo entregar la prueba. Probá desactivar y volver a activar el aviso." }
+      );
+    }
+    setGuardandoNotif(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -126,6 +263,75 @@ export default function AccountPage() {
       </section>
 
       <section>
+        <h2 className="rotulo mb-3">Notificaciones</h2>
+        <div className="tarjeta flex max-w-sm flex-col">
+          <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
+            <div className="min-w-0">
+              <label htmlFor="notif-mail" className="text-sm font-medium text-texto">
+                Resumen del mes por mail
+              </label>
+              <p className="mt-1 text-xs leading-relaxed text-suave">
+                {prefs && !prefs.mailConfigured
+                  ? "No disponible: el envío de mails no está configurado."
+                  : `El día 1 de cada mes te llega${prefs ? ` a ${prefs.email}` : ""} lo que gastaste el mes anterior.`}
+              </p>
+            </div>
+            <Interruptor
+              id="notif-mail"
+              activo={Boolean(prefs?.monthlyEmail)}
+              disabled={!prefs || !prefs.mailConfigured || guardandoNotif !== null}
+              onChange={cambiarMail}
+            />
+          </div>
+
+          <div className="flex items-start justify-between gap-4 border-t border-borde p-4 sm:p-5">
+            <div className="min-w-0">
+              <label htmlFor="notif-push" className="text-sm font-medium text-texto">
+                Aviso en este dispositivo
+              </label>
+              <p className="mt-1 text-xs leading-relaxed text-suave">
+                {prefs && !prefs.pushConfigured
+                  ? "No disponible: las notificaciones no están configuradas."
+                  : "El día 1 de cada mes, una notificación que abre el resumen. Activalo en cada dispositivo donde la quieras."}
+              </p>
+            </div>
+            <Interruptor
+              id="notif-push"
+              activo={pushEnEsteDispositivo}
+              disabled={!prefs || !prefs.pushConfigured || guardandoNotif !== null}
+              onChange={cambiarPush}
+            />
+          </div>
+
+          {prefs && (prefs.monthlyEmail || prefs.monthlyPush) && (
+            <div className="flex flex-col gap-2 border-t border-borde p-4 sm:p-5">
+              <div>
+                <button
+                  type="button"
+                  onClick={enviarPrueba}
+                  disabled={guardandoNotif !== null}
+                  className="boton-linea disabled:opacity-50"
+                >
+                  {guardandoNotif === "prueba" ? "Enviando..." : "Enviarme una prueba"}
+                </button>
+              </div>
+              <p className="text-xs text-tenue">Manda ahora el aviso del último mes que terminó.</p>
+            </div>
+          )}
+
+          {avisoNotif && (
+            <p
+              className={`border-t border-borde px-4 py-3 text-sm sm:px-5 ${
+                avisoNotif.tipo === "ok" ? "text-ok" : "text-alerta"
+              }`}
+            >
+              {avisoNotif.texto}
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section>
         <h2 className="rotulo mb-3 text-alerta">Zona de peligro</h2>
         <div className="max-w-sm rounded-md border border-alerta/40 bg-alerta-fondo p-4 sm:p-5">
           <p className="text-sm leading-relaxed text-suave">
@@ -183,5 +389,64 @@ export default function AccountPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+type Preferencias = {
+  email: string;
+  monthlyEmail: boolean;
+  monthlyPush: boolean;
+  mailConfigured: boolean;
+  pushConfigured: boolean;
+  vapidPublicKey: string | null;
+};
+
+function mensajeDeError(error: unknown) {
+  // Los errores del navegador (DOMException) vienen en inglés y con jerga técnica.
+  if (typeof DOMException !== "undefined" && error instanceof DOMException) {
+    return "No se pudieron activar las notificaciones en este dispositivo.";
+  }
+  return error instanceof Error ? error.message : "Algo salió mal. Probá de nuevo.";
+}
+
+/** La clave pública VAPID viene en base64url; el navegador la pide en bytes. */
+function claveABytes(base64url: string) {
+  const relleno = "=".repeat((4 - (base64url.length % 4)) % 4);
+  const binario = atob((base64url + relleno).replace(/-/g, "+").replace(/_/g, "/"));
+  const bytes = new Uint8Array(new ArrayBuffer(binario.length));
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  return bytes;
+}
+
+function Interruptor({
+  id,
+  activo,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  activo: boolean;
+  disabled?: boolean;
+  onChange: (activo: boolean) => void;
+}) {
+  return (
+    <button
+      id={id}
+      type="button"
+      role="switch"
+      aria-checked={activo}
+      disabled={disabled}
+      onClick={() => onChange(!activo)}
+      className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+        activo ? "bg-peso" : "bg-borde-fuerte"
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`inline-block h-5 w-5 rounded-full bg-superficie shadow-sm transition-transform ${
+          activo ? "translate-x-5.5" : "translate-x-0.5"
+        }`}
+      />
+    </button>
   );
 }

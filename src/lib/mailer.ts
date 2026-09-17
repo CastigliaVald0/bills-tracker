@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { formatMoney } from "@/lib/format";
 
 /**
  * Envío de mails por SMTP genérico, para no atarse a un proveedor: funciona igual
@@ -137,6 +138,67 @@ export function newUserNotificationEmail({
         <tr><td style="color: #666; padding: 2px 16px 2px 0;">Fecha</td><td>${escapeHtml(fecha)}</td></tr>
       </table>
       <p style="color: #666; font-size: 13px;">Usuarios en total: ${totalUsers}</p>
+    </div>
+  `;
+
+  return { subject, text, html };
+}
+
+/** Resumen de fin de mes que recibe el usuario que activó el aviso por mail. */
+export function monthlySummaryEmail({
+  nombre,
+  mes,
+  pesos,
+  dolares,
+  cantidad,
+  url,
+}: {
+  nombre: string | null | undefined;
+  /** "Setiembre de 2026" */
+  mes: string;
+  pesos: number;
+  dolares: number;
+  cantidad: number;
+  url: string;
+}) {
+  const saludo = nombre?.trim() ? `Hola ${nombre.trim()},` : "Hola,";
+  const subject = `Tu resumen de ${mes.toLowerCase()} en Billions Tracker`;
+  const hayGastos = cantidad > 0;
+  const detalle = hayGastos
+    ? `Cargaste ${cantidad} ${cantidad === 1 ? "gasto" : "gastos"}.`
+    : "No registraste gastos este mes.";
+
+  const text = [
+    saludo,
+    "",
+    `${mes} terminó. Esto es lo que gastaste:`,
+    "",
+    `Pesos: ${formatMoney(pesos, "UYU")}`,
+    `Dólares: ${formatMoney(dolares, "USD")}`,
+    detalle,
+    "",
+    `Ver el resumen: ${url}`,
+    "",
+    "Recibís este mail porque activaste el resumen mensual. Podés desactivarlo desde Mi cuenta.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 15px; color: #1a1a1a; line-height: 1.6;">
+      <p>${escapeHtml(saludo)}</p>
+      <p><strong>${escapeHtml(mes)}</strong> terminó. Esto es lo que gastaste:</p>
+      <table style="border-collapse: collapse; font-size: 15px; margin: 4px 0 8px;">
+        <tr><td style="color: #666; padding: 2px 20px 2px 0;">Pesos</td><td style="font-variant-numeric: tabular-nums;">${escapeHtml(formatMoney(pesos, "UYU"))}</td></tr>
+        <tr><td style="color: #666; padding: 2px 20px 2px 0;">Dólares</td><td style="font-variant-numeric: tabular-nums;">${escapeHtml(formatMoney(dolares, "USD"))}</td></tr>
+      </table>
+      <p style="color: #666; font-size: 13px; margin-top: 0;">${escapeHtml(detalle)}</p>
+      <p>
+        <a href="${escapeHtml(url)}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 10px 18px; border-radius: 4px; text-decoration: none;">
+          Ver el resumen
+        </a>
+      </p>
+      <p style="color: #999; font-size: 12px;">
+        Recibís este mail porque activaste el resumen mensual. Podés desactivarlo desde Mi cuenta.
+      </p>
     </div>
   `;
 

@@ -24,8 +24,10 @@ export const config = {
   // Los íconos y el manifiesto quedan fuera del control de sesión: el navegador
   // y el sistema operativo los piden sin cookies y antes de cualquier login,
   // así que si pasaran por acá se irían redirigidos a /login y la pestaña
-  // quedaría sin logo, o el celular sin ícono al agregarlo al inicio.
+  // quedaría sin logo, o el celular sin ícono al agregarlo al inicio. El service
+  // worker (sw.js) tampoco puede pasar: redirigido a /login no se registra y no
+  // llegan las notificaciones.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|icon-|apple-icon|manifest.webmanifest).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|icon-|apple-icon|manifest.webmanifest|sw.js).*)",
   ],
 };

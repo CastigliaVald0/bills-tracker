@@ -21,6 +21,15 @@ model User {
   expenses            Expense[]
   recurringExpenses   RecurringExpense[]
   passwordResetTokens PasswordResetToken[]
+  pushSubscriptions   PushSubscription[]
+
+  /// Aviso de fin de mes por mail. Apagado hasta que el usuario lo activa.
+  notifyMonthlyEmail   Boolean @default(false)
+  /// Aviso de fin de mes como notificación en sus dispositivos.
+  notifyMonthlyPush    Boolean @default(false)
+  /// Último mes ("2026-09") del que ya se mandó el aviso. Evita duplicados si el
+  /// cron corre más de una vez el mismo día.
+  monthlyNoticeSentFor String?
 }
 
 /// Ventana fija de intentos por clave (ej. "login:mail@x.com", "register-ip:1.2.3.4").
@@ -100,4 +109,19 @@ model RecurringExpense {
   expenses    Expense[]
 
   @@index([userId, active])
+}
+
+/// Un dispositivo (navegador) que aceptó recibir notificaciones push. Un usuario
+/// puede tener varios: el celular y la PC, por ejemplo.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Dirección del servicio de push del navegador (Google, Mozilla, Apple...).
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

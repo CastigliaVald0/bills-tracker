@@ -18,7 +18,19 @@ const nextConfig: NextConfig = {
   // No anunciar el framework en las respuestas.
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        // El service worker de las notificaciones: sin caché para que una versión
+        // nueva llegue enseguida, y solo puede cargar código de la propia app.
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ];
   },
 };
 
