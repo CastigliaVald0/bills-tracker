@@ -166,7 +166,9 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    // Las tarjetas son angostas (max-w-sm): se centra la columna entera para que en
+    // PC no queden pegadas a la izquierda. En celular la pantalla ya es más angosta.
+    <div className="mx-auto flex w-full max-w-sm flex-col gap-8">
       <header>
         <p className="rotulo">Acceso y datos</p>
         <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Mi cuenta</h1>
