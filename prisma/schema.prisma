@@ -23,10 +23,11 @@ model User {
   passwordResetTokens PasswordResetToken[]
   pushSubscriptions   PushSubscription[]
 
-  /// Aviso de fin de mes por mail. Apagado hasta que el usuario lo activa.
-  notifyMonthlyEmail   Boolean @default(false)
-  /// Aviso de fin de mes como notificación en sus dispositivos.
-  notifyMonthlyPush    Boolean @default(false)
+  /// Aviso de fin de mes por mail. Activado por defecto; se desactiva desde Mi cuenta.
+  notifyMonthlyEmail   Boolean @default(true)
+  /// Aviso de fin de mes como notificación en sus dispositivos. Activado por
+  /// defecto: al entrar a la app se pide el permiso del navegador una vez.
+  notifyMonthlyPush    Boolean @default(true)
   /// Último mes ("2026-09") del que ya se mandó el aviso. Evita duplicados si el
   /// cron corre más de una vez el mismo día.
   monthlyNoticeSentFor String?

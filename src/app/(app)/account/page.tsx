@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import { CampoContrasena } from "@/components/CampoContrasena";
+import { soportaPush, suscribirEsteDispositivo } from "@/lib/push-cliente";
 
 export default function AccountPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -21,7 +22,7 @@ export default function AccountPage() {
   // La preferencia es por usuario, pero la suscripción es por dispositivo: el
   // interruptor muestra si ESTE navegador va a recibir la notificación.
   const [pushEnEsteDispositivo, setPushEnEsteDispositivo] = useState(false);
-  const [guardandoNotif, setGuardandoNotif] = useState<"mail" | "push" | "prueba" | null>(null);
+  const [guardandoNotif, setGuardandoNotif] = useState<"mail" | "push" | null>(null);
   const [avisoNotif, setAvisoNotif] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
 
   useEffect(() => {
@@ -75,7 +76,7 @@ export default function AccountPage() {
     setAvisoNotif(null);
     try {
       if (activo) {
-        if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+        if (!soportaPush()) {
           throw new Error(
             "Este navegador no admite notificaciones. En iPhone, primero agregá la app a la pantalla de inicio."
           );
@@ -89,28 +90,7 @@ export default function AccountPage() {
           );
         }
 
-        const registro = await navigator.serviceWorker.register("/sw.js", {
-          scope: "/",
-          updateViaCache: "none",
-        });
-        await navigator.serviceWorker.ready;
-        const suscripcion =
-          (await registro.pushManager.getSubscription()) ??
-          (await registro.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: claveABytes(prefs.vapidPublicKey),
-          }));
-
-        const datos = suscripcion.toJSON();
-        const res = await fetch("/api/account/notifications/push", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: datos.endpoint, keys: datos.keys }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error ?? "No se pudo registrar este dispositivo");
-        }
+        await suscribirEsteDispositivo(prefs.vapidPublicKey);
 
         await guardarPreferencia({ monthlyPush: true });
         setPushEnEsteDispositivo(true);
@@ -130,26 +110,6 @@ export default function AccountPage() {
       }
     } catch (error) {
       setAvisoNotif({ tipo: "error", texto: mensajeDeError(error) });
-    }
-    setGuardandoNotif(null);
-  }
-
-  async function enviarPrueba() {
-    setGuardandoNotif("prueba");
-    setAvisoNotif(null);
-    const res = await fetch("/api/account/notifications/test", { method: "POST" });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setAvisoNotif({ tipo: "error", texto: data.error ?? "No se pudo enviar la prueba" });
-    } else {
-      const partes: string[] = [];
-      if (data.mail === true) partes.push("el mail");
-      if (typeof data.push === "number" && data.push > 0) partes.push("la notificación");
-      setAvisoNotif(
-        partes.length > 0
-          ? { tipo: "ok", texto: `Listo: te mandamos ${partes.join(" y ")} de prueba.` }
-          : { tipo: "error", texto: "No se pudo entregar la prueba. Probá desactivar y volver a activar el aviso." }
-      );
     }
     setGuardandoNotif(null);
   }
@@ -303,22 +263,6 @@ export default function AccountPage() {
             />
           </div>
 
-          {prefs && (prefs.monthlyEmail || prefs.monthlyPush) && (
-            <div className="flex flex-col gap-2 border-t border-borde p-4 sm:p-5">
-              <div>
-                <button
-                  type="button"
-                  onClick={enviarPrueba}
-                  disabled={guardandoNotif !== null}
-                  className="boton-linea disabled:opacity-50"
-                >
-                  {guardandoNotif === "prueba" ? "Enviando..." : "Enviarme una prueba"}
-                </button>
-              </div>
-              <p className="text-xs text-tenue">Manda ahora el aviso del último mes que terminó.</p>
-            </div>
-          )}
-
           {avisoNotif && (
             <p
               className={`border-t border-borde px-4 py-3 text-sm sm:px-5 ${
@@ -407,15 +351,6 @@ function mensajeDeError(error: unknown) {
     return "No se pudieron activar las notificaciones en este dispositivo.";
   }
   return error instanceof Error ? error.message : "Algo salió mal. Probá de nuevo.";
-}
-
-/** La clave pública VAPID viene en base64url; el navegador la pide en bytes. */
-function claveABytes(base64url: string) {
-  const relleno = "=".repeat((4 - (base64url.length % 4)) % 4);
-  const binario = atob((base64url + relleno).replace(/-/g, "+").replace(/_/g, "/"));
-  const bytes = new Uint8Array(new ArrayBuffer(binario.length));
-  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
-  return bytes;
 }
 
 function Interruptor({

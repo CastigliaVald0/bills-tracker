@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { UserMenu } from "@/components/UserMenu";
 import { NavLinks } from "@/components/NavLinks";
 import { Marca } from "@/components/Marca";
+import { ActivarNotificaciones } from "@/components/ActivarNotificaciones";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -21,6 +22,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">{children}</main>
+
+      <ActivarNotificaciones />
 
       <nav className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-borde bg-superficie px-2 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] sm:hidden">
         <NavLinks menuDirection="up" />
