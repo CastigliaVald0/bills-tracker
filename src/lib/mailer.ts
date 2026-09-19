@@ -144,48 +144,56 @@ export function newUserNotificationEmail({
   return { subject, text, html };
 }
 
-/** Resumen de fin de mes que recibe el usuario que activó el aviso por mail. */
-export function monthlySummaryEmail({
+/**
+ * Resumen de un período que terminó: el del mes (día 1) o el del año (1 de
+ * enero). Lo recibe quien tiene activados los resúmenes por mail.
+ */
+export function resumenEmail({
   nombre,
-  mes,
+  periodo,
+  esAnual,
   pesos,
   dolares,
   cantidad,
   url,
 }: {
   nombre: string | null | undefined;
-  /** "Setiembre de 2026" */
-  mes: string;
+  /** "Setiembre de 2026" para el mes, "2026" para el año. */
+  periodo: string;
+  esAnual: boolean;
   pesos: number;
   dolares: number;
   cantidad: number;
   url: string;
 }) {
   const saludo = nombre?.trim() ? `Hola ${nombre.trim()},` : "Hola,";
-  const subject = `Tu resumen de ${mes.toLowerCase()} en Billions Tracker`;
-  const hayGastos = cantidad > 0;
-  const detalle = hayGastos
-    ? `Cargaste ${cantidad} ${cantidad === 1 ? "gasto" : "gastos"}.`
-    : "No registraste gastos este mes.";
+  const subject = `Tu resumen de ${esAnual ? periodo : periodo.toLowerCase()} en Billions Tracker`;
+  const detalle =
+    cantidad > 0
+      ? `Cargaste ${cantidad} ${cantidad === 1 ? "gasto" : "gastos"}.`
+      : esAnual
+        ? "No registraste gastos en el año."
+        : "No registraste gastos este mes.";
+  const boton = esAnual ? "Ver el resumen del año" : "Ver el resumen del mes";
 
   const text = [
     saludo,
     "",
-    `${mes} terminó. Esto es lo que gastaste:`,
+    `${periodo} terminó. Esto es lo que gastaste:`,
     "",
     `Pesos: ${formatMoney(pesos, "UYU")}`,
     `Dólares: ${formatMoney(dolares, "USD")}`,
     detalle,
     "",
-    `Ver el resumen: ${url}`,
+    `${boton}: ${url}`,
     "",
-    "Recibís este mail porque activaste el resumen mensual. Podés desactivarlo desde Mi cuenta.",
+    "Recibís este mail porque tenés activados los resúmenes. Podés desactivarlos desde Mi cuenta.",
   ].join("\n");
 
   const html = `
     <div style="font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 15px; color: #1a1a1a; line-height: 1.6;">
       <p>${escapeHtml(saludo)}</p>
-      <p><strong>${escapeHtml(mes)}</strong> terminó. Esto es lo que gastaste:</p>
+      <p><strong>${escapeHtml(periodo)}</strong> terminó. Esto es lo que gastaste:</p>
       <table style="border-collapse: collapse; font-size: 15px; margin: 4px 0 8px;">
         <tr><td style="color: #666; padding: 2px 20px 2px 0;">Pesos</td><td style="font-variant-numeric: tabular-nums;">${escapeHtml(formatMoney(pesos, "UYU"))}</td></tr>
         <tr><td style="color: #666; padding: 2px 20px 2px 0;">Dólares</td><td style="font-variant-numeric: tabular-nums;">${escapeHtml(formatMoney(dolares, "USD"))}</td></tr>
@@ -193,11 +201,11 @@ export function monthlySummaryEmail({
       <p style="color: #666; font-size: 13px; margin-top: 0;">${escapeHtml(detalle)}</p>
       <p>
         <a href="${escapeHtml(url)}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 10px 18px; border-radius: 4px; text-decoration: none;">
-          Ver el resumen
+          ${escapeHtml(boton)}
         </a>
       </p>
       <p style="color: #999; font-size: 12px;">
-        Recibís este mail porque activaste el resumen mensual. Podés desactivarlo desde Mi cuenta.
+        Recibís este mail porque tenés activados los resúmenes. Podés desactivarlos desde Mi cuenta.
       </p>
     </div>
   `;

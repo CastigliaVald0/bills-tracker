@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { generarGastoDelMes } from "@/lib/recurring";
-import { enviarResumenesMensuales } from "@/lib/monthly-summary";
+import { enviarResumenesMensuales, enviarResumenesAnuales } from "@/lib/monthly-summary";
 
 /**
  * Solo el cron puede disparar esto: genera gastos para todos los usuarios.
@@ -56,8 +56,9 @@ export async function GET(request: Request) {
     }),
   ]);
 
-  // Aviso de fin de mes (solo hace algo el día 1). Los links apuntan al mismo
-  // dominio por el que llegó el cron, igual que el mail de recuperación.
+  // Avisos de fin de mes (día 1) y de fin de año (1 de enero). Los links
+  // apuntan al mismo dominio por el que llegó el cron, igual que el mail de
+  // recuperación.
   const url = new URL(request.url);
   let fechaDelAviso = now;
   // Solo en desarrollo: ?hoy=2026-10-01 simula otra fecha para probar el aviso
@@ -67,11 +68,13 @@ export async function GET(request: Request) {
     fechaDelAviso = new Date(`${hoySimulado}T12:00:00Z`);
   }
   const monthlySummary = await enviarResumenesMensuales(fechaDelAviso, url.origin);
+  const annualSummary = await enviarResumenesAnuales(fechaDelAviso, url.origin);
 
   return NextResponse.json({
     checked: due.length,
     created,
     cleaned: { resetTokens: deletedTokens.count, rateLimits: deletedLimits.count },
     monthlySummary,
+    annualSummary,
   });
 }

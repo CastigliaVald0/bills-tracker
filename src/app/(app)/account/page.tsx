@@ -230,12 +230,12 @@ export default function AccountPage() {
           <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
             <div className="min-w-0">
               <label htmlFor="notif-mail" className="text-sm font-medium text-texto">
-                Resumen del mes por mail
+                Resúmenes por mail
               </label>
               <p className="mt-1 text-xs leading-relaxed text-suave">
                 {prefs && !prefs.mailConfigured
                   ? "No disponible: el envío de mails no está configurado."
-                  : `El día 1 de cada mes te llega${prefs ? ` a ${prefs.email}` : ""} lo que gastaste el mes anterior.`}
+                  : `El día 1 de cada mes te llega${prefs ? ` a ${prefs.email}` : ""} lo que gastaste el mes anterior, y el 1 de enero, el resumen del año.`}
               </p>
             </div>
             <Interruptor
@@ -254,7 +254,7 @@ export default function AccountPage() {
               <p className="mt-1 text-xs leading-relaxed text-suave">
                 {prefs && !prefs.pushConfigured
                   ? "No disponible: las notificaciones no están configuradas."
-                  : "El día 1 de cada mes, una notificación que abre el resumen. Activalo en cada dispositivo donde la quieras."}
+                  : "El día 1 de cada mes, una notificación con el resumen del mes, y el 1 de enero, la del año. Activalo en cada dispositivo donde la quieras."}
               </p>
             </div>
             <Interruptor
