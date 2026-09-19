@@ -8,6 +8,7 @@ const MENU_LINKS = [
   { href: "/expenses", label: "Gastos" },
   { href: "/recurring", label: "Gastos fijos" },
   { href: "/categories", label: "Categorías" },
+  { href: "/monthly", label: "Resumen mensual" },
   { href: "/reports", label: "Resumen anual" },
   { href: "/converter", label: "Conversor UYU/USD" },
 ];
