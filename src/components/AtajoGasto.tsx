@@ -3,14 +3,14 @@ import Link from "next/link";
 /**
  * Atajo flotante para cargar un gasto sin pasar por el menú.
  *
- * El contenedor repite el ancho de la columna (max-w-3xl px-4) en vez de
- * pegarse al borde de la ventana: así en PC el botón queda alineado con el
- * contenido y no suelto en la esquina. En celular hay que esquivar la barra
- * de navegación fija de abajo, de ahí el bottom con el safe-area sumado.
+ * Solo en PC: en el celular el mismo botón vive en el centro de la barra
+ * flotante de abajo. El contenedor repite el ancho de la columna (max-w-3xl
+ * px-4) en vez de pegarse al borde de la ventana: así el botón queda alineado
+ * con el contenido y no suelto en la esquina.
  */
 export function AtajoGasto() {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 mx-auto flex max-w-3xl justify-end px-4 sm:bottom-8">
+    <div className="pointer-events-none fixed inset-x-0 bottom-8 z-10 mx-auto hidden max-w-3xl justify-end px-4 sm:flex">
       <Link
         href="/expenses"
         aria-label="Agregar gasto"

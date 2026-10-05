@@ -331,6 +331,44 @@
     transform: translateY(0);
   }
 
+  /* --- barra flotante del celular -------------------------------------
+     El botón de agregar gasto (64px) es más grande que la barra (56px) y
+     está corrido hacia arriba. Alrededor suyo la barra se recorta en círculo,
+     dejando una separación curva entre el botón y cada mitad de la barra. */
+  .barra-flotante {
+    /* cuánto sube el botón respecto del centro de la barra */
+    --sube: 6px;
+    /* radio del recorte: los 32px del botón más la separación */
+    --muesca: 38px;
+    /* Se achica hacia su base, así no se despega del borde de abajo. */
+    transform-origin: 50% 100%;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  /* comprimida mientras se baja por la página (ver BarraFlotante) */
+  .barra-flotante[data-compacta="true"] {
+    transform: scale(0.86);
+  }
+
+  .barra-muesca {
+    --recorte: radial-gradient(
+      circle at 50% calc(50% - var(--sube)),
+      transparent calc(var(--muesca) - 0.5px),
+      #000 calc(var(--muesca) + 0.5px)
+    );
+    -webkit-mask-image: var(--recorte);
+    mask-image: var(--recorte);
+  }
+
+  /* la capa de adentro se recorta 1px más: ese filete es el borde de la curva */
+  .barra-muesca-interior {
+    --muesca: 39px;
+  }
+
+  .boton-central {
+    transform: translate(-50%, calc(-50% - var(--sube)));
+  }
+
   /* acciones secundarias de fila: mono, chicas, sin peso visual */
   .boton-mini {
     font-family: var(--font-num), ui-monospace, monospace;

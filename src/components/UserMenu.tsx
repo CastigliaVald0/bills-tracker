@@ -45,6 +45,8 @@ export function UserMenu({
         onClick={() => setOpen((v) => !v)}
         className="monto flex h-8 w-8 items-center justify-center rounded-full bg-accion text-[13px] font-medium text-accion-texto transition-opacity hover:opacity-85"
         aria-label="Cuenta"
+        aria-expanded={open}
+        aria-haspopup="true"
       >
         {initial}
       </button>
@@ -52,7 +54,7 @@ export function UserMenu({
       {open && (
         <div
           className={`absolute right-0 z-30 flex w-60 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10 ${
-            menuDirection === "up" ? "bottom-full mb-3" : "top-full mt-3"
+            menuDirection === "up" ? "bottom-full mb-4" : "top-full mt-3"
           }`}
         >
           <div className="truncate border-b border-borde px-3 pb-2.5 pt-2 mb-0.5">

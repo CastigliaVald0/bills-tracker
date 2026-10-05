@@ -13,10 +13,22 @@ const MENU_LINKS = [
   { href: "/converter", label: "Conversor UYU/USD" },
 ];
 
-function linkClass(active: boolean) {
-  return active
-    ? "text-sm font-medium text-texto underline decoration-peso decoration-2 underline-offset-[6px] transition-colors"
-    : "text-sm text-suave hover:text-texto transition-colors";
+/**
+ * En la barra de arriba (PC) el ícono activo lleva una raya debajo. En la barra
+ * flotante del celular no hay lugar para la raya: el activo se marca con una
+ * pastilla del color del peso, y el botón crece para que el dedo no erre.
+ */
+function iconClass(active: boolean, flotante: boolean) {
+  if (flotante) {
+    return `flex h-11 w-14 items-center justify-center rounded-full transition-colors ${
+      active ? "bg-peso/15 text-peso" : "text-suave hover:text-texto"
+    }`;
+  }
+  return `relative flex items-center transition-colors ${
+    active
+      ? "text-texto after:absolute after:inset-x-0 after:-bottom-1.5 after:h-0.5 after:bg-peso"
+      : "text-suave hover:text-texto"
+  }`;
 }
 
 export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | "up" }) {
@@ -25,6 +37,10 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
   const [lastPathname, setLastPathname] = useState(pathname);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // "up" es la barra flotante del celular: el menú se abre hacia arriba.
+  const flotante = menuDirection === "up";
+  const tamanoIcono = flotante ? "h-6 w-6" : "h-5 w-5";
+  const enInicio = pathname.startsWith("/dashboard");
   const menuActive = MENU_LINKS.some((link) => pathname.startsWith(link.href));
 
   if (pathname !== lastPathname) {
@@ -45,34 +61,58 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
 
   return (
     <>
-      <Link href="/dashboard" className={linkClass(pathname.startsWith("/dashboard"))}>
-        Inicio
+      <Link
+        href="/dashboard"
+        aria-label="Inicio"
+        title="Inicio"
+        aria-current={enInicio ? "page" : undefined}
+        className={iconClass(enInicio, flotante)}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={tamanoIcono}
+          aria-hidden
+        >
+          <path d="M3.5 10.5 12 3.5l8.5 7" />
+          <path d="M5.5 9.5V20h13V9.5" />
+          <path d="M10 20v-5.5h4V20" />
+        </svg>
       </Link>
 
       <div ref={containerRef} className="relative">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className={`flex items-center gap-1 ${linkClass(menuActive)}`}
+          aria-label="Menú"
+          title="Menú"
+          aria-expanded={open}
+          aria-haspopup="true"
+          className={iconClass(menuActive || open, flotante)}
         >
-          Menú
           <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            className={tamanoIcono}
+            aria-hidden
           >
-            <path
-              fillRule="evenodd"
-              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-              clipRule="evenodd"
-            />
+            <path d="M4 6.5h16M4 12h16M4 17.5h16" />
           </svg>
         </button>
 
         {open && (
           <div
-            className={`absolute right-0 z-30 flex w-52 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10 ${
-              menuDirection === "up" ? "bottom-full mb-3" : "top-full mt-3"
+            // En el celular el botón queda a la izquierda de la barra, así que
+            // el menú se abre hacia la derecha para no salirse de la pantalla.
+            className={`absolute z-30 flex w-52 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10 ${
+              flotante ? "bottom-full left-0 mb-4" : "top-full right-0 mt-3"
             }`}
           >
             {MENU_LINKS.map((link) => (
