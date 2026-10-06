@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { UserMenu } from "@/components/UserMenu";
-import { NavLinks } from "@/components/NavLinks";
+import { NavLinks, ConversorLink } from "@/components/NavLinks";
 import { Marca } from "@/components/Marca";
 import { BarraFlotante } from "@/components/BarraFlotante";
 import { ActivarNotificaciones } from "@/components/ActivarNotificaciones";
@@ -17,6 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Marca />
             <nav className="flex items-center gap-5">
               <NavLinks menuDirection="down" />
+              <ConversorLink />
             </nav>
           </div>
           <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="down" />
@@ -67,10 +68,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <path d="M12 5v14M5 12h14" />
           </svg>
         </Link>
-        {/* Espejo del lado izquierdo: un lugar vacío y después la cuenta, para
-            que quede a la misma distancia del borde que la casa. */}
+        {/* Espejo del lado izquierdo: el conversor y después la cuenta, que
+            queda a la misma distancia del borde que la casa. */}
         <div className="flex items-center justify-around">
-          <span aria-hidden className="w-14" />
+          <ConversorLink flotante />
           <div className="flex w-14 justify-center">
             <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="up" />
           </div>

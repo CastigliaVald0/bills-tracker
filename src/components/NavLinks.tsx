@@ -10,7 +10,6 @@ const MENU_LINKS = [
   { href: "/categories", label: "Categorías" },
   { href: "/monthly", label: "Resumen mensual" },
   { href: "/reports", label: "Resumen anual" },
-  { href: "/converter", label: "Conversor UYU/USD" },
 ];
 
 /**
@@ -132,5 +131,37 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
         )}
       </div>
     </>
+  );
+}
+
+/**
+ * Acceso directo al conversor, fuera del menú: va al lado de la cuenta. Las dos
+ * flechas enfrentadas son el ida y vuelta entre pesos y dólares.
+ */
+export function ConversorLink({ flotante = false }: { flotante?: boolean }) {
+  const activo = usePathname().startsWith("/converter");
+
+  return (
+    <Link
+      href="/converter"
+      aria-label="Conversor UYU/USD"
+      title="Conversor UYU/USD"
+      aria-current={activo ? "page" : undefined}
+      className={iconClass(activo, flotante)}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={flotante ? "h-6 w-6" : "h-5 w-5"}
+        aria-hidden
+      >
+        <path d="M4 8h16M16 4l4 4-4 4" />
+        <path d="M20 16H4M8 12l-4 4 4 4" />
+      </svg>
+    </Link>
   );
 }
