@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { auth } from "@/auth";
 import { UserMenu } from "@/components/UserMenu";
 import { NavLinks, ConversorLink } from "@/components/NavLinks";
 import { Marca } from "@/components/Marca";
+import { BotonAgregar } from "@/components/BotonAgregar";
 import { BarraFlotante } from "@/components/BarraFlotante";
 import { ActivarNotificaciones } from "@/components/ActivarNotificaciones";
 
@@ -33,7 +33,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           cuenta a la derecha. Las columnas de los costados miden lo mismo para
           que el botón central quede justo en el medio.
 
-          El botón es más grande que la barra y sobresale hacia arriba. El fondo
+          El botón (BotonAgregar) es más grande que la barra, sobresale hacia
+          arriba y al tocarlo despliega los dos tipos de gasto. El fondo
           va en capas aparte (ver .barra-muesca) porque lleva un recorte
           circular alrededor del botón: si el recorte se aplicara a la barra
           entera, también cortaría el botón y los menús que se abren arriba. */}
@@ -50,24 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         {/* Reserva el ancho del recorte; el botón va posicionado encima. */}
         <span aria-hidden className="w-[76px]" />
-        <Link
-          href="/expenses"
-          aria-label="Agregar gasto"
-          title="Agregar gasto"
-          className="boton-central absolute left-1/2 top-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-accion text-accion-texto shadow-lg shadow-black/25 transition-colors hover:bg-accion-alta"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            className="h-7 w-7"
-            aria-hidden
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-        </Link>
+        <BotonAgregar />
         {/* Espejo del lado izquierdo: el conversor y después la cuenta, que
             queda a la misma distancia del borde que la casa. */}
         <div className="flex items-center justify-around">

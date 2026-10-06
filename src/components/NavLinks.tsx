@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const MENU_LINKS = [
-  { href: "/expenses", label: "Gastos" },
-  { href: "/recurring", label: "Gastos fijos" },
+const MENU_LINKS: { href: string; label: string; soloEnPc?: boolean }[] = [
+  { href: "/expenses", label: "Gastos", soloEnPc: true },
+  { href: "/recurring", label: "Gastos fijos", soloEnPc: true },
   { href: "/categories", label: "Categorías" },
   { href: "/monthly", label: "Resumen mensual" },
   { href: "/reports", label: "Resumen anual" },
@@ -40,7 +40,10 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
   const flotante = menuDirection === "up";
   const tamanoIcono = flotante ? "h-6 w-6" : "h-5 w-5";
   const enInicio = pathname.startsWith("/dashboard");
-  const menuActive = MENU_LINKS.some((link) => pathname.startsWith(link.href));
+  // En el celular cargar gastos se hace desde el botón + de la barra, que
+  // despliega las dos opciones: en el menú estarían repetidas.
+  const links = flotante ? MENU_LINKS.filter((link) => !link.soloEnPc) : MENU_LINKS;
+  const menuActive = links.some((link) => pathname.startsWith(link.href));
 
   if (pathname !== lastPathname) {
     setLastPathname(pathname);
@@ -114,7 +117,7 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
               flotante ? "bottom-full left-0 mb-4" : "top-full right-0 mt-3"
             }`}
           >
-            {MENU_LINKS.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
