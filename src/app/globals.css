@@ -265,6 +265,143 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--peso) 18%, transparent);
   }
 
+  /* --- el campo de monto ----------------------------------------------
+     El símbolo, la cifra y la moneda son un solo control, no tres cajas
+     sueltas. La cifra va grande porque es el dato del que depende todo lo
+     demás del formulario: antes pesaba lo mismo que "descripción opcional". */
+  .campo-monto {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    border: 1px solid var(--borde);
+    border-radius: 5px;
+    background-color: var(--fondo);
+    padding: 0.4375rem 0.4375rem 0.4375rem 0.875rem;
+    transition: border-color 0.15s ease, background-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .campo-monto:hover {
+    border-color: var(--borde-fuerte);
+  }
+
+  /* el foco se dibuja en el contorno del grupo, no en el input de adentro:
+     para el que mira, el control es uno solo */
+  .campo-monto:focus-within {
+    border-color: var(--peso);
+    background-color: var(--superficie);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--peso) 18%, transparent);
+  }
+
+  .campo-monto input {
+    min-width: 0;
+    flex: 1 1 auto;
+    border: 0;
+    background: transparent;
+    font-size: 1.5rem;
+    line-height: 1.15;
+  }
+
+  .campo-monto input:focus-visible {
+    outline: none;
+  }
+
+  /* las flechitas del input numérico al lado de una cifra grande quedan mal */
+  .campo-monto input::-webkit-outer-spin-button,
+  .campo-monto input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .campo-monto input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* --- conmutador de dos opciones --------------------------------------
+     Dos opciones excluyentes se eligen de una vez, no desplegando una lista.
+     Cada moneda se prende en su color, el mismo de la pizarra. */
+  .segmentos {
+    display: flex;
+    flex-shrink: 0;
+    gap: 2px;
+    border-radius: 4px;
+    background-color: var(--superficie-alta);
+    padding: 2px;
+  }
+
+  .segmento {
+    cursor: pointer;
+  }
+
+  .segmento > span {
+    display: block;
+    border-radius: 3px;
+    padding: 0.375rem 0.6875rem;
+    font-family: var(--font-num), ui-monospace, monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--texto-tenue);
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .segmento:hover > span {
+    color: var(--texto);
+  }
+
+  /* el radio real va oculto pero sigue ahí: el teclado y el lector de
+     pantalla lo manejan solo, sin que haya que reponer nada a mano */
+  .segmento input:focus-visible + span {
+    outline: 2px solid var(--peso);
+    outline-offset: 1px;
+  }
+
+  /* --- ficha de categoría ----------------------------------------------
+     En las listas una categoría es su color; en el formulario era texto gris
+     adentro de un desplegable. Acá se elige viendo el color. */
+  .ficha {
+    cursor: pointer;
+  }
+
+  .ficha > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--borde);
+    border-radius: 9999px;
+    background-color: var(--fondo);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--texto-suave);
+    transition: border-color 0.15s ease, background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .ficha:hover > span {
+    border-color: var(--borde-fuerte);
+    color: var(--texto);
+  }
+
+  .ficha input:focus-visible + span {
+    outline: 2px solid var(--peso);
+    outline-offset: 2px;
+  }
+
+  /* En pantalla táctil las fichas y los segmentos crecen hasta los 44px de
+     alto mínimo que pide un objetivo táctil. En PC no hace falta y los
+     dejaría innecesariamente gordos, así que solo pasa con puntero grueso. */
+  @media (pointer: coarse) {
+    .ficha > span {
+      padding-block: 0.75rem;
+    }
+
+    .segmento > span {
+      padding-block: 0.8125rem;
+    }
+  }
+
   .boton {
     display: inline-flex;
     align-items: center;

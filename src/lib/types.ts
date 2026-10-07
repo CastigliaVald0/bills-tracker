@@ -26,6 +26,8 @@ export type RecurringExpense = {
   active: boolean;
   /** Último mes que se cobra (ISO). Null = sin fin. */
   endsOn: string | null;
+  /** Cuándo se dio de alta (ISO). Sirve para saber en qué cuota va. */
+  createdAt: string;
   categoryId: string;
   category: Category;
 };
