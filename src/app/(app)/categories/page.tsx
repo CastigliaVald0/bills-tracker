@@ -179,7 +179,7 @@ export default function CategoriesPage() {
             {categories.map((cat) => (
               <div key={cat.id} className="fila">
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="punto" style={{ backgroundColor: cat.color }} />
+                  <span aria-hidden className="filete" style={{ backgroundColor: cat.color }} />
                   <span className="truncate text-sm text-texto">{cat.name}</span>
                 </div>
                 <button

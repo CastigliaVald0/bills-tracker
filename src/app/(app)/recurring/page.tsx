@@ -224,7 +224,7 @@ export default function RecurringPage() {
               return (
                 <div key={item.id} className={`fila ${atenuado ? "opacity-55" : ""}`}>
                   <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                    <span className="punto" style={{ backgroundColor: item.category.color }} />
+                    <span aria-hidden className="filete" style={{ backgroundColor: item.category.color }} />
                     <div className="min-w-0">
                       <p
                         className={`truncate text-sm ${

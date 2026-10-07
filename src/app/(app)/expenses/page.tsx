@@ -175,7 +175,7 @@ export default function ExpensesPage() {
             {expenses.map((expense) => (
               <div key={expense.id} className="fila">
                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                  <span className="punto" style={{ backgroundColor: expense.category.color }} />
+                  <span aria-hidden className="filete" style={{ backgroundColor: expense.category.color }} />
                   <div className="min-w-0">
                     <p className="truncate text-sm text-texto">
                       {expense.description || expense.category.name}

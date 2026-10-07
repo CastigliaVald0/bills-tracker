@@ -249,7 +249,8 @@ export function GastosDelMes({
           <div key={g.id} className="fila">
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
               <span
-                className="punto"
+                aria-hidden
+                className="filete"
                 style={{ backgroundColor: g.categoria.color }}
               />
               <div className="min-w-0">

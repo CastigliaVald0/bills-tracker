@@ -182,11 +182,13 @@
   }
 
   .fila {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.6875rem 0.875rem;
+    /* el sangrado izquierdo deja respirar al filete de color */
+    padding: 0.6875rem 0.875rem 0.6875rem 1rem;
     transition: background-color 0.15s ease;
   }
 
@@ -404,7 +406,18 @@
     border-radius: 2px;
   }
 
-  /* el punto de color de cada categoría */
+  /* el filete de color que identifica la categoría en el borde de su fila.
+     Reemplazó al punto en las listas: ocupa el alto completo, no roba ancho al
+     texto y repite el gesto del filo bicolor de la pizarra. */
+  .filete {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 3px;
+  }
+
+  /* el punto de color: queda para fuera de las listas, como la muestra del
+     formulario de categorías */
   .punto {
     height: 0.5rem;
     width: 0.5rem;

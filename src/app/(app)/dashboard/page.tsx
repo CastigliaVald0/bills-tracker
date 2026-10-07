@@ -5,6 +5,7 @@ import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
 import { BrouLink } from "@/components/BrouLink";
 import { Pizarra } from "@/components/Pizarra";
 import { AtajoGasto } from "@/components/AtajoGasto";
+import { ListaCategorias } from "@/components/ListaCategorias";
 
 export default async function DashboardPage() {
   const userId = await requireUserId();
@@ -38,7 +39,9 @@ export default async function DashboardPage() {
     byCategory.set(expense.categoryId, entry);
   }
 
-  const categoryTotals = Array.from(byCategory.values()).sort((a, b) => b.UYU + b.USD * 40 - (a.UYU + a.USD * 40));
+  // Sin ordenar: ListaCategorias arma un bloque por moneda y ordena cada uno
+  // por su propio monto.
+  const categoryTotals = Array.from(byCategory.values());
 
   return (
     <div className="flex flex-col gap-8">
@@ -57,21 +60,7 @@ export default async function DashboardPage() {
             Todavía no cargaste gastos este mes.
           </p>
         ) : (
-          <div className="lista">
-            {categoryTotals.map((cat) => (
-              <div key={cat.name} className="fila">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="punto" style={{ backgroundColor: cat.color }} />
-                  <span className="truncate text-sm text-texto">{cat.name}</span>
-                </div>
-                <div className="monto shrink-0 text-sm text-texto">
-                  {cat.UYU > 0 && <span>{formatMoney(cat.UYU, "UYU")}</span>}
-                  {cat.UYU > 0 && cat.USD > 0 && <span className="mx-1.5 text-tenue">·</span>}
-                  {cat.USD > 0 && <span>{formatMoney(cat.USD, "USD")}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
+          <ListaCategorias categorias={categoryTotals} totales={totals} />
         )}
       </section>
 
