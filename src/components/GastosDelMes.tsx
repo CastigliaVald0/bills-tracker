@@ -161,7 +161,9 @@ export function GastosDelMes({
                   {cantidad > 0 && (
                     <span
                       aria-hidden
-                      className="monto text-[10px] leading-none opacity-75"
+                      // Elegido, el fondo es sólido y el conteo tiene que
+                      // heredar el blanco del día; si no, se atenúa.
+                      className={`monto text-xs leading-none ${elegido ? "" : "text-suave"}`}
                     >
                       {cantidad}
                     </span>

@@ -20,7 +20,9 @@
   /* tinta sobre papel */
   --texto: #15242e;
   --texto-suave: #556970;
-  --texto-tenue: #7c8b8a;
+  /* Oscurecido de #7c8b8a: a 11px daba 3,0:1 sobre el fondo, debajo del
+     mínimo de 4,5. Ahora 4,6:1 sobre papel y 5,2:1 sobre superficie. */
+  --texto-tenue: #606c6c;
 
   /* la pizarra es una superficie propia: casi no cambia entre temas */
   --pizarra: #132430;
@@ -35,12 +37,19 @@
   --peso-luz: #6ec3e8;
   --dolar-luz: #7ec894;
 
+  /* Para lo pausado o vencido. Antes se resolvía con opacity, que apilaba
+     transparencia sobre texto ya suave y hundía el contraste a 2,3:1. */
+  --texto-apagado: #616d70;
+
   /* acción y estado */
   --accion: #132430;
   --accion-alta: #23394a;
   --accion-texto: #f6f8f4;
   --alerta: #b23a28;
   --alerta-fondo: #f7ebe8;
+  /* El rojo cambia de claridad entre temas, así que su texto también: blanco
+     sobre el rojo del tema oscuro da 3,1:1 y no llega al mínimo de 4,5. */
+  --alerta-texto: #ffffff;
   --ok: #2f6e46;
 }
 
@@ -54,7 +63,8 @@
 
     --texto: #e7ece6;
     --texto-suave: #9aacb2;
-    --texto-tenue: #6d7f85;
+    /* Aclarado de #6d7f85 por lo mismo: 5,1:1 y 4,6:1. */
+    --texto-tenue: #788b91;
 
     --pizarra: #08161f;
     --pizarra-alta: #12242f;
@@ -63,11 +73,14 @@
     --peso: #6fbee4;
     --dolar: #7fc895;
 
+    --texto-apagado: #7f9096;
+
     --accion: #dfe7e0;
     --accion-alta: #ffffff;
     --accion-texto: #101c22;
     --alerta: #e4705c;
     --alerta-fondo: #2c1b18;
+    --alerta-texto: #08161f;
     --ok: #7fc895;
   }
 }
@@ -82,6 +95,7 @@
   --color-texto: var(--texto);
   --color-suave: var(--texto-suave);
   --color-tenue: var(--texto-tenue);
+  --color-apagado: var(--texto-apagado);
 
   --color-pizarra: var(--pizarra);
   --color-pizarra-alta: var(--pizarra-alta);
@@ -100,6 +114,7 @@
 
   --color-alerta: var(--alerta);
   --color-alerta-fondo: var(--alerta-fondo);
+  --color-alerta-texto: var(--alerta-texto);
   --color-ok: var(--ok);
 
   --font-sans: var(--font-ui);
@@ -269,29 +284,38 @@
      El símbolo, la cifra y la moneda son un solo control, no tres cajas
      sueltas. La cifra va grande porque es el dato del que depende todo lo
      demás del formulario: antes pesaba lo mismo que "descripción opcional". */
+  /* `--moneda` la pone el componente: celeste para el peso, verde para el
+     dólar. Así el campo entero dice en qué moneda estás cargando, sin tener
+     que mirar el conmutador. Sin la variable se cae al gris de siempre. */
   .campo-monto {
+    --moneda: var(--borde-fuerte);
     display: flex;
     align-items: center;
     gap: 0.625rem;
     width: 100%;
-    border: 1px solid var(--borde);
+    border: 1px solid color-mix(in srgb, var(--moneda) 55%, var(--borde));
     border-radius: 5px;
-    background-color: var(--fondo);
+    background-color: color-mix(in srgb, var(--moneda) 7%, var(--fondo));
     padding: 0.4375rem 0.4375rem 0.4375rem 0.875rem;
     transition: border-color 0.15s ease, background-color 0.15s ease,
       box-shadow 0.15s ease;
   }
 
   .campo-monto:hover {
-    border-color: var(--borde-fuerte);
+    border-color: color-mix(in srgb, var(--moneda) 80%, var(--borde));
   }
 
   /* el foco se dibuja en el contorno del grupo, no en el input de adentro:
      para el que mira, el control es uno solo */
   .campo-monto:focus-within {
-    border-color: var(--peso);
-    background-color: var(--superficie);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--peso) 18%, transparent);
+    border-color: var(--moneda);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--moneda) 20%, transparent);
+  }
+
+  /* El signo toma el color de la moneda pero tirado hacia la tinta: el
+     celeste puro sobre el campo teñido daba 4,3:1 y no llegaba al mínimo. */
+  .campo-monto-simbolo {
+    color: color-mix(in srgb, var(--moneda) 80%, var(--texto));
   }
 
   .campo-monto input {
@@ -426,6 +450,16 @@
     cursor: not-allowed;
   }
 
+  /* el botón de lo que no se puede deshacer */
+  .boton-peligro {
+    background-color: var(--alerta);
+    color: var(--alerta-texto);
+  }
+
+  .boton-peligro:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--alerta) 85%, #000);
+  }
+
   .boton-linea {
     display: inline-flex;
     align-items: center;
@@ -509,14 +543,25 @@
   }
 
   /* acciones secundarias de fila: mono, chicas, sin peso visual */
+  /* Acciones de fila. Eran 10px en color tenue: tipografía por debajo del
+     mínimo y 3,4:1 de contraste, en controles que se tocan de verdad. */
   .boton-mini {
     font-family: var(--font-num), ui-monospace, monospace;
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     font-weight: 500;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--texto-tenue);
+    color: var(--texto-suave);
     transition: color 0.15s ease;
+  }
+
+  /* El área tocable llega a 44px sin engordar el texto. */
+  @media (pointer: coarse) {
+    .boton-mini {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+    }
   }
 
   .boton-mini:hover {
@@ -525,6 +570,24 @@
 
   .boton-mini-peligro:hover {
     color: var(--alerta);
+  }
+
+  /* --- diálogo --------------------------------------------------------
+     El <dialog> nativo da foco atrapado, Escape y fondo inerte gratis; lo
+     único que hay que poner es la piel. */
+  .dialogo {
+    margin: auto;
+    width: calc(100% - 2rem);
+    max-width: 26rem;
+    padding: 0;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background-color: var(--superficie);
+    color: var(--texto);
+  }
+
+  .dialogo::backdrop {
+    background-color: rgb(0 0 0 / 0.45);
   }
 
   /* --- datos ---------------------------------------------------------- */
@@ -553,6 +616,12 @@
     width: 3px;
   }
 
+  /* el hueso del esqueleto: la silueta de un dato que todavía no llegó */
+  .hueso {
+    background-color: var(--borde);
+    animation: latir 1.4s ease-in-out infinite;
+  }
+
   /* el punto de color: queda para fuera de las listas, como la muestra del
      formulario de categorías */
   .punto {
@@ -578,6 +647,16 @@
   }
 }
 
+@keyframes latir {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
 @keyframes aparece {
   from {
     opacity: 0;
@@ -592,7 +671,8 @@
 @media (prefers-reduced-motion: reduce) {
   .pizarra-panel::before,
   .filo::before,
-  .aparece {
+  .aparece,
+  .hueso {
     animation: none;
   }
 

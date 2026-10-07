@@ -4,7 +4,7 @@ import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 import { formatMoney } from "@/lib/format";
 import { Pizarra } from "@/components/Pizarra";
-import { Vacio, IconoCalendario } from "@/components/Vacio";
+import { Vacio, IconoCalendario, IconoPizarra } from "@/components/Vacio";
 import { TortaCombinada } from "@/components/TortaCombinada";
 import { BarrasMes } from "@/components/BarrasMes";
 import { ListaCategorias } from "@/components/ListaCategorias";
@@ -178,10 +178,11 @@ export default async function ReportsPage({
                 }
               />
             ) : (
-              <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
-                No se pudo obtener la cotización del dólar, así que no se pueden
-                combinar las dos monedas ahora.
-              </p>
+              <Vacio
+                icono={<IconoPizarra />}
+                titulo="Falta la cotización"
+                detalle="Sin cotización del dólar no se pueden sumar las dos monedas en un solo gráfico. El resto del resumen sí está completo."
+              />
             )}
           </section>
         </>

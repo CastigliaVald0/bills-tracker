@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import type { Category, RecurringExpense } from "@/lib/types";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, parseMoneyInput } from "@/lib/format";
 import { Vacio, IconoCalendario } from "@/components/Vacio";
 import { CampoMonto, CampoCategoria, Conmutador } from "@/components/CamposGasto";
+import { Aviso, useAvisoTemporal, enfocarCampoConError } from "@/components/Aviso";
+import { EsqueletoLista } from "@/components/Esqueleto";
+import { Confirmar } from "@/components/Confirmar";
 import Link from "next/link";
 import {
   monthYearLabel,
@@ -30,6 +33,10 @@ export default function RecurringPage() {
   // "siempre" = alquiler, abono, suscripción. "cuotas" = una compra financiada.
   const [tipo, setTipo] = useState<"siempre" | "cuotas">("siempre");
   const [cuotas, setCuotas] = useState("12");
+  const [guardando, setGuardando] = useState(false);
+  const [aviso, mostrarAviso] = useAvisoTemporal();
+  // El gasto fijo que el diálogo está por eliminar.
+  const [porEliminar, setPorEliminar] = useState<RecurringExpense | null>(null);
 
   async function load() {
     const [recurringRes, categoriesRes] = await Promise.all([
@@ -52,30 +59,52 @@ export default function RecurringPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (guardando) return;
+
     setError(null);
-    const res = await fetch("/api/recurring", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amount: Number(amount),
-        currency,
-        categoryId,
-        dayOfMonth: Number(dayOfMonth),
-        description: description || undefined,
-        endsOn: mesFinal ? dateToMonthInput(mesFinal) : null,
-      }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "No se pudo crear el gasto fijo");
+
+    const montoNumerico = parseMoneyInput(amount);
+    if (!Number.isFinite(montoNumerico) || montoNumerico <= 0) {
+      setError("Escribí un monto mayor que cero.");
+      enfocarCampoConError("monto-fijo");
       return;
     }
-    setAmount("");
-    setDescription("");
-    setDayOfMonth("1");
-    setTipo("siempre");
-    setCuotas("12");
-    load();
+
+    setGuardando(true);
+    try {
+      const res = await fetch("/api/recurring", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: montoNumerico,
+          currency,
+          categoryId,
+          dayOfMonth: Number(dayOfMonth),
+          description: description || undefined,
+          endsOn: mesFinal ? dateToMonthInput(mesFinal) : null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo crear el gasto fijo");
+        enfocarCampoConError("monto-fijo");
+        return;
+      }
+
+      mostrarAviso(
+        tipo === "cuotas"
+          ? `Gasto fijo en ${cantidadCuotas} cuotas creado.`
+          : "Gasto fijo creado."
+      );
+      setAmount("");
+      setDescription("");
+      setDayOfMonth("1");
+      setTipo("siempre");
+      setCuotas("12");
+      await load();
+    } finally {
+      setGuardando(false);
+    }
   }
 
   async function handleToggle(item: RecurringExpense) {
@@ -87,9 +116,10 @@ export default function RecurringPage() {
     load();
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar este gasto fijo?")) return;
-    await fetch(`/api/recurring/${id}`, { method: "DELETE" });
+  async function handleDelete(item: RecurringExpense) {
+    setPorEliminar(null);
+    await fetch(`/api/recurring/${item.id}`, { method: "DELETE" });
+    mostrarAviso("Gasto fijo eliminado.");
     load();
   }
 
@@ -103,7 +133,7 @@ export default function RecurringPage() {
   const mesFinal = tipo === "cuotas" ? mesFinalDeCuotas(cantidadCuotas, dia) : null;
   const primerMes = primerMesDeCobro(dia);
 
-  const montoCuota = Number(amount);
+  const montoCuota = parseMoneyInput(amount);
   const totalFinanciado =
     mesFinal && montoCuota > 0 ? montoCuota * cantidadCuotas : null;
 
@@ -139,6 +169,7 @@ export default function RecurringPage() {
 
         <CampoMonto
           id="monto-fijo"
+          idError={error ? "error-fijo" : undefined}
           monto={amount}
           alCambiarMonto={setAmount}
           moneda={currency}
@@ -232,11 +263,16 @@ export default function RecurringPage() {
           </p>
         )}
 
-        {error && <p className="text-sm text-alerta">{error}</p>}
+        {error && <Aviso id="error-fijo" tono="error">{error}</Aviso>}
 
-        <div className="flex justify-end border-t border-borde pt-4">
-          <button type="submit" disabled={categories.length === 0} className="boton">
-            Agregar gasto fijo
+        <div className="flex flex-wrap items-center gap-3 border-t border-borde pt-4">
+          {aviso && <Aviso tono="ok">{aviso}</Aviso>}
+          <button
+            type="submit"
+            disabled={guardando || categories.length === 0}
+            className="boton ml-auto"
+          >
+            {guardando ? "Agregando..." : "Agregar gasto fijo"}
           </button>
         </div>
       </form>
@@ -244,7 +280,7 @@ export default function RecurringPage() {
       <section>
         <h2 className="rotulo mb-3">Activos y pausados</h2>
         {loading ? (
-          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
+          <EsqueletoLista />
         ) : recurring.length === 0 ? (
           <Vacio
             icono={<IconoCalendario />}
@@ -269,13 +305,13 @@ export default function RecurringPage() {
                 : null;
 
               return (
-                <div key={item.id} className={`fila ${atenuado ? "opacity-55" : ""}`}>
+                <div key={item.id} className="fila">
                   <div className="flex min-w-0 flex-1 items-center gap-2.5">
                     <span aria-hidden className="filete" style={{ backgroundColor: item.category.color }} />
                     <div className="min-w-0">
                       <p
                         className={`truncate text-sm ${
-                          atenuado ? "text-suave line-through" : "text-texto"
+                          atenuado ? "text-apagado line-through" : "text-texto"
                         }`}
                       >
                         {item.description || item.category.name}
@@ -324,7 +360,7 @@ export default function RecurringPage() {
                       </button>
                     )}
                     <button
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => setPorEliminar(item)}
                       className="boton-mini boton-mini-peligro"
                     >
                       Eliminar
@@ -336,6 +372,19 @@ export default function RecurringPage() {
           </div>
         )}
       </section>
+
+      <Confirmar
+        abierto={porEliminar !== null}
+        titulo="¿Eliminar este gasto fijo?"
+        detalle={
+          porEliminar
+            ? `Se deja de generar "${porEliminar.description || porEliminar.category.name}" todos los meses. Los gastos que ya generó no se borran.`
+            : ""
+        }
+        textoConfirmar="Eliminar"
+        alConfirmar={() => porEliminar && handleDelete(porEliminar)}
+        alCancelar={() => setPorEliminar(null)}
+      />
     </div>
   );
 }

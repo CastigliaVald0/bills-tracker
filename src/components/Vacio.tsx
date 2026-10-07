@@ -103,3 +103,21 @@ export function IconoEtiqueta() {
     </svg>
   );
 }
+
+export function IconoPizarra() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[22px] w-[22px]"
+      aria-hidden
+    >
+      <rect x="3" y="4.5" width="18" height="13" rx="2" />
+      <path d="M7.5 9h4M7.5 13h4M15 9h1.5M15 13h1.5M12 17.5v3M9 20.5h6" />
+    </svg>
+  );
+}

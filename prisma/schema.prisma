@@ -129,3 +129,15 @@ model PushSubscription {
 
   @@index([userId])
 }
+
+/// La última cotización que se pudo leer, para servirla si BROU y BCU fallan.
+/// Una sola fila: el id es siempre "actual".
+model UsdRateCache {
+  id        String   @id @default("actual")
+  source    String
+  compra    Decimal  @db.Decimal(12, 4)
+  venta     Decimal  @db.Decimal(12, 4)
+  /// La fecha que publica la fuente, cuando la publica (BCU sí, BROU no).
+  date      String?
+  updatedAt DateTime @updatedAt
+}

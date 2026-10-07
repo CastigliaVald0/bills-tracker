@@ -1,6 +1,7 @@
 "use client";
 
 import type { Category } from "@/lib/types";
+import { formatMoneyInput } from "@/lib/format";
 
 export type Moneda = "UYU" | "USD";
 
@@ -76,6 +77,7 @@ export function Conmutador<T extends string>({
 /** Monto, símbolo y moneda como un solo control. */
 export function CampoMonto({
   id,
+  idError,
   monto,
   alCambiarMonto,
   moneda,
@@ -83,6 +85,8 @@ export function CampoMonto({
   nombreGrupo,
 }: {
   id: string;
+  /** El error del formulario, para enlazarlo con aria-describedby. */
+  idError?: string;
   monto: string;
   alCambiarMonto: (valor: string) => void;
   moneda: Moneda;
@@ -90,7 +94,7 @@ export function CampoMonto({
   /** Distinto por formulario: si no, los dos grupos de radios se pisan. */
   nombreGrupo: string;
 }) {
-  const simbolo = MONEDAS.find((m) => m.valor === moneda)!.simbolo;
+  const actual = MONEDAS.find((m) => m.valor === moneda)!;
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -98,20 +102,27 @@ export function CampoMonto({
         Monto
       </label>
 
-      <div className="campo-monto">
-        <span aria-hidden className="monto shrink-0 text-lg text-tenue">
-          {simbolo}
+      <div
+        className="campo-monto"
+        style={{ "--moneda": actual.color } as React.CSSProperties}
+      >
+        <span aria-hidden className="campo-monto-simbolo monto shrink-0 text-lg">
+          {actual.simbolo}
         </span>
 
+        {/* De texto y no de número: `type="number"` no admite separadores de
+            miles, así que $ 18.500 se veía "18500". El formato se aplica en
+            cada tecla y `parseMoneyInput` lo deshace al guardar. */}
         <input
           id={id}
-          type="number"
-          step="0.01"
-          min="0"
+          type="text"
           inputMode="decimal"
+          autoComplete="off"
           placeholder="0,00"
           value={monto}
-          onChange={(e) => alCambiarMonto(e.target.value)}
+          onChange={(e) => alCambiarMonto(formatMoneyInput(e.target.value))}
+          aria-describedby={idError}
+          aria-invalid={idError ? true : undefined}
           required
           className="monto text-texto"
         />

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Category, Expense } from "@/lib/types";
 import { Vacio, IconoTicket } from "@/components/Vacio";
 import { CampoMonto, CampoCategoria } from "@/components/CamposGasto";
+import { Aviso, useAvisoTemporal, enfocarCampoConError } from "@/components/Aviso";
+import { EsqueletoLista } from "@/components/Esqueleto";
 import Link from "next/link";
-import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
+import { formatMoney, currentMonth, monthLabel, parseMoneyInput } from "@/lib/format";
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -22,6 +24,13 @@ export default function ExpensesPage() {
   const [categoryId, setCategoryId] = useState("");
   const [date, setDate] = useState(todayIso());
   const [description, setDescription] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const [aviso, mostrarAviso] = useAvisoTemporal();
+
+  // El gasto que acaba de desaparecer de la lista y todavía se puede recuperar.
+  const [borrado, setBorrado] = useState<Expense | null>(null);
+  const esperandoBorrado = useRef<string | null>(null);
+  const temporizadorBorrado = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function load() {
     const [expensesRes, categoriesRes] = await Promise.all([
@@ -42,33 +51,97 @@ export default function ExpensesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Si se va de la página con un borrado a medio camino, se concreta.
+  // `keepalive` deja que el pedido sobreviva a la navegación.
+  useEffect(() => {
+    const temporizador = temporizadorBorrado;
+    const pendiente = esperandoBorrado;
+    return () => {
+      if (temporizador.current) clearTimeout(temporizador.current);
+      if (pendiente.current) {
+        fetch(`/api/expenses/${pendiente.current}`, { method: "DELETE", keepalive: true });
+      }
+    };
+  }, []);
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    // Sin esta guarda, dos clics en una conexión lenta cargaban el gasto dos
+    // veces. Es la misma que ya usaban login y cuenta.
+    if (guardando) return;
+
     setError(null);
-    const res = await fetch("/api/expenses", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amount: Number(amount),
-        currency,
-        categoryId,
-        date: new Date(date).toISOString(),
-        description: description || undefined,
-      }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "No se pudo cargar el gasto");
+
+    // El campo ahora es de texto, así que la validación de monto se hace acá
+    // en vez de dejársela al navegador.
+    const montoNumerico = parseMoneyInput(amount);
+    if (!Number.isFinite(montoNumerico) || montoNumerico <= 0) {
+      setError("Escribí un monto mayor que cero.");
+      enfocarCampoConError("monto");
       return;
     }
-    setAmount("");
-    setDescription("");
-    setDate(todayIso());
-    load();
+
+    setGuardando(true);
+    try {
+      const res = await fetch("/api/expenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: montoNumerico,
+          currency,
+          categoryId,
+          date: new Date(date).toISOString(),
+          description: description || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo cargar el gasto");
+        enfocarCampoConError("monto");
+        return;
+      }
+
+      mostrarAviso(`Gasto de ${formatMoney(montoNumerico, currency)} cargado.`);
+      setAmount("");
+      setDescription("");
+      setDate(todayIso());
+      await load();
+    } finally {
+      setGuardando(false);
+    }
   }
 
-  async function handleDelete(id: string) {
-    await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+  /** Manda el DELETE que estaba esperando, si hay alguno. */
+  function confirmarBorradoPendiente() {
+    const id = esperandoBorrado.current;
+    if (!id) return;
+    esperandoBorrado.current = null;
+    fetch(`/api/expenses/${id}`, { method: "DELETE" });
+  }
+
+  /**
+   * Borrar un gasto es frecuente, así que en vez de preguntar cada vez se
+   * saca de la lista y se da unos segundos para arrepentirse. El DELETE recién
+   * sale cuando se agota ese plazo: si se deshace, nunca llegó a pasar nada.
+   */
+  function handleDelete(expense: Expense) {
+    if (temporizadorBorrado.current) clearTimeout(temporizadorBorrado.current);
+    confirmarBorradoPendiente();
+
+    setExpenses((previos) => previos.filter((e) => e.id !== expense.id));
+    setBorrado(expense);
+    esperandoBorrado.current = expense.id;
+
+    temporizadorBorrado.current = setTimeout(() => {
+      confirmarBorradoPendiente();
+      setBorrado(null);
+    }, 7000);
+  }
+
+  function deshacerBorrado() {
+    if (temporizadorBorrado.current) clearTimeout(temporizadorBorrado.current);
+    esperandoBorrado.current = null;
+    setBorrado(null);
     load();
   }
 
@@ -84,6 +157,7 @@ export default function ExpensesPage() {
 
         <CampoMonto
           id="monto"
+          idError={error ? "error-gasto" : undefined}
           monto={amount}
           alCambiarMonto={setAmount}
           moneda={currency}
@@ -135,19 +209,42 @@ export default function ExpensesPage() {
           </p>
         )}
 
-        {error && <p className="text-sm text-alerta">{error}</p>}
+        {error && <Aviso id="error-gasto" tono="error">{error}</Aviso>}
 
-        <div className="flex justify-end border-t border-borde pt-4">
-          <button type="submit" disabled={categories.length === 0} className="boton">
-            Cargar gasto
+        <div className="flex flex-wrap items-center gap-3 border-t border-borde pt-4">
+          {aviso && <Aviso tono="ok">{aviso}</Aviso>}
+          <button
+            type="submit"
+            disabled={guardando || categories.length === 0}
+            className="boton ml-auto"
+          >
+            {guardando ? "Cargando..." : "Cargar gasto"}
           </button>
         </div>
       </form>
 
       <section>
         <h2 className="rotulo mb-3">Cargados este mes</h2>
+
+        {borrado && (
+          <div
+            role="status"
+            className="tarjeta mb-3 flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+          >
+            <p className="text-sm text-suave">
+              Borraste{" "}
+              <span className="text-texto">
+                {borrado.description || borrado.category.name}
+              </span>
+              , {formatMoney(borrado.amount, borrado.currency)}.
+            </p>
+            <button type="button" onClick={deshacerBorrado} className="boton-linea">
+              Deshacer
+            </button>
+          </div>
+        )}
         {loading ? (
-          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
+          <EsqueletoLista />
         ) : expenses.length === 0 ? (
           <Vacio
             icono={<IconoTicket />}
@@ -177,7 +274,7 @@ export default function ExpensesPage() {
                     {formatMoney(expense.amount, expense.currency)}
                   </span>
                   <button
-                    onClick={() => handleDelete(expense.id)}
+                    onClick={() => handleDelete(expense)}
                     className="boton-mini boton-mini-peligro"
                   >
                     Eliminar

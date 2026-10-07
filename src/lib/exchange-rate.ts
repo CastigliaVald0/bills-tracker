@@ -10,6 +10,10 @@ export type UsdRate = {
   venta: number;
   /** Fecha de la cotización cuando la fuente la publica (BCU). BROU no la expone. */
   date: string | null;
+  /** Cuándo se leyó de la fuente. Solo viene cuando sale de la copia guardada. */
+  leidaEl?: Date;
+  /** True cuando ninguna fuente respondió y esto es lo último que había. */
+  vieja?: boolean;
 };
 
 const REVALIDATE_SECONDS = 3600;
@@ -124,10 +128,62 @@ async function getBcuUsdRate(): Promise<UsdRate | null> {
   return { source: "BCU", compra, venta, date: fecha };
 }
 
+// --- copia de resguardo -------------------------------------------------
+
+/**
+ * La última cotización buena, guardada en la base.
+ *
+ * Antes, si BROU y BCU fallaban a la vez, `getUsdRate` devolvía null y se
+ * apagaban el conversor entero y la torta del resumen anual. Una cotización de
+ * ayer sirve muchísimo más que ninguna, siempre que se diga que es de ayer.
+ *
+ * Todo va envuelto en try/catch a propósito: si la tabla todavía no existe
+ * porque falta correr la migración, la app se comporta como antes en vez de
+ * romperse.
+ */
+async function guardarCotizacion(rate: UsdRate) {
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    await prisma.usdRateCache.upsert({
+      where: { id: "actual" },
+      create: { id: "actual", source: rate.source, compra: rate.compra, venta: rate.venta, date: rate.date },
+      update: { source: rate.source, compra: rate.compra, venta: rate.venta, date: rate.date },
+    });
+  } catch {
+    // Sin copia de resguardo se sigue andando igual.
+  }
+}
+
+async function cotizacionGuardada(): Promise<UsdRate | null> {
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const fila = await prisma.usdRateCache.findUnique({ where: { id: "actual" } });
+    if (!fila) return null;
+    return {
+      source: fila.source === "BCU" ? "BCU" : "BROU",
+      compra: Number(fila.compra),
+      venta: Number(fila.venta),
+      date: fila.date,
+      leidaEl: fila.updatedAt,
+      vieja: true,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // --- API pública --------------------------------------------------------
 
 export async function getUsdRate(): Promise<UsdRate | null> {
-  return (await getBrouUsdRate()) ?? (await getBcuUsdRate());
+  const fresca = (await getBrouUsdRate()) ?? (await getBcuUsdRate());
+
+  if (fresca) {
+    // Sin await: refrescar la copia no tiene por qué demorar la página.
+    void guardarCotizacion(fresca);
+    return fresca;
+  }
+
+  return cotizacionGuardada();
 }
 
 /**
@@ -136,12 +192,17 @@ export async function getUsdRate(): Promise<UsdRate | null> {
  * Devuelve null en gastos en pesos (no hay nada que convertir) y también si la
  * fuente no responde: cargar un gasto nunca puede fallar porque BROU esté
  * caído. Un gasto sin cotización propia se convierte después con la de hoy.
+ *
+ * Acá no se acepta la copia de resguardo. Sirve para mostrar, pero grabarla
+ * junto al gasto sería dejar escrita como "la cotización de ese día" una que
+ * puede ser de la semana pasada.
  */
 export async function rateParaGuardar(currency: "UYU" | "USD"): Promise<number | null> {
   if (currency !== "USD") return null;
   try {
     const rate = await getUsdRate();
-    return rate && rate.venta > 0 ? rate.venta : null;
+    if (!rate || rate.vieja || rate.venta <= 0) return null;
+    return rate.venta;
   } catch {
     return null;
   }

@@ -45,6 +45,52 @@ export function Pizarra({
   );
 }
 
+/**
+ * Una cifra sobre tinta, con su rótulo. Se exporta porque el conversor dibuja
+ * su propia pizarra y, mientras tuvo su copia a mano, se desincronizó: quedó
+ * con el `font-light` que acá se sacó por ilegible sobre fondo oscuro.
+ *
+ * `escala` elige entre el tamaño del tablero principal y el del conversor;
+ * `color` tiñe el rótulo cuando nombra una moneda, y se omite cuando no
+ * (compra y venta son las dos en pesos).
+ */
+export function ColumnaPizarra({
+  etiqueta,
+  monto,
+  color,
+  separador = false,
+  escala = "grande",
+}: {
+  etiqueta: string;
+  monto: string;
+  color?: string;
+  separador?: boolean;
+  escala?: "grande" | "media";
+}) {
+  const grande = escala === "grande";
+
+  return (
+    <div
+      className={
+        grande ? "relative px-5 pb-6 sm:px-7 sm:pb-7" : `relative ${separador ? "pl-4" : ""}`
+      }
+    >
+      {separador && (
+        <span aria-hidden className="absolute inset-y-1 left-0 w-px bg-pizarra-borde" />
+      )}
+      <p className="rotulo" style={color ? { color } : undefined}>
+        {etiqueta}
+      </p>
+      <p
+        className={`monto leading-[0.95] text-pizarra-texto ${grande ? "mt-2.5" : "mt-1.5 text-xl"}`}
+        style={grande ? { fontSize: "clamp(1.375rem, 4.5vw, 2.5rem)" } : undefined}
+      >
+        {monto}
+      </p>
+    </div>
+  );
+}
+
 function Columna({
   etiqueta,
   monto,

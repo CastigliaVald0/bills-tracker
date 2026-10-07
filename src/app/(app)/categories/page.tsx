@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import type { Category } from "@/lib/types";
 import { Vacio, IconoEtiqueta } from "@/components/Vacio";
+import { Aviso, useAvisoTemporal, enfocarCampoConError } from "@/components/Aviso";
+import { EsqueletoLista } from "@/components/Esqueleto";
+import { Confirmar } from "@/components/Confirmar";
 
 /** Con qué color arranca el formulario. Tiene que ser un #rrggbb válido: la API
  *  rechaza cualquier otra cosa y el selector nativo no acepta un valor vacío. */
@@ -44,6 +47,10 @@ export default function CategoriesPage() {
   const [hexTexto, setHexTexto] = useState(COLOR_INICIAL);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [avisoGuardado, mostrarAvisoGuardado] = useAvisoTemporal();
+  // La categoría que el diálogo está por eliminar.
+  const [porEliminar, setPorEliminar] = useState<Category | null>(null);
 
   async function load() {
     const res = await fetch("/api/categories");
@@ -58,20 +65,30 @@ export default function CategoriesPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (guardando) return;
+
     setError(null);
-    const res = await fetch("/api/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, color }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "No se pudo crear la categoría");
-      return;
+    setGuardando(true);
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, color }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo crear la categoría");
+        enfocarCampoConError("nombre-categoria");
+        return;
+      }
+
+      mostrarAvisoGuardado(`Categoría "${name}" creada.`);
+      setName("");
+      elegirColor(COLOR_INICIAL);
+      await load();
+    } finally {
+      setGuardando(false);
     }
-    setName("");
-    elegirColor(COLOR_INICIAL);
-    load();
   }
 
   function elegirColor(nuevo: string) {
@@ -88,9 +105,10 @@ export default function CategoriesPage() {
 
   const aviso = avisoDeContraste(color);
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar esta categoría? Los gastos asociados no se borran.")) return;
-    await fetch(`/api/categories/${id}`, { method: "DELETE" });
+  async function handleDelete(cat: Category) {
+    setPorEliminar(null);
+    await fetch(`/api/categories/${cat.id}`, { method: "DELETE" });
+    mostrarAvisoGuardado(`Categoría "${cat.name}" eliminada.`);
     load();
   }
 
@@ -109,6 +127,7 @@ export default function CategoriesPage() {
           <input
             id="nombre-categoria"
             type="text"
+            aria-describedby={error ? "error-categoria" : undefined}
             placeholder="Ej: Alimentación"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -154,15 +173,16 @@ export default function CategoriesPage() {
           </p>
         </div>
 
-        {error && <p className="text-sm text-alerta">{error}</p>}
+        {error && <Aviso id="error-categoria" tono="error">{error}</Aviso>}
+        {avisoGuardado && <Aviso tono="ok">{avisoGuardado}</Aviso>}
 
         <div className="flex items-center justify-between gap-3 border-t border-borde pt-4">
           <span className="flex min-w-0 items-center gap-2.5">
             <span className="punto" style={{ backgroundColor: color }} />
             <span className="truncate text-sm text-suave">{name || "Sin nombre"}</span>
           </span>
-          <button type="submit" className="boton">
-            Agregar
+          <button type="submit" disabled={guardando} className="boton">
+            {guardando ? "Agregando..." : "Agregar"}
           </button>
         </div>
       </form>
@@ -170,7 +190,7 @@ export default function CategoriesPage() {
       <section>
         <h2 className="rotulo mb-3">Tus categorías</h2>
         {loading ? (
-          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
+          <EsqueletoLista dosLineas={false} />
         ) : categories.length === 0 ? (
           <Vacio
             icono={<IconoEtiqueta />}
@@ -186,7 +206,7 @@ export default function CategoriesPage() {
                   <span className="truncate text-sm text-texto">{cat.name}</span>
                 </div>
                 <button
-                  onClick={() => handleDelete(cat.id)}
+                  onClick={() => setPorEliminar(cat)}
                   className="boton-mini boton-mini-peligro shrink-0"
                 >
                   Eliminar
@@ -196,6 +216,19 @@ export default function CategoriesPage() {
           </div>
         )}
       </section>
+
+      <Confirmar
+        abierto={porEliminar !== null}
+        titulo="¿Eliminar esta categoría?"
+        detalle={
+          porEliminar
+            ? `Los gastos cargados en "${porEliminar.name}" no se borran, pero se quedan sin categoría.`
+            : ""
+        }
+        textoConfirmar="Eliminar"
+        alConfirmar={() => porEliminar && handleDelete(porEliminar)}
+        alCancelar={() => setPorEliminar(null)}
+      />
     </div>
   );
 }

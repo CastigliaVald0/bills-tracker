@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { formatMoney } from "@/lib/format";
+import { ColumnaPizarra } from "@/components/Pizarra";
+import { Vacio, IconoPizarra } from "@/components/Vacio";
 import type { UsdRate } from "@/lib/exchange-rate";
 
 export function CurrencyConverter({ rate }: { rate: UsdRate | null }) {
@@ -10,12 +12,11 @@ export function CurrencyConverter({ rate }: { rate: UsdRate | null }) {
 
   if (!rate) {
     return (
-      <div className="tarjeta p-5">
-        <p className="rotulo">Sin cotización</p>
-        <p className="mt-2 text-sm text-suave">
-          No se pudo obtener la cotización del dólar en este momento. Probá de nuevo en un rato.
-        </p>
-      </div>
+      <Vacio
+        icono={<IconoPizarra />}
+        titulo="Sin cotización por ahora"
+        detalle="No se pudo leer la pizarra de BROU ni la del BCU, y todavía no hay ninguna guardada. Probá de nuevo en un rato."
+      />
     );
   }
 
@@ -41,19 +42,24 @@ export function CurrencyConverter({ rate }: { rate: UsdRate | null }) {
           Pizarra {rate.source}
           {dateLabel ? ` · ${dateLabel}` : ""}
         </p>
+        {/* Una cotización de ayer sirve; una de ayer disfrazada de hoy, no. */}
+        {rate.vieja && (
+          <p className="mt-1.5 text-xs text-pizarra-suave">
+            No se pudo consultar la cotización ahora. Esta es la última que se
+            leyó
+            {rate.leidaEl
+              ? `, el ${new Intl.DateTimeFormat("es-UY", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                }).format(new Date(rate.leidaEl))}`
+              : ""}
+            .
+          </p>
+        )}
         <div className="mt-3 grid grid-cols-2 gap-4">
-          <div>
-            <p className="rotulo text-pizarra-suave">Compra</p>
-            <p className="monto mt-1.5 text-xl font-light leading-none text-pizarra-texto">
-              {formatMoney(rate.compra, "UYU")}
-            </p>
-          </div>
-          <div className="border-l border-pizarra-borde pl-4">
-            <p className="rotulo text-pizarra-suave">Venta</p>
-            <p className="monto mt-1.5 text-xl font-light leading-none text-pizarra-texto">
-              {formatMoney(rate.venta, "UYU")}
-            </p>
-          </div>
+          <ColumnaPizarra escala="media" etiqueta="Compra" monto={formatMoney(rate.compra, "UYU")} />
+          <ColumnaPizarra escala="media" etiqueta="Venta" monto={formatMoney(rate.venta, "UYU")} separador />
         </div>
       </div>
 
