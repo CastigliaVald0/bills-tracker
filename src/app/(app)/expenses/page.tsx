@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Category, Expense } from "@/lib/types";
+import { Vacio, IconoTicket } from "@/components/Vacio";
 import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
 
 function todayIso() {
@@ -167,9 +168,11 @@ export default function ExpensesPage() {
         {loading ? (
           <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
         ) : expenses.length === 0 ? (
-          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
-            Todavía no cargaste gastos este mes.
-          </p>
+          <Vacio
+            icono={<IconoTicket />}
+            titulo="Ningún gasto cargado este mes"
+            detalle="Usá el formulario de arriba para cargar el primero. Van a aparecer acá, del más nuevo al más viejo."
+          />
         ) : (
           <div className="lista">
             {expenses.map((expense) => (

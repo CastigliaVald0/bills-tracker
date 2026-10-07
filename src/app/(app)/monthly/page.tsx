@@ -6,6 +6,7 @@ import { formatMoney, monthLabel } from "@/lib/format";
 import { getUsdRate } from "@/lib/exchange-rate";
 import { fechaEnUruguay } from "@/lib/monthly-summary";
 import { Pizarra } from "@/components/Pizarra";
+import { Vacio, IconoCalendario } from "@/components/Vacio";
 import { BarrasMes } from "@/components/BarrasMes";
 import { ListaCategorias, type TotalCategoria } from "@/components/ListaCategorias";
 import { GastosDelMes, type GastoDelMes } from "@/components/GastosDelMes";
@@ -222,9 +223,11 @@ export default async function MonthlyPage({
       />
 
       {delMes.length === 0 ? (
-        <p className="tarjeta px-4 py-8 text-center text-sm text-suave">
-          No hay gastos cargados en {nombreMes} de {anio}.
-        </p>
+        <Vacio
+          icono={<IconoCalendario />}
+          titulo={`Sin gastos en ${nombreMes} de ${anio}`}
+          detalle="Movete a otro mes con las flechas de arriba, o cargá un gasto con esta fecha para que aparezca acá."
+        />
       ) : (
         <>
           <section>

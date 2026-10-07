@@ -6,6 +6,7 @@ import { BrouLink } from "@/components/BrouLink";
 import { Pizarra } from "@/components/Pizarra";
 import { AtajoGasto } from "@/components/AtajoGasto";
 import { ListaCategorias } from "@/components/ListaCategorias";
+import { Vacio, IconoTicket } from "@/components/Vacio";
 
 export default async function DashboardPage() {
   const userId = await requireUserId();
@@ -23,7 +24,10 @@ export default async function DashboardPage() {
   });
 
   const totals = { UYU: 0, USD: 0 };
-  const byCategory = new Map<string, { name: string; color: string; UYU: number; USD: number }>();
+  const byCategory = new Map<
+    string,
+    { name: string; color: string; UYU: number; USD: number }
+  >();
 
   for (const expense of expenses) {
     const amount = Number(expense.amount);
@@ -53,44 +57,49 @@ export default async function DashboardPage() {
         dolares={formatMoney(totals.USD, "USD")}
       />
 
-      <section>
-        <h2 className="rotulo mb-3">Por categoría</h2>
-        {categoryTotals.length === 0 ? (
-          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
-            Todavía no cargaste gastos este mes.
-          </p>
-        ) : (
-          <ListaCategorias categorias={categoryTotals} totales={totals} />
-        )}
-      </section>
+      {/* Un solo bloque en vez de dos cajas vacías seguidas: sin gastos, "Por
+          categoría" y "Últimos gastos" decían lo mismo y la página arrancaba
+          pareciendo rota. */}
+      {expenses.length === 0 ? (
+        <Vacio
+          icono={<IconoTicket />}
+          titulo="Todavía no hay nada este mes"
+          detalle="Cargá tu primer gasto y acá vas a ver en qué se te va el mes, por categoría y con cada moneda por separado."
+          accion={{ href: "/expenses", texto: "Cargar un gasto" }}
+        />
+      ) : (
+        <>
+          <section>
+            <h2 className="rotulo mb-3">Por categoría</h2>
+            <ListaCategorias categorias={categoryTotals} totales={totals} />
+          </section>
 
-      <section>
-        <h2 className="rotulo mb-3">Últimos gastos</h2>
-        {expenses.length === 0 ? (
-          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
-            Nada cargado todavía.
-          </p>
-        ) : (
-          <div className="lista">
-            {expenses.slice(0, 8).map((expense) => (
-              <div key={expense.id} className="fila">
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-texto">
-                    {expense.description || expense.category.name}
-                  </p>
-                  <p className="rotulo mt-1 truncate normal-case tracking-normal">
-                    {new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "short" }).format(expense.date)} ·{" "}
-                    {expense.category.name}
-                  </p>
+          <section>
+            <h2 className="rotulo mb-3">Últimos gastos</h2>
+            <div className="lista">
+              {expenses.slice(0, 8).map((expense) => (
+                <div key={expense.id} className="fila">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-texto">
+                      {expense.description || expense.category.name}
+                    </p>
+                    <p className="rotulo mt-1 truncate normal-case tracking-normal">
+                      {new Intl.DateTimeFormat("es-UY", {
+                        day: "2-digit",
+                        month: "short",
+                      }).format(expense.date)}{" "}
+                      · {expense.category.name}
+                    </p>
+                  </div>
+                  <span className="monto shrink-0 text-sm text-texto">
+                    {formatMoney(expense.amount.toString(), expense.currency)}
+                  </span>
                 </div>
-                <span className="monto shrink-0 text-sm text-texto">
-                  {formatMoney(expense.amount.toString(), expense.currency)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
 
       <AtajoGasto />
     </div>

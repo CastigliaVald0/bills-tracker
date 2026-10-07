@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Category, RecurringExpense } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
+import { Vacio, IconoCalendario } from "@/components/Vacio";
 import {
   monthYearLabel,
   monthInputToDate,
@@ -211,9 +212,11 @@ export default function RecurringPage() {
         {loading ? (
           <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
         ) : recurring.length === 0 ? (
-          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
-            Todavía no tenés gastos fijos configurados.
-          </p>
+          <Vacio
+            icono={<IconoCalendario />}
+            titulo="Sin gastos fijos"
+            detalle="El alquiler, el abono del celular, una suscripción. Cargalos una vez arriba y se generan solos cada mes, el día que elijas."
+          />
         ) : (
           <div className="lista">
             {recurring.map((item) => {

@@ -4,6 +4,7 @@ import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 import { formatMoney } from "@/lib/format";
 import { Pizarra } from "@/components/Pizarra";
+import { Vacio, IconoCalendario } from "@/components/Vacio";
 import { TortaCombinada } from "@/components/TortaCombinada";
 import { BarrasMes } from "@/components/BarrasMes";
 import { ListaCategorias } from "@/components/ListaCategorias";
@@ -120,9 +121,11 @@ export default async function ReportsPage({
       />
 
       {!hasExpenses ? (
-        <p className="tarjeta px-4 py-8 text-center text-sm text-suave">
-          No hay gastos cargados en {year}.
-        </p>
+        <Vacio
+          icono={<IconoCalendario />}
+          titulo={`Sin gastos en ${year}`}
+          detalle="Probá con otro año usando las flechas de arriba. El resumen se arma con lo que haya cargado en esos doce meses."
+        />
       ) : (
         <>
           {mesesVisibles > 0 && (

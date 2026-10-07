@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Category } from "@/lib/types";
+import { Vacio, IconoEtiqueta } from "@/components/Vacio";
 
 /** Con qué color arranca el formulario. Tiene que ser un #rrggbb válido: la API
  *  rechaza cualquier otra cosa y el selector nativo no acepta un valor vacío. */
@@ -171,9 +172,11 @@ export default function CategoriesPage() {
         {loading ? (
           <p className="tarjeta px-4 py-6 text-center text-sm text-suave">Cargando...</p>
         ) : categories.length === 0 ? (
-          <p className="tarjeta px-4 py-6 text-center text-sm text-suave">
-            Todavía no creaste ninguna categoría.
-          </p>
+          <Vacio
+            icono={<IconoEtiqueta />}
+            titulo="Sin categorías propias"
+            detalle="Creá la primera con el formulario de arriba. El color que le pongas es el que va a identificar sus gastos en todas las listas."
+          />
         ) : (
           <div className="lista">
             {categories.map((cat) => (
