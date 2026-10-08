@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { IconoTicket, IconoCalendario } from "@/components/navegacion";
 
 /**
  * El botón central de la barra flotante. Al tocarlo se despliegan arriba dos
@@ -11,9 +12,12 @@ import { usePathname } from "next/navigation";
  *
  * `x` e `y` son hasta dónde se corre cada círculo desde el centro del botón.
  */
+/** Los círculos de la barra los muestran un poco más grandes. */
+const TAMANO_BARRA = "h-[22px] w-[22px]";
+
 const OPCIONES = [
-  { href: "/expenses", etiqueta: "Gasto", x: -42, y: -72, icono: <IconoTicket /> },
-  { href: "/recurring", etiqueta: "Gasto fijo", x: 42, y: -72, icono: <IconoCalendario /> },
+  { href: "/expenses", etiqueta: "Gasto", x: -42, y: -72, icono: <IconoTicket className={TAMANO_BARRA} /> },
+  { href: "/recurring", etiqueta: "Gasto fijo", x: 42, y: -72, icono: <IconoCalendario className={TAMANO_BARRA} /> },
 ];
 
 export function BotonAgregar() {
@@ -100,40 +104,5 @@ export function BotonAgregar() {
 }
 
 /** Un ticket de compra: el gasto de todos los días. */
-function IconoTicket() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-[22px] w-[22px]"
-      aria-hidden
-    >
-      <path d="M6 3.5h12v17l-2.25-1.5L13.5 20.5 12 19l-1.5 1.5L8.25 19 6 20.5z" />
-      <path d="M9.25 8.5h5.5M9.25 12.5h5.5" />
-    </svg>
-  );
-}
 
 /** Un calendario con el día marcado: el gasto que vuelve todos los meses. */
-function IconoCalendario() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-[22px] w-[22px]"
-      aria-hidden
-    >
-      <rect x="4" y="5.5" width="16" height="15" rx="2" />
-      <path d="M8 3.5v4M16 3.5v4M4 10.5h16" />
-      <circle cx="12" cy="15.5" r="1.25" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}

@@ -4,8 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Marca } from "@/components/Marca";
-
-type Entrada = { href: string; label: string; icono: React.ReactNode };
+import {
+  CAJON_DIARIO,
+  CAJON_RESUMENES,
+  CAJON_HERRAMIENTAS,
+  type EntradaNav,
+} from "@/components/navegacion";
 
 /**
  * El menú de PC: un cajón que entra desde el borde izquierdo.
@@ -98,9 +102,9 @@ export function CajonMenu() {
           </div>
 
           <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
-            <Grupo entradas={DIARIO} pathname={pathname} />
-            <Grupo titulo="Resúmenes" entradas={RESUMENES} pathname={pathname} />
-            <Grupo titulo="Herramientas" entradas={HERRAMIENTAS} pathname={pathname} />
+            <Grupo entradas={CAJON_DIARIO} pathname={pathname} />
+            <Grupo titulo="Resúmenes" entradas={CAJON_RESUMENES} pathname={pathname} />
+            <Grupo titulo="Herramientas" entradas={CAJON_HERRAMIENTAS} pathname={pathname} />
           </nav>
         </div>
       </dialog>
@@ -114,7 +118,7 @@ function Grupo({
   pathname,
 }: {
   titulo?: string;
-  entradas: Entrada[];
+  entradas: EntradaNav[];
   pathname: string;
 }) {
   return (
@@ -143,105 +147,3 @@ function Grupo({
     </div>
   );
 }
-
-/* --- los íconos, con el trazo de siempre --------------------------------- */
-
-function Icono({ children }: { children: React.ReactNode }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-[18px] w-[18px]"
-      aria-hidden
-    >
-      {children}
-    </svg>
-  );
-}
-
-const DIARIO: Entrada[] = [
-  {
-    href: "/dashboard",
-    label: "Inicio",
-    icono: (
-      <Icono>
-        <path d="M3.5 10.5 12 3.5l8.5 7" />
-        <path d="M5.5 9.5V20h13V9.5" />
-        <path d="M10 20v-5.5h4V20" />
-      </Icono>
-    ),
-  },
-  {
-    href: "/expenses",
-    label: "Gastos",
-    icono: (
-      <Icono>
-        <path d="M6 3.5h12v17l-2.25-1.5L13.5 20.5 12 19l-1.5 1.5L8.25 19 6 20.5z" />
-        <path d="M9.25 8.5h5.5M9.25 12.5h5.5" />
-      </Icono>
-    ),
-  },
-  {
-    href: "/recurring",
-    label: "Gastos fijos",
-    icono: (
-      <Icono>
-        <rect x="4" y="5.5" width="16" height="15" rx="2" />
-        <path d="M8 3.5v4M16 3.5v4M4 10.5h16" />
-        <circle cx="12" cy="15.5" r="1.25" fill="currentColor" stroke="none" />
-      </Icono>
-    ),
-  },
-  {
-    href: "/categories",
-    label: "Categorías",
-    icono: (
-      <Icono>
-        <path d="M3.5 11.2V4.5a1 1 0 0 1 1-1h6.7a1 1 0 0 1 .7.3l8.3 8.3a1 1 0 0 1 0 1.4l-6.7 6.7a1 1 0 0 1-1.4 0L3.8 11.9a1 1 0 0 1-.3-.7z" />
-        <circle cx="8" cy="8" r="1.35" fill="currentColor" stroke="none" />
-      </Icono>
-    ),
-  },
-];
-
-const RESUMENES: Entrada[] = [
-  {
-    href: "/monthly",
-    label: "Resumen mensual",
-    icono: (
-      <Icono>
-        <path d="M4 19.5h16" />
-        <path d="M6.5 19.5v-6M11 19.5V8M15.5 19.5v-9M20 19.5V5" />
-      </Icono>
-    ),
-  },
-  {
-    href: "/reports",
-    label: "Resumen anual",
-    // Una porción rellena: es el gráfico que manda en esa pantalla. Sin
-    // relleno el contorno se lee como un reloj marcando las tres.
-    icono: (
-      <Icono>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M12 12V3.5a8.5 8.5 0 0 1 8.5 8.5z" fill="currentColor" stroke="none" />
-      </Icono>
-    ),
-  },
-];
-
-const HERRAMIENTAS: Entrada[] = [
-  {
-    href: "/converter",
-    label: "Conversor",
-    icono: (
-      <Icono>
-        <path d="M4 8h16M16 4l4 4-4 4" />
-        <path d="M20 16H4M8 12l-4 4 4 4" />
-      </Icono>
-    ),
-  },
-];

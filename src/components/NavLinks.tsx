@@ -3,20 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-/**
- * El menú del celular. En PC la navegación vive en CajonMenu, que entra por el
- * costado y tiene lugar para todo.
- *
- * Cargar gastos y gastos fijos no está acá: en el celular eso se hace con el
- * botón + del centro de la barra, que despliega los dos tipos. Repetirlos
- * sería dar dos caminos al mismo lugar desde la misma barra.
- */
-const MENU_LINKS: { href: string; label: string }[] = [
-  { href: "/categories", label: "Categorías" },
-  { href: "/monthly", label: "Resumen mensual" },
-  { href: "/reports", label: "Resumen anual" },
-];
+import { MENU_CELULAR } from "@/components/navegacion";
 
 /**
  * En la barra de arriba (PC) el ícono activo lleva una raya debajo. En la barra
@@ -43,7 +30,7 @@ export function NavLinks() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const enInicio = pathname.startsWith("/dashboard");
-  const menuActive = MENU_LINKS.some((link) => pathname.startsWith(link.href));
+  const menuActive = MENU_CELULAR.some((link) => pathname.startsWith(link.href));
 
   if (pathname !== lastPathname) {
     setLastPathname(pathname);
@@ -115,17 +102,18 @@ export function NavLinks() {
             // abre hacia arriba y hacia la derecha para no salirse.
             className="absolute bottom-full left-0 z-30 mb-4 flex w-52 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10"
           >
-            {MENU_LINKS.map((link) => (
+            {MENU_CELULAR.map((entrada) => (
               <Link
-                key={link.href}
-                href={link.href}
-                className={`rounded px-3 py-2 text-sm transition-colors ${
-                  pathname.startsWith(link.href)
+                key={entrada.href}
+                href={entrada.href}
+                className={`flex items-center gap-3 rounded px-3 py-2.5 text-sm transition-colors ${
+                  pathname.startsWith(entrada.href)
                     ? "bg-superficie-alta font-medium text-texto"
                     : "text-suave hover:bg-superficie-alta hover:text-texto"
                 }`}
               >
-                {link.label}
+                <span className="shrink-0">{entrada.icono}</span>
+                {entrada.label}
               </Link>
             ))}
           </div>
