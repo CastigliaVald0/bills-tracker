@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { UserMenu } from "@/components/UserMenu";
 import { NavLinks, ConversorLink } from "@/components/NavLinks";
+import { CajonMenu } from "@/components/CajonMenu";
+import Link from "next/link";
 import { Marca } from "@/components/Marca";
 import { BotonAgregar } from "@/components/BotonAgregar";
 import { BarraFlotante } from "@/components/BarraFlotante";
@@ -11,16 +13,40 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-fondo pb-24 sm:pb-0">
+      {/* En PC la navegación vive en un cajón que entra por la izquierda. Las
+          tres barritas van antes del nombre, que es de donde se las espera, y
+          el nombre lleva al inicio. Así la cabecera queda con lo justo y el
+          menú tiene lugar para agrupar las siete pantallas. */}
       <header className="hidden border-b border-borde bg-superficie px-4 sm:block">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-6">
-          <div className="flex items-center gap-7">
-            <Marca />
-            <nav className="flex items-center gap-5">
-              <NavLinks menuDirection="down" />
-              <ConversorLink />
-            </nav>
+          <div className="flex items-center gap-3">
+            <CajonMenu />
+            <Link href="/dashboard" aria-label="Inicio" className="rounded-sm">
+              <Marca />
+            </Link>
           </div>
-          <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="down" />
+          <div className="flex items-center gap-4">
+            {/* La acción principal, con nombre y en todas las pantallas. Antes
+                era un círculo flotante abajo a la derecha que solo existía en
+                el dashboard y, a diferencia del + del celular, no ofrecía
+                elegir entre gasto y gasto fijo: iba derecho a /expenses. */}
+            <Link href="/expenses" className="boton py-1.5">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className="h-4 w-4"
+                aria-hidden
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Cargar gasto
+            </Link>
+            <ConversorLink />
+            <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="down" />
+          </div>
         </div>
       </header>
 
@@ -47,7 +73,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="flex items-center justify-around">
-          <NavLinks menuDirection="up" />
+          <NavLinks />
         </div>
         {/* Reserva el ancho del recorte; el botón va posicionado encima. */}
         <span aria-hidden className="w-[76px]" />

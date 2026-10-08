@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
 import { BrouLink } from "@/components/BrouLink";
 import { Pizarra } from "@/components/Pizarra";
-import { AtajoGasto } from "@/components/AtajoGasto";
 import { ListaCategorias } from "@/components/ListaCategorias";
 import { Vacio, IconoTicket } from "@/components/Vacio";
 
@@ -100,8 +99,6 @@ export default async function DashboardPage() {
           </section>
         </>
       )}
-
-      <AtajoGasto />
     </div>
   );
 }

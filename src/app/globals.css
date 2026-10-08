@@ -221,6 +221,23 @@
     color: var(--pizarra-texto);
   }
 
+  /* La cifra se mide contra el ancho de su propia columna, no contra el de
+     la ventana. Un clamp por vw no sabe que el panel está partido en dos: en
+     un teléfono de 360px la columna son 124px útiles y "$ 48.340,00" se
+     partía en dos renglones. */
+  .pizarra-columna {
+    container-type: inline-size;
+  }
+
+  /* Con cqi el tamaño sigue al ancho de la columna, así que el límite real
+     no es la pantalla sino cuántos caracteres tiene el número: a 13cqi entran
+     doce, o sea cualquier monto por debajo del millón. Más que eso se parte
+     en dos renglones, y achicar la cifra para evitarlo achicaría también
+     todos los montos normales, que son la mayoría. */
+  .pizarra-cifra {
+    font-size: clamp(0.875rem, 13cqi, 2.5rem);
+  }
+
   /* el filo bicolor: mitad peso, mitad dólar. Se traza al cargar. */
   .pizarra-panel::before {
     content: "";
@@ -590,6 +607,54 @@
     background-color: rgb(0 0 0 / 0.45);
   }
 
+  /* --- el cajón del menú ----------------------------------------------
+     Mismo <dialog> que el cartel de confirmación, pero pegado al borde
+     izquierdo y de alto completo. Entra deslizándose desde afuera. */
+  .cajon {
+    margin: 0 auto 0 0;
+    height: 100%;
+    max-height: 100%;
+    width: min(17rem, 85vw);
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-right: 1px solid var(--borde);
+    background-color: var(--superficie);
+    color: var(--texto);
+    translate: -100% 0;
+    /* `allow-discrete` deja animar la salida: sin eso el cajón desaparece de
+       golpe, porque display pasa a none antes de que corra la transición. */
+    transition: translate 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+      overlay 0.24s allow-discrete, display 0.24s allow-discrete;
+  }
+
+  .cajon[open] {
+    translate: 0 0;
+  }
+
+  /* El estado del que parte al abrirse. */
+  @starting-style {
+    .cajon[open] {
+      translate: -100% 0;
+    }
+  }
+
+  .cajon::backdrop {
+    background-color: rgb(0 0 0 / 0);
+    transition: background-color 0.24s ease, overlay 0.24s allow-discrete,
+      display 0.24s allow-discrete;
+  }
+
+  .cajon[open]::backdrop {
+    background-color: rgb(0 0 0 / 0.45);
+  }
+
+  @starting-style {
+    .cajon[open]::backdrop {
+      background-color: rgb(0 0 0 / 0);
+    }
+  }
+
   /* --- datos ---------------------------------------------------------- */
 
   .barra-pista {
@@ -674,6 +739,11 @@
   .aparece,
   .hueso {
     animation: none;
+  }
+
+  .cajon,
+  .cajon::backdrop {
+    transition: none;
   }
 
   *,

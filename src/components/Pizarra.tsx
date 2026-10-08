@@ -72,7 +72,9 @@ export function ColumnaPizarra({
   return (
     <div
       className={
-        grande ? "relative px-5 pb-6 sm:px-7 sm:pb-7" : `relative ${separador ? "pl-4" : ""}`
+        grande
+          ? "pizarra-columna relative px-5 pb-6 sm:px-7 sm:pb-7"
+          : `relative ${separador ? "pl-4" : ""}`
       }
     >
       {separador && (
@@ -82,8 +84,9 @@ export function ColumnaPizarra({
         {etiqueta}
       </p>
       <p
-        className={`monto leading-[0.95] text-pizarra-texto ${grande ? "mt-2.5" : "mt-1.5 text-xl"}`}
-        style={grande ? { fontSize: "clamp(1.375rem, 4.5vw, 2.5rem)" } : undefined}
+        className={`monto leading-[0.95] text-pizarra-texto ${
+          grande ? "pizarra-cifra mt-2.5" : "mt-1.5 text-xl"
+        }`}
       >
         {monto}
       </p>
@@ -103,7 +106,7 @@ function Columna({
   separador?: boolean;
 }) {
   return (
-    <div className="relative px-5 pb-6 sm:px-7 sm:pb-7">
+    <div className="pizarra-columna relative px-5 pb-6 sm:px-7 sm:pb-7">
       {/* El filete va suelto y sin tocar los bordes: un borde completo cortaría
           el panel en dos mitades y acá son dos lecturas de lo mismo. */}
       {separador && (
@@ -112,10 +115,7 @@ function Columna({
       <p className="rotulo" style={{ color }}>
         {etiqueta}
       </p>
-      <p
-        className="monto mt-2.5 leading-[0.95] text-pizarra-texto"
-        style={{ fontSize: "clamp(1.375rem, 4.5vw, 2.5rem)" }}
-      >
+      <p className="pizarra-cifra monto mt-2.5 leading-[0.95] text-pizarra-texto">
         {monto}
       </p>
     </div>

@@ -4,9 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const MENU_LINKS: { href: string; label: string; soloEnPc?: boolean }[] = [
-  { href: "/expenses", label: "Gastos", soloEnPc: true },
-  { href: "/recurring", label: "Gastos fijos", soloEnPc: true },
+/**
+ * El menú del celular. En PC la navegación vive en CajonMenu, que entra por el
+ * costado y tiene lugar para todo.
+ *
+ * Cargar gastos y gastos fijos no está acá: en el celular eso se hace con el
+ * botón + del centro de la barra, que despliega los dos tipos. Repetirlos
+ * sería dar dos caminos al mismo lugar desde la misma barra.
+ */
+const MENU_LINKS: { href: string; label: string }[] = [
   { href: "/categories", label: "Categorías" },
   { href: "/monthly", label: "Resumen mensual" },
   { href: "/reports", label: "Resumen anual" },
@@ -30,20 +36,14 @@ function iconClass(active: boolean, flotante: boolean) {
   }`;
 }
 
-export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | "up" }) {
+export function NavLinks() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [lastPathname, setLastPathname] = useState(pathname);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // "up" es la barra flotante del celular: el menú se abre hacia arriba.
-  const flotante = menuDirection === "up";
-  const tamanoIcono = flotante ? "h-6 w-6" : "h-5 w-5";
   const enInicio = pathname.startsWith("/dashboard");
-  // En el celular cargar gastos se hace desde el botón + de la barra, que
-  // despliega las dos opciones: en el menú estarían repetidas.
-  const links = flotante ? MENU_LINKS.filter((link) => !link.soloEnPc) : MENU_LINKS;
-  const menuActive = links.some((link) => pathname.startsWith(link.href));
+  const menuActive = MENU_LINKS.some((link) => pathname.startsWith(link.href));
 
   if (pathname !== lastPathname) {
     setLastPathname(pathname);
@@ -68,7 +68,7 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
         aria-label="Inicio"
         title="Inicio"
         aria-current={enInicio ? "page" : undefined}
-        className={iconClass(enInicio, flotante)}
+        className={iconClass(enInicio, true)}
       >
         <svg
           viewBox="0 0 24 24"
@@ -77,7 +77,7 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={tamanoIcono}
+          className="h-6 w-6"
           aria-hidden
         >
           <path d="M3.5 10.5 12 3.5l8.5 7" />
@@ -94,7 +94,7 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
           title="Menú"
           aria-expanded={open}
           aria-haspopup="true"
-          className={iconClass(menuActive || open, flotante)}
+          className={iconClass(menuActive || open, true)}
         >
           <svg
             viewBox="0 0 24 24"
@@ -102,7 +102,7 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
             stroke="currentColor"
             strokeWidth="1.75"
             strokeLinecap="round"
-            className={tamanoIcono}
+            className="h-6 w-6"
             aria-hidden
           >
             <path d="M4 6.5h16M4 12h16M4 17.5h16" />
@@ -111,13 +111,11 @@ export function NavLinks({ menuDirection = "down" }: { menuDirection?: "down" | 
 
         {open && (
           <div
-            // En el celular el botón queda a la izquierda de la barra, así que
-            // el menú se abre hacia la derecha para no salirse de la pantalla.
-            className={`absolute z-30 flex w-52 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10 ${
-              flotante ? "bottom-full left-0 mb-4" : "top-full right-0 mt-3"
-            }`}
+            // El botón queda a la izquierda de la barra, así que el menú se
+            // abre hacia arriba y hacia la derecha para no salirse.
+            className="absolute bottom-full left-0 z-30 mb-4 flex w-52 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10"
           >
-            {links.map((link) => (
+            {MENU_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
