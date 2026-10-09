@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { IconoAmigos, IconoCuenta, IconoSalir } from "@/components/navegacion";
+
+const TAMANO_ICONO = "h-[18px] w-[18px] shrink-0";
+const FILA =
+  "flex items-center gap-3 rounded px-3 py-2 text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto";
 
 export function UserMenu({
   name,
@@ -63,17 +68,22 @@ export function UserMenu({
             )}
             <p className="monto truncate text-xs text-tenue">{email}</p>
           </div>
-          <Link
-            href="/account"
-            className="rounded px-3 py-2 text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
-          >
+          {/* Amigos vive acá y no en el cajón: es parte de tu perfil, no de la
+              navegación de gastos. */}
+          <Link href="/amigos" className={FILA}>
+            <IconoAmigos className={TAMANO_ICONO} />
+            Amigos
+          </Link>
+          <Link href="/account" className={FILA}>
+            <IconoCuenta className={TAMANO_ICONO} />
             Mi cuenta
           </Link>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="rounded px-3 py-2 text-left text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
+            className={`${FILA} w-full text-left`}
           >
+            <IconoSalir className={TAMANO_ICONO} />
             Cerrar sesión
           </button>
         </div>

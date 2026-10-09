@@ -23,6 +23,16 @@ model User {
   passwordResetTokens PasswordResetToken[]
   pushSubscriptions   PushSubscription[]
 
+  /// Código corto para que otro te agregue, y que también es tu enlace de
+  /// invitación. Se genera la primera vez que entrás a Amigos, así las cuentas
+  /// que ya existían no necesitan migración de datos.
+  codigoAmigo         String?              @unique
+  /// Si no está prendido, solo te pueden agregar con el código. Apagado por
+  /// defecto: aparecer en una búsqueda es algo que se elige, no que se sufre.
+  buscablePorNombre   Boolean              @default(false)
+  amistadesEnviadas   Amistad[]            @relation("AmistadesEnviadas")
+  amistadesRecibidas  Amistad[]            @relation("AmistadesRecibidas")
+
   /// Resúmenes por mail (el del mes y, el 1 de enero, el del año). Activado por
   /// defecto; se desactiva desde Mi cuenta.
   notifyMonthlyEmail   Boolean @default(true)
@@ -140,4 +150,28 @@ model UsdRateCache {
   /// La fecha que publica la fuente, cuando la publica (BCU sí, BROU no).
   date      String?
   updatedAt DateTime @updatedAt
+}
+
+enum EstadoAmistad {
+  pendiente
+  aceptada
+  rechazada
+}
+
+/// Una solicitud de amistad y su desenlace. La fila se guarda en la dirección
+/// en que se mandó; quién la mandó importa para saber a quién le toca
+/// responder y para que el rechazado no pueda insistir.
+model Amistad {
+  id             String        @id @default(cuid())
+  solicitanteId  String
+  solicitante    User          @relation("AmistadesEnviadas", fields: [solicitanteId], references: [id], onDelete: Cascade)
+  destinatarioId String
+  destinatario   User          @relation("AmistadesRecibidas", fields: [destinatarioId], references: [id], onDelete: Cascade)
+  estado         EstadoAmistad @default(pendiente)
+  createdAt      DateTime      @default(now())
+  respondidaEn   DateTime?
+
+  @@unique([solicitanteId, destinatarioId])
+  @@index([destinatarioId, estado])
+  @@index([solicitanteId, estado])
 }

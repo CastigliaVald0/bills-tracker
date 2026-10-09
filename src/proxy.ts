@@ -5,7 +5,11 @@ const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-passwor
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isPublicPath = PUBLIC_PATHS.includes(req.nextUrl.pathname);
+  // /invitacion/<codigo> es público a propósito: quien todavía no tiene cuenta
+  // tiene que poder abrirlo para ver quién lo invita y registrarse.
+  const isPublicPath =
+    PUBLIC_PATHS.includes(req.nextUrl.pathname) ||
+    req.nextUrl.pathname.startsWith("/invitacion/");
 
   if (!isLoggedIn && !isPublicPath) {
     const loginUrl = new URL("/login", req.nextUrl.origin);

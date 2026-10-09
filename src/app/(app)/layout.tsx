@@ -44,7 +44,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </svg>
               Cargar gasto
             </Link>
-            <ConversorLink />
+            {/* El conversor salió de la cabecera: se usa de vez en cuando, no
+                todos los días, y vive en el cajón bajo Herramientas. */}
             <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="down" />
           </div>
         </div>

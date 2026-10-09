@@ -57,6 +57,34 @@ export function IconoEtiqueta({ className }: { className?: string }) {
   );
 }
 
+export function IconoAmigos({ className }: { className?: string }) {
+  return (
+    <Icono className={className}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" />
+      <path d="M16 5.2a3.5 3.5 0 0 1 0 6.6M17.5 14.8c2.1.7 3.5 2.6 3.5 5.2" />
+    </Icono>
+  );
+}
+
+export function IconoCuenta({ className }: { className?: string }) {
+  return (
+    <Icono className={className}>
+      <circle cx="12" cy="8" r="3.75" />
+      <path d="M4.5 20c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6" />
+    </Icono>
+  );
+}
+
+export function IconoSalir({ className }: { className?: string }) {
+  return (
+    <Icono className={className}>
+      <path d="M14.5 4.5h3a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-3" />
+      <path d="M10 8.5 6 12l4 3.5M6 12h8.5" />
+    </Icono>
+  );
+}
+
 export function IconoPizarra({ className }: { className?: string }) {
   return (
     <Icono className={className}>

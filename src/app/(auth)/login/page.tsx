@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { rutaInternaSegura } from "@/lib/volver-a";
 import Link from "next/link";
 import { CampoContrasena } from "@/components/CampoContrasena";
 
-export default function LoginPage() {
+function LoginPageForm() {
   const router = useRouter();
+  // A dónde volver después de entrar: lo usa el enlace de invitación para que
+  // no te deje en el inicio y tengas que buscar el mensaje de nuevo.
+  const destino = rutaInternaSegura(useSearchParams().get("volverA"), "/dashboard");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +39,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(destino);
     router.refresh();
   }
 
@@ -88,5 +92,17 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+/**
+ * `useSearchParams` obliga a un límite de Suspense: sin él, esta página
+ * —que se prerenderiza— falla al compilar.
+ */
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-suave">Cargando...</p>}>
+      <LoginPageForm />
+    </Suspense>
   );
 }

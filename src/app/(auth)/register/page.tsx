@@ -1,18 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { normalizarCodigo } from "@/lib/amigos";
 import Link from "next/link";
 import { CampoContrasena } from "@/components/CampoContrasena";
 
-export default function RegisterPage() {
+function RegisterPageForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Si llegó por un enlace de invitación, al terminar vuelve ahí para
+  // confirmar la amistad en vez de caer en el inicio.
+  const invitacion = normalizarCodigo(useSearchParams().get("invitacion") ?? "");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,7 +44,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(invitacion ? `/invitacion/${invitacion}` : "/dashboard");
     router.refresh();
   }
 
@@ -103,5 +107,17 @@ export default function RegisterPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+/**
+ * `useSearchParams` obliga a un límite de Suspense: sin él, esta página
+ * —que se prerenderiza— falla al compilar.
+ */
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-suave">Cargando...</p>}>
+      <RegisterPageForm />
+    </Suspense>
   );
 }
