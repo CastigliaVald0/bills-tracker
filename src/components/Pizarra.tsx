@@ -13,12 +13,22 @@ export function Pizarra({
   accion,
   pesos,
   dolares,
+  notaPesos,
+  notaDolares,
+  pie,
 }: {
   rotulo: string;
   titulo: string;
   accion?: React.ReactNode;
   pesos: string;
   dolares: string;
+  /** Una línea bajo cada cifra: en el resumen mensual, contra qué se compara.
+      Va acá y no en una tarjeta aparte porque el dato describe a ese número. */
+  notaPesos?: React.ReactNode;
+  notaDolares?: React.ReactNode;
+  /** Una franja al pie del mismo panel, para lo que habla de las dos columnas
+      a la vez. Va adentro y no en otra tarjeta: sigue siendo el mismo total. */
+  pie?: React.ReactNode;
 }) {
   return (
     <section className="pizarra-panel aparece">
@@ -33,14 +43,17 @@ export function Pizarra({
       </div>
 
       <div className="mt-6 grid grid-cols-2 sm:mt-7">
-        <Columna etiqueta="Pesos" monto={pesos} color="var(--peso-luz)" />
+        <Columna etiqueta="Pesos" monto={pesos} color="var(--peso-luz)" nota={notaPesos} />
         <Columna
           etiqueta="Dólares"
           monto={dolares}
           color="var(--dolar-luz)"
+          nota={notaDolares}
           separador
         />
       </div>
+
+      {pie}
     </section>
   );
 }
@@ -98,11 +111,13 @@ function Columna({
   etiqueta,
   monto,
   color,
+  nota,
   separador = false,
 }: {
   etiqueta: string;
   monto: string;
   color: string;
+  nota?: React.ReactNode;
   separador?: boolean;
 }) {
   return (
@@ -118,6 +133,7 @@ function Columna({
       <p className="pizarra-cifra monto mt-2.5 leading-[0.95] text-pizarra-texto">
         {monto}
       </p>
+      {nota && <p className="mt-2 text-xs text-pizarra-suave">{nota}</p>}
     </div>
   );
 }

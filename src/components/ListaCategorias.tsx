@@ -20,9 +20,19 @@ const COLOR_MONEDA: Record<Moneda, string> = { UYU: "var(--peso)", USD: "var(--d
 export function ListaCategorias({
   categorias,
   totales,
+  antes,
 }: {
   categorias: TotalCategoria[];
   totales: { UYU: number; USD: number };
+  /**
+   * Lo que gastó cada categoría en el período anterior, por nombre. Cuando
+   * viene, cada fila muestra cuánto se movió.
+   *
+   * El dato vive en la fila y no en una sección aparte: antes había un bloque
+   * "Qué cambió" que solo mostraba la que más subió y la que más bajó, y
+   * obligaba a cruzarlo mentalmente con esta lista.
+   */
+  antes?: Map<string, { UYU: number; USD: number }>;
 }) {
   const grupos = MONEDAS.map((moneda) => ({
     moneda,
@@ -33,6 +43,7 @@ export function ListaCategorias({
         color: cat.color,
         monto: cat[moneda],
         porcentaje: totales[moneda] > 0 ? (cat[moneda] / totales[moneda]) * 100 : 0,
+        antes: antes?.get(cat.name)?.[moneda] ?? null,
       }))
       .sort((a, b) => b.monto - a.monto),
   })).filter((grupo) => grupo.filas.length > 0);
@@ -75,8 +86,14 @@ export function ListaCategorias({
                   />
                 </span>
 
+                {/* Con la columna de cambio a la derecha no entran los dos en
+                    un celular: se cortaban los nombres de categoría. Cede el
+                    porcentaje, que es el dato menos accionable de la fila y
+                    que el orden descendente ya insinúa. En PC van los dos. */}
                 <span
-                  className="monto w-10 shrink-0 text-right text-xs text-tenue"
+                  className={`monto w-10 shrink-0 text-right text-xs text-tenue ${
+                    antes ? "hidden sm:inline-block" : ""
+                  }`}
                   title={`${Math.round(fila.porcentaje)}% de lo gastado en ${NOMBRE_MONEDA[moneda].toLowerCase()}`}
                 >
                   {Math.round(fila.porcentaje)}%
@@ -84,14 +101,43 @@ export function ListaCategorias({
 
                 {/* Ancho fijo: si cada monto se ajustara a su largo, las barras y
                     los porcentajes de cada fila terminarían en lugares distintos. */}
-                <span className="monto w-32 shrink-0 text-right text-sm text-texto">
+                <span className="monto w-28 shrink-0 text-right text-sm text-texto sm:w-32">
                   {formatMoney(fila.monto, moneda)}
                 </span>
+
+                {antes && (
+                  <span className="monto w-16 shrink-0 pl-2 text-right text-xs text-suave">
+                    <Cambio ahora={fila.monto} antes={fila.antes} />
+                  </span>
+                )}
               </li>
             ))}
           </ul>
         </div>
       ))}
     </div>
+  );
+}
+
+/**
+ * Cuánto se movió una categoría contra el período anterior.
+ *
+ * La flecha y el signo hacen el trabajo; el color no se usa para la dirección
+ * porque en esta app el verde ya significa "dólares".
+ */
+function Cambio({ ahora, antes }: { ahora: number; antes: number | null }) {
+  // Sin monto en el período anterior la categoría es nueva; un porcentaje
+  // contra cero no significa nada.
+  if (antes === null || antes === 0) return <span>nuevo</span>;
+
+  const pct = Math.round(((ahora - antes) / antes) * 100);
+  if (pct === 0) return <span>=</span>;
+
+  return (
+    <>
+      <span aria-hidden>{pct > 0 ? "▲" : "▼"} </span>
+      <span className="sr-only">{pct > 0 ? "subió " : "bajó "}</span>
+      {Math.abs(pct)}%
+    </>
   );
 }

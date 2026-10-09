@@ -36,6 +36,26 @@ const ORDENES: { valor: Orden; etiqueta: string }[] = [
   { valor: "monto-asc", etiqueta: "Monto: de menor a mayor" },
 ];
 
+/**
+ * Cuánto se tiñe un día, en porcentaje de color sobre el papel.
+ *
+ * El calendario antes solo decía si hubo gastos: un día de $200 se veía igual
+ * que uno de $28.500. Ahora la intensidad dice cuánto.
+ *
+ * La escala es por raíz cuadrada y no lineal: casi todos los meses tienen un
+ * gasto que dobla o triplica al resto —el alquiler— y en escala lineal ese día
+ * se lleva todo el color y los demás quedan indistinguibles entre sí. La raíz
+ * comprime el extremo y deja ver las diferencias entre los días normales, que
+ * es lo que uno mira.
+ */
+const TINTE_MINIMO = 10;
+const TINTE_MAXIMO = 46;
+
+function tinteDelDia(total: number, tope: number) {
+  if (tope <= 0 || total <= 0) return 0;
+  return TINTE_MINIMO + Math.sqrt(total / tope) * (TINTE_MAXIMO - TINTE_MINIMO);
+}
+
 /** La semana arranca el lunes, como en los calendarios de acá. */
 const DIAS_SEMANA = ["L", "M", "X", "J", "V", "S", "D"];
 
@@ -65,11 +85,27 @@ export function GastosDelMes({
   const huecoInicial =
     (new Date(Date.UTC(anio, mes - 1, 1)).getUTCDay() + 6) % 7;
 
-  const cantidadPorDia = useMemo(() => {
-    const mapa = new Map<number, number>();
-    for (const g of gastos) mapa.set(g.dia, (mapa.get(g.dia) ?? 0) + 1);
+  /**
+   * Cuántos gastos y cuánta plata por día. El monto usa `montoComparable`
+   * (dólares llevados a pesos) porque la barra compara días entre sí, y
+   * mezclar monedas sin convertir daría una altura mentirosa.
+   */
+  const porDia = useMemo(() => {
+    const mapa = new Map<number, { cantidad: number; total: number }>();
+    for (const g of gastos) {
+      const entrada = mapa.get(g.dia) ?? { cantidad: 0, total: 0 };
+      entrada.cantidad += 1;
+      entrada.total += g.montoComparable;
+      mapa.set(g.dia, entrada);
+    }
     return mapa;
   }, [gastos]);
+
+  /** El día más caro marca el tope de la escala de las barras. */
+  const topeDelMes = useMemo(
+    () => Math.max(0, ...[...porDia.values()].map((d) => d.total)),
+    [porDia]
+  );
 
   const visibles = useMemo(() => {
     const lista =
@@ -122,10 +158,13 @@ export function GastosDelMes({
               <span key={`hueco-${i}`} />
             ))}
             {Array.from({ length: diasDelMes }, (_, i) => i + 1).map((dia) => {
-              const cantidad = cantidadPorDia.get(dia) ?? 0;
+              const { cantidad, total } = porDia.get(dia) ?? { cantidad: 0, total: 0 };
               const elegido = diaElegido === dia;
               const esHoy = diaDeHoy === dia;
               const esMayor = mayorGasto?.dia === dia;
+              const color = esMayor ? "var(--alerta)" : "var(--peso)";
+              const tinte = tinteDelDia(total, topeDelMes);
+
               return (
                 <button
                   key={dia}
@@ -138,98 +177,83 @@ export function GastosDelMes({
                       ? `${dia} de ${nombreMes}: ${cantidad} ${cantidad === 1 ? "gasto" : "gastos"}${esMayor ? ", el día del mayor gasto" : ""}`
                       : `${dia} de ${nombreMes}: sin gastos`
                   }
-                  className={`relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-md text-sm transition-colors ${
+                  className={`monto flex aspect-square items-center justify-center rounded-md text-sm transition-colors ${
                     elegido
-                      ? `${esMayor ? "bg-alerta" : "bg-peso"} font-semibold text-superficie`
+                      ? "font-semibold text-superficie"
                       : cantidad > 0
-                        ? "font-medium text-texto hover:ring-1 hover:ring-peso"
+                        ? "text-texto hover:ring-1 hover:ring-peso"
                         : "cursor-default text-tenue"
                   } ${esHoy && !elegido ? "ring-1 ring-borde-fuerte" : ""}`}
-                  // Los días con gastos se tiñen con el color de los pesos; el del
-                  // mayor gasto, con el rojo de la app, con el mismo tinte suave.
                   style={
-                    cantidad > 0 && !elegido
-                      ? {
-                          backgroundColor: esMayor
-                            ? "color-mix(in srgb, var(--alerta) 22%, transparent)"
-                            : "color-mix(in srgb, var(--peso) 16%, transparent)",
-                        }
-                      : undefined
+                    elegido
+                      ? { backgroundColor: color }
+                      : cantidad > 0
+                        ? {
+                            backgroundColor: `color-mix(in srgb, ${color} ${tinte}%, transparent)`,
+                          }
+                        : undefined
                   }
                 >
-                  <span className="monto leading-none">{dia}</span>
-                  {cantidad > 0 && (
-                    <span
-                      aria-hidden
-                      // Elegido, el fondo es sólido y el conteo tiene que
-                      // heredar el blanco del día; si no, se atenúa.
-                      className={`monto text-xs leading-none ${elegido ? "" : "text-suave"}`}
-                    >
-                      {cantidad}
-                    </span>
-                  )}
+                  {dia}
                 </button>
               );
             })}
           </div>
 
-          {/* Referencias: el color nunca es el único que avisa. La del mayor
-              gasto además filtra ese día. */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-borde pt-3 text-xs text-suave">
-            <span className="flex items-center gap-1.5">
+          {/* Se fue el chip "Días con gastos": cada celda ya muestra cuántos
+              hay, así que la referencia explicaba algo que estaba a la vista.
+              Queda el mayor gasto, que además de informar filtra ese día. */}
+          {mayorGasto && (
+            <button
+              type="button"
+              onClick={() => setDiaElegido(mayorGasto.dia)}
+              className="mt-3 flex w-full min-w-0 items-center gap-1.5 border-t border-borde pt-3 text-left text-xs text-suave transition-colors hover:text-texto"
+              aria-label={`Ver el día del mayor gasto: ${mayorGasto.descripcion}, ${formatMoney(mayorGasto.monto, mayorGasto.moneda)}, día ${mayorGasto.dia}`}
+            >
+              {/* La misma forma y tinte que la celda del día. */}
               <span
                 aria-hidden
-                className="h-3 w-3 rounded-sm"
-                style={{ backgroundColor: "color-mix(in srgb, var(--peso) 16%, transparent)" }}
+                className="h-3 w-3 shrink-0 rounded-sm"
+                style={{ backgroundColor: "color-mix(in srgb, var(--alerta) 46%, transparent)" }}
               />
-              Días con gastos
-            </span>
-            {mayorGasto && (
-              <button
-                type="button"
-                onClick={() => setDiaElegido(mayorGasto.dia)}
-                className="flex min-w-0 items-center gap-1.5 text-left hover:text-texto"
-                aria-label={`Ver el día del mayor gasto: ${mayorGasto.descripcion}, ${formatMoney(mayorGasto.monto, mayorGasto.moneda)}, día ${mayorGasto.dia}`}
-              >
-                <span
-                  aria-hidden
-                  className="h-3 w-3 shrink-0 rounded-sm"
-                  style={{ backgroundColor: "color-mix(in srgb, var(--alerta) 22%, transparent)" }}
-                />
-                <span className="min-w-0">
-                  Mayor gasto:{" "}
-                  <span className="monto text-texto">
-                    {formatMoney(mayorGasto.monto, mayorGasto.moneda)}
-                  </span>{" "}
-                  · {mayorGasto.descripcion} · día {mayorGasto.dia}
-                </span>
-              </button>
-            )}
-          </div>
+              <span className="min-w-0 truncate">
+                Mayor gasto · día {mayorGasto.dia} ·{" "}
+                <span className="monto text-texto">
+                  {formatMoney(mayorGasto.monto, mayorGasto.moneda)}
+                </span>{" "}
+                · {mayorGasto.descripcion}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {diaElegido === null ? (
-          <p className="text-sm text-suave">
-            Todos los días · tocá un día para filtrar
-          </p>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setDiaElegido(null)}
-            className="boton-linea py-1 text-sm"
-            aria-label={`Quitar el filtro del día ${diaElegido} y ver todos`}
-          >
-            Día {diaElegido} <span aria-hidden>✕</span>
-          </button>
-        )}
-        <label className="flex items-center gap-2">
-          <span className="rotulo">Ordenar</span>
+      {/* Una sola fila: qué se está viendo a la izquierda, cómo ordenarlo a la
+          derecha. Antes eran tres renglones apilados —el filtro, el orden y el
+          conteo— para decir lo mismo. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <p className="monto min-w-0 text-xs text-suave">
+          {diaElegido !== null && (
+            <button
+              type="button"
+              onClick={() => setDiaElegido(null)}
+              className="mr-2 rounded-full bg-superficie-alta px-2 py-1 text-texto transition-colors hover:bg-borde"
+              aria-label={`Quitar el filtro del día ${diaElegido} y ver todos`}
+            >
+              Día {diaElegido} <span aria-hidden>✕</span>
+            </button>
+          )}
+          {visibles.length} {visibles.length === 1 ? "gasto" : "gastos"}
+          {totalVisible.UYU > 0 && ` · ${formatMoney(totalVisible.UYU, "UYU")}`}
+          {totalVisible.USD > 0 && ` · ${formatMoney(totalVisible.USD, "USD")}`}
+        </p>
+
+        <label className="flex shrink-0 items-center gap-2">
+          <span className="sr-only">Ordenar</span>
           <select
             value={orden}
             onChange={(e) => setOrden(e.target.value as Orden)}
-            className="campo w-auto py-1.5 text-sm"
+            className="campo w-auto py-1 text-xs"
           >
             {ORDENES.map((o) => (
               <option key={o.valor} value={o.valor}>
@@ -239,12 +263,6 @@ export function GastosDelMes({
           </select>
         </label>
       </div>
-
-      <p className="monto text-xs text-suave">
-        {visibles.length} {visibles.length === 1 ? "gasto" : "gastos"}
-        {totalVisible.UYU > 0 && ` · ${formatMoney(totalVisible.UYU, "UYU")}`}
-        {totalVisible.USD > 0 && ` · ${formatMoney(totalVisible.USD, "USD")}`}
-      </p>
 
       <div className="lista">
         {visibles.map((g) => (
