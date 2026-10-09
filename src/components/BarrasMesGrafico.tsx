@@ -48,20 +48,23 @@ export default function BarrasMesGrafico({
   montos,
   moneda,
   alto,
+  combinado = false,
 }: {
   etiquetas: string[];
   montos: number[];
   moneda: "UYU" | "USD";
   alto: number;
+  /** Las dos monedas sumadas: la barra va del celeste del peso al verde del
+      dólar, el mismo gesto del filo bicolor de la pizarra. */
+  combinado?: boolean;
 }) {
   const tema = useSyncExternalStore(suscribirTema, temaActual, temaActual);
   const oscuro = tema === "oscuro";
 
   const opciones = useMemo<ApexOptions>(() => {
-    const color =
-      moneda === "UYU"
-        ? leerToken("--peso", oscuro ? "#6fbee4" : "#1f6f96")
-        : leerToken("--dolar", oscuro ? "#7fc895" : "#2f6e46");
+    const colorPeso = leerToken("--peso", oscuro ? "#6fbee4" : "#1f6f96");
+    const colorDolar = leerToken("--dolar", oscuro ? "#7fc895" : "#2f6e46");
+    const color = moneda === "UYU" ? colorPeso : colorDolar;
     const texto = leerToken("--texto-suave", oscuro ? "#9aacb2" : "#556970");
     const grilla = leerToken("--borde", oscuro ? "#26363f" : "#d6dbd3");
     const fuente = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
@@ -75,9 +78,23 @@ export default function BarrasMesGrafico({
         parentHeightOffset: 0,
         animations: { enabled: true, speed: 450 },
       },
-      colors: [color],
+      // En el combinado ApexCharts pinta `gradientToColors` del lado del
+      // origen, así que van invertidos para que la barra arranque en el
+      // celeste del peso y termine en el verde del dólar.
+      colors: [combinado ? colorDolar : color],
       // Sólido: el 85% que trae por defecto lava el color de la moneda.
-      fill: { opacity: 1 },
+      fill: combinado
+        ? {
+            type: "gradient",
+            gradient: {
+              type: "horizontal",
+              gradientToColors: [colorPeso],
+              stops: [0, 100],
+              opacityFrom: 1,
+              opacityTo: 1,
+            },
+          }
+        : { opacity: 1 },
       plotOptions: {
         bar: {
           horizontal: true,
@@ -128,11 +145,13 @@ export default function BarrasMesGrafico({
         },
       },
     };
-  }, [etiquetas, moneda, oscuro]);
+  }, [etiquetas, moneda, oscuro, combinado]);
 
   const serie = useMemo(
-    () => [{ name: moneda === "UYU" ? "Pesos" : "Dólares", data: montos }],
-    [montos, moneda]
+    () => [
+      { name: combinado ? "Todo junto" : moneda === "UYU" ? "Pesos" : "Dólares", data: montos },
+    ],
+    [montos, moneda, combinado]
   );
 
   // key={tema}: al cambiar de tema se vuelve a montar con los colores nuevos.

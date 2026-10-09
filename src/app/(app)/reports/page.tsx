@@ -4,8 +4,7 @@ import { requireUserId } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 import { formatMoney } from "@/lib/format";
 import { Pizarra } from "@/components/Pizarra";
-import { Vacio, IconoCalendario, IconoPizarra } from "@/components/Vacio";
-import { TortaCombinada } from "@/components/TortaCombinada";
+import { Vacio, IconoCalendario } from "@/components/Vacio";
 import { BarrasMes } from "@/components/BarrasMes";
 import { ListaCategorias } from "@/components/ListaCategorias";
 import { getUsdRate } from "@/lib/exchange-rate";
@@ -22,13 +21,18 @@ export default async function ReportsPage({
   const { year: yearParam } = await searchParams;
   const year = yearParam ? Number(yearParam) : new Date().getUTCFullYear();
 
-  const start = new Date(Date.UTC(year, 0, 1));
-  const end = new Date(Date.UTC(year + 1, 0, 1));
+  // Se traen dos años de una: el que se mira y el anterior, para comparar las
+  // categorías. Una consulta sola sale más barata que dos.
+  const desde = new Date(Date.UTC(year - 1, 0, 1));
+  const hasta = new Date(Date.UTC(year + 1, 0, 1));
 
-  const expenses = await prisma.expense.findMany({
-    where: { userId, date: { gte: start, lt: end } },
+  const todos = await prisma.expense.findMany({
+    where: { userId, date: { gte: desde, lt: hasta } },
     include: { category: true },
   });
+
+  const expenses = todos.filter((e) => e.date.getUTCFullYear() === year);
+  const delAnioPrevio = todos.filter((e) => e.date.getUTCFullYear() === year - 1);
 
   const yearTotals = { UYU: 0, USD: 0 };
   const monthlyTotals = Array.from({ length: 12 }, () => ({ UYU: 0, USD: 0 }));
@@ -51,9 +55,18 @@ export default async function ReportsPage({
     byCategory.set(expense.categoryId, entry);
   }
 
-  const categoryTotals = Array.from(byCategory.values()).sort(
-    (a, b) => b.UYU + b.USD * 40 - (a.UYU + a.USD * 40)
-  );
+  // Sin ordenar: ListaCategorias arma un bloque por moneda y ordena cada uno
+  // por su propio monto. El orden que había acá usaba un dólar a 40 escrito a
+  // mano y ya no hacía nada.
+  const categoryTotals = Array.from(byCategory.values());
+
+  /** Lo que gastó cada categoría el año pasado, para el cambio por fila. */
+  const categoriasAntes = new Map<string, { UYU: number; USD: number }>();
+  for (const e of delAnioPrevio) {
+    const previo = categoriasAntes.get(e.category.name) ?? { UYU: 0, USD: 0 };
+    previo[e.currency] += Number(e.amount);
+    categoriasAntes.set(e.category.name, previo);
+  }
 
   // Los meses que todavía no llegaron no se muestran. En un año pasado se ven
   // los 12; en el año en curso, hasta el mes actual inclusive; en uno futuro,
@@ -128,6 +141,39 @@ export default async function ReportsPage({
         />
       ) : (
         <>
+          {/* Primero el total combinado: es el único número comparable entre
+              meses y antes estaba enterrado en una torta de doce gajos, que
+              además respondía una pregunta que nadie se hace ("¿qué porcentaje
+              de mi año fue marzo?"). Los dos desgloses por moneda van abajo. */}
+          {mesesVisibles > 0 && gajosCombinados.length > 0 && cotizacion && combinado && (
+            <section>
+              <h2 className="rotulo mb-3">Mes a mes · todo junto</h2>
+              <div className="tarjeta px-2 pt-3 pb-1 sm:px-3">
+                <BarrasMes
+                  meses={combinado.porMes
+                    .map((monto, mes) => ({ mes, monto }))
+                    .slice(0, mesesVisibles)}
+                  moneda="UYU"
+                  combinado
+                />
+              </div>
+              <p className="mt-2 text-xs text-tenue">
+                Único gráfico que suma pesos y dólares. Cada gasto en dólares se
+                convierte con la cotización del día en que lo cargaste.
+                {combinado.conCotizacionDeHoy > 0 && (
+                  <>
+                    {" "}
+                    {combinado.conCotizacionDeHoy}{" "}
+                    {combinado.conCotizacionDeHoy === 1
+                      ? "gasto no tiene la suya guardada y usa"
+                      : "gastos no tienen la suya guardada y usan"}{" "}
+                    la de hoy ({cotizacion.source}, venta {cotizacion.venta}).
+                  </>
+                )}
+              </p>
+            </section>
+          )}
+
           {mesesVisibles > 0 && (
             <section>
               <h2 className="rotulo mb-3">
@@ -151,39 +197,17 @@ export default async function ReportsPage({
           )}
 
           <section>
-            <h2 className="rotulo mb-3">Categorías del año</h2>
-            <ListaCategorias categorias={categoryTotals} totales={yearTotals} />
-          </section>
-
-          <section>
-            <h2 className="rotulo mb-3">Todo junto · % por mes</h2>
-            {gajosCombinados.length > 0 && cotizacion && combinado ? (
-              <TortaCombinada
-                datos={gajosCombinados}
-                nota={
-                  <>
-                    Único gráfico que suma pesos y dólares. Cada gasto en dólares se
-                    convierte con la cotización del día en que lo cargaste.
-                    {combinado.conCotizacionDeHoy > 0 && (
-                      <>
-                        {" "}
-                        {combinado.conCotizacionDeHoy}{" "}
-                        {combinado.conCotizacionDeHoy === 1
-                          ? "gasto no tiene la suya guardada y usa"
-                          : "gastos no tienen la suya guardada y usan"}{" "}
-                        la de hoy ({cotizacion.source}, venta {cotizacion.venta}).
-                      </>
-                    )}
-                  </>
-                }
-              />
-            ) : (
-              <Vacio
-                icono={<IconoPizarra />}
-                titulo="Falta la cotización"
-                detalle="Sin cotización del dólar no se pueden sumar las dos monedas en un solo gráfico. El resto del resumen sí está completo."
-              />
-            )}
+            <h2 className="rotulo mb-3">
+              Categorías del año
+              {delAnioPrevio.length > 0 && (
+                <span className="text-tenue"> · cambio contra {year - 1}</span>
+              )}
+            </h2>
+            <ListaCategorias
+              categorias={categoryTotals}
+              totales={yearTotals}
+              antes={delAnioPrevio.length > 0 ? categoriasAntes : undefined}
+            />
           </section>
         </>
       )}

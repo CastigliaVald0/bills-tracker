@@ -20,7 +20,16 @@ const ALTO_EJES = 40;
 
 type Mes = { mes: number; monto: number };
 
-export function BarrasMes({ meses, moneda }: { meses: Mes[]; moneda: "UYU" | "USD" }) {
+export function BarrasMes({
+  meses,
+  moneda,
+  combinado = false,
+}: {
+  meses: Mes[];
+  moneda: "UYU" | "USD";
+  /** Pesos y dólares sumados en un solo total por mes. */
+  combinado?: boolean;
+}) {
   const etiquetas = useMemo(
     () => meses.map((m) => monthShortLabel(m.mes).replace(".", "")),
     [meses]
@@ -32,13 +41,17 @@ export function BarrasMes({ meses, moneda }: { meses: Mes[]; moneda: "UYU" | "US
     <>
       {/* Altura reservada mientras carga ApexCharts, para que la página no salte. */}
       <div style={{ minHeight: alto }} aria-hidden>
-        <Grafico etiquetas={etiquetas} montos={montos} moneda={moneda} alto={alto} />
+        <Grafico etiquetas={etiquetas} montos={montos} moneda={moneda} alto={alto} combinado={combinado} />
       </div>
 
       {/* Versión en tabla para lectores de pantalla: el gráfico es un SVG sin
           texto accesible y los montos exactos solo aparecen al pasar el mouse. */}
       <table className="sr-only">
-        <caption>Gasto por mes en {moneda === "UYU" ? "pesos" : "dólares"}</caption>
+        <caption>
+          {combinado
+            ? "Gasto combinado por mes, pesos y dólares convertidos"
+            : `Gasto por mes en ${moneda === "UYU" ? "pesos" : "dólares"}`}
+        </caption>
         <tbody>
           {meses.map((m) => (
             <tr key={m.mes}>
