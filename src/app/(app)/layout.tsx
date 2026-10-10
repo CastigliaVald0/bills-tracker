@@ -5,7 +5,6 @@ import { CajonMenu } from "@/components/CajonMenu";
 import Link from "next/link";
 import { Marca } from "@/components/Marca";
 import { BotonAgregar } from "@/components/BotonAgregar";
-import { BarraFlotante } from "@/components/BarraFlotante";
 import { ActivarNotificaciones } from "@/components/ActivarNotificaciones";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -65,7 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           va en capas aparte (ver .barra-muesca) porque lleva un recorte
           circular alrededor del botón: si el recorte se aplicara a la barra
           entera, también cortaría el botón y los menús que se abren arriba. */}
-      <BarraFlotante>
+      <nav className="barra-flotante fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-20 grid h-14 grid-cols-[1fr_auto_1fr] items-center px-2 sm:hidden">
         <div aria-hidden className="absolute inset-0 -z-10 drop-shadow-[0_6px_14px_rgb(0_0_0/0.16)]">
           {/* Dos capas con el mismo recorte, la de adentro 1px más chica: lo que
               asoma de la de atrás es el borde, que así sigue también la curva. */}
@@ -87,7 +86,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="up" />
           </div>
         </div>
-      </BarraFlotante>
+      </nav>
     </div>
   );
 }

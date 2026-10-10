@@ -530,14 +530,6 @@
     --sube: 6px;
     /* radio del recorte: los 32px del botón más la separación */
     --muesca: 38px;
-    /* Se achica hacia su base, así no se despega del borde de abajo. */
-    transform-origin: 50% 100%;
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  /* comprimida mientras se baja por la página (ver BarraFlotante) */
-  .barra-flotante[data-compacta="true"] {
-    transform: scale(0.86);
   }
 
   .barra-muesca {
