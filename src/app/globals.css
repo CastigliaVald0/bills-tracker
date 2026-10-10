@@ -31,6 +31,15 @@
   --pizarra-texto: #edf1ec;
   --pizarra-suave: #91a7b2;
 
+  /* el ticket: la tira de papel de los últimos gastos. Tiene sus propios
+     colores para poder despegarse un poco del fondo en cada tema. */
+  --ticket: #fdfdf8;
+  --ticket-texto: #15242e;
+  --ticket-suave: #556970;
+  --ticket-linea: #aab4a9;
+  --ticket-peso: #1f6f96;
+  --ticket-dolar: #2f6e46;
+
   /* las dos monedas */
   --peso: #1f6f96;
   --dolar: #2f6e46;
@@ -65,6 +74,15 @@
     --texto-suave: #9aacb2;
     /* Aclarado de #6d7f85 por lo mismo: 5,1:1 y 4,6:1. */
     --texto-tenue: #788b91;
+
+    /* de noche el papel es oscuro como el resto de la app, apenas más claro
+       que las tarjetas para que se lea como una hoja apoyada encima */
+    --ticket: #1b2b35;
+    --ticket-texto: #e7ece6;
+    --ticket-suave: #9aacb2;
+    --ticket-linea: #3d5059;
+    --ticket-peso: #6fbee4;
+    --ticket-dolar: #7fc895;
 
     --pizarra: #08161f;
     --pizarra-alta: #12242f;
@@ -267,6 +285,74 @@
     background: linear-gradient(90deg, var(--peso) 0 50%, var(--dolar) 50% 100%);
     transform-origin: left center;
     animation: trazar 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* el ticket: la tira de papel donde quedan los últimos gastos. Sale de la
+     "caja" al cargar la página y termina en un borde cortado en serrucho. */
+  .ticket {
+    position: relative;
+    border-radius: 3px 3px 0 0;
+    background-color: var(--ticket);
+    color: var(--ticket-texto);
+    /* El serrucho de abajo cuelga fuera de la caja: drop-shadow lo sigue,
+       box-shadow dibujaría un rectángulo. */
+    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.1)) drop-shadow(0 8px 14px rgb(0 0 0 / 0.12));
+    margin-bottom: 7px;
+    animation: imprimir 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .ticket::after {
+    content: "";
+    position: absolute;
+    inset: 100% 0 auto 0;
+    height: 7px;
+    background:
+      linear-gradient(135deg, var(--ticket) 50%, transparent 50%),
+      linear-gradient(225deg, var(--ticket) 50%, transparent 50%);
+    background-size: 14px 7px;
+    background-repeat: repeat-x;
+  }
+
+  /* la línea de corte entre un día y el siguiente */
+  .ticket-tramo + .ticket-tramo {
+    border-top: 1px dashed var(--ticket-linea);
+  }
+
+  /* el pie se separa con doble línea, como el total de un ticket */
+  .ticket-pie {
+    border-top: 3px double var(--ticket-linea);
+  }
+
+  /* renglón de servicio: fecha, categoría, pie. Todo en mono y mayúsculas. */
+  .ticket-renglon {
+    font-family: var(--font-num), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ticket-suave);
+  }
+
+  .ticket-enlace {
+    color: var(--ticket-texto);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--ticket-linea);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.15s ease;
+  }
+
+  .ticket-enlace:hover {
+    text-decoration-color: var(--ticket-texto);
+  }
+
+  /* los puntos que llevan del nombre al monto */
+  .ticket-puntos {
+    flex: 1 1 1.5rem;
+    min-width: 1.5rem;
+    border-bottom: 2px dotted var(--ticket-linea);
+    transform: translateY(-3px);
   }
 
   /* --- controles ------------------------------------------------------ */
@@ -714,6 +800,16 @@
   }
 }
 
+/* el ticket sale de arriba hacia abajo, como de la impresora de la caja */
+@keyframes imprimir {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 -10px 0);
+  }
+}
+
 @keyframes aparece {
   from {
     opacity: 0;
@@ -729,7 +825,8 @@
   .pizarra-panel::before,
   .filo::before,
   .aparece,
-  .hueso {
+  .hueso,
+  .ticket {
     animation: none;
   }
 
