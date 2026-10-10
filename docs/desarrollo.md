@@ -74,11 +74,13 @@ Los mails se leen en [http://localhost:8025](http://localhost:8025).
    - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` — ver
      [Configurar el envío de mails](#configurar-el-envío-de-mails). Sin esto nadie puede
      recuperar su contraseña.
-4. Aplicá las migraciones contra Neon **antes** del primer deploy, desde tu máquina:
+4. Deploy. El script `build` corre `prisma migrate deploy`, después `prisma generate` y recién ahí `next build`:
+   - `migrate deploy` aplica contra la base las migraciones que falten, usando el `DATABASE_URL` de Vercel. Así el código nuevo nunca queda publicado sobre una base con el esquema viejo. Si una migración falla, el build se corta y sigue en línea la versión anterior.
+   - `prisma generate` es imprescindible: sin eso el build falla en un servidor limpio.
+
+   Si alguna vez hace falta aplicarlas a mano desde tu máquina:
    ```bash
    DATABASE_URL="<la-de-neon>" npx prisma migrate deploy
    ```
-   Repetí este paso cada vez que agregues una migración nueva.
-5. Deploy. El script `build` corre `prisma generate` antes de `next build`, que es imprescindible: sin eso el build falla en un servidor limpio.
 
 > Si lo desplegás fuera de Vercel, agregá también `AUTH_TRUST_HOST=true` (Auth.js solo confía en el host automáticamente en Vercel).
