@@ -145,10 +145,10 @@ export default function RecurringPage() {
         : "Escribí en cuántas cuotas se paga.";
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <header>
         <p className="rotulo">Se cargan solos cada mes</p>
-        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Gastos fijos</h1>
+        <h1 className="titulo">Gastos fijos</h1>
       </header>
 
       <form onSubmit={handleCreate} className="tarjeta flex flex-col gap-5 p-4 sm:p-5">

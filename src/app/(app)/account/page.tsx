@@ -171,7 +171,7 @@ export default function AccountPage() {
     <div className="mx-auto flex w-full max-w-sm flex-col gap-8">
       <header>
         <p className="rotulo">Acceso y datos</p>
-        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Mi cuenta</h1>
+        <h1 className="titulo">Mi cuenta</h1>
       </header>
 
       <section>

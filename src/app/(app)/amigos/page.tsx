@@ -23,10 +23,10 @@ export default async function AmigosPage() {
   const enlace = `${protocolo}://${host}/invitacion/${codigo}`;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <header>
         <p className="rotulo">Para compartir gastos más adelante</p>
-        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Amigos</h1>
+        <h1 className="titulo">Amigos</h1>
       </header>
 
       <PanelAmigos

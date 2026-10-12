@@ -214,7 +214,7 @@ export default async function MonthlyPage({
   );
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <Pizarra
         rotulo="Gastado en el mes"
         titulo={monthLabel(claveMes)}

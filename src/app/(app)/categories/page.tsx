@@ -29,12 +29,11 @@ function contraste(a: string, b: string) {
 
 /**
  * Con colores libres existe el riesgo de elegir uno que se confunda con el
- * fondo. El color vive en puntos y barras finas, así que se
- * avisa cuando no llega a 1,5:1 contra la superficie clara o la oscura.
+ * fondo. El color vive en filetes y barras finas, así que se avisa cuando no
+ * llega a 1,5:1 contra la superficie de las tarjetas.
  */
 function avisoDeContraste(hex: string) {
-  if (contraste(hex, "#fafbf8") < 1.5) return "Muy claro: en tema claro casi no se va a ver.";
-  if (contraste(hex, "#16222a") < 1.5) return "Muy oscuro: en tema oscuro casi no se va a ver.";
+  if (contraste(hex, "#15212a") < 1.5) return "Muy oscuro: casi no se va a ver sobre el fondo de la app.";
   return null;
 }
 
@@ -113,10 +112,10 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <header>
         <p className="rotulo">El color identifica cada gasto en las listas</p>
-        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Categorías</h1>
+        <h1 className="titulo">Categorías</h1>
       </header>
 
       <form onSubmit={handleCreate} className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
@@ -142,7 +141,7 @@ export default function CategoriesPage() {
             {/* El input nativo va invisible encima de la muestra: tocarla abre
                 la paleta del sistema, también en el celular. */}
             <label
-              className="relative h-10 w-14 shrink-0 cursor-pointer overflow-hidden rounded border border-borde transition-transform hover:scale-105"
+              className="relative h-10 w-14 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-borde transition-transform hover:scale-105"
               style={{ backgroundColor: color }}
               title="Elegir color"
             >

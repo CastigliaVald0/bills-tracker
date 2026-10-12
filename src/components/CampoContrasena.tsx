@@ -44,7 +44,7 @@ export function CampoContrasena({
         aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         aria-pressed={visible}
         title={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
-        className="absolute right-1 top-1/2 flex h-7 w-9 -translate-y-1/2 items-center justify-center rounded text-suave transition-colors hover:text-texto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-peso"
+        className="absolute right-1 top-1/2 flex h-7 w-9 -translate-y-1/2 items-center justify-center rounded-md text-suave transition-colors hover:text-texto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-peso"
       >
         {visible ? <IconoOjoTachado /> : <IconoOjo />}
       </button>

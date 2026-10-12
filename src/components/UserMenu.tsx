@@ -8,7 +8,7 @@ import { IconoAmigos, IconoCuenta, IconoSalir } from "@/components/navegacion";
 
 const TAMANO_ICONO = "h-[18px] w-[18px] shrink-0";
 const FILA =
-  "flex items-center gap-3 rounded px-3 py-2 text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto";
+  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto";
 
 export function UserMenu({
   name,
@@ -58,7 +58,7 @@ export function UserMenu({
 
       {open && (
         <div
-          className={`absolute right-0 z-30 flex w-60 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10 ${
+          className={`absolute right-0 z-30 flex w-60 flex-col gap-0.5 rounded-xl border border-borde bg-superficie p-1.5 shadow-[var(--sombra-flotante)] ${
             menuDirection === "up" ? "bottom-full mb-4" : "top-full mt-3"
           }`}
         >

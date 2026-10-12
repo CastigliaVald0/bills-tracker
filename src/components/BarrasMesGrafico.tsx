@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import Chart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { formatMoney } from "@/lib/format";
@@ -12,21 +12,9 @@ import { formatMoney } from "@/lib/format";
  * renderiza en el servidor tira un 500.
  */
 
-const CONSULTA_OSCURO = "(prefers-color-scheme: dark)";
-
-function suscribirTema(avisar: () => void) {
-  const mq = window.matchMedia(CONSULTA_OSCURO);
-  mq.addEventListener("change", avisar);
-  return () => mq.removeEventListener("change", avisar);
-}
-
-function temaActual() {
-  return window.matchMedia(CONSULTA_OSCURO).matches ? "oscuro" : "claro";
-}
-
 /**
  * ApexCharts necesita colores reales (calcula el tono del hover), no
- * var(--peso). Se toman de las variables CSS del tema activo; el respaldo cubre
+ * var(--peso). Se toman de las variables CSS; el respaldo cubre
  * el caso de que la hoja de estilos todavía no esté aplicada.
  */
 function leerToken(nombre: string, respaldo: string) {
@@ -58,15 +46,12 @@ export default function BarrasMesGrafico({
       dólar, el mismo gesto del filo bicolor de la pizarra. */
   combinado?: boolean;
 }) {
-  const tema = useSyncExternalStore(suscribirTema, temaActual, temaActual);
-  const oscuro = tema === "oscuro";
-
   const opciones = useMemo<ApexOptions>(() => {
-    const colorPeso = leerToken("--peso", oscuro ? "#6fbee4" : "#1f6f96");
-    const colorDolar = leerToken("--dolar", oscuro ? "#7fc895" : "#2f6e46");
+    const colorPeso = leerToken("--peso", "#6fbee4");
+    const colorDolar = leerToken("--dolar", "#7fc895");
     const color = moneda === "UYU" ? colorPeso : colorDolar;
-    const texto = leerToken("--texto-suave", oscuro ? "#9aacb2" : "#556970");
-    const grilla = leerToken("--borde", oscuro ? "#26363f" : "#d6dbd3");
+    const texto = leerToken("--texto-suave", "#9aacb2");
+    const grilla = leerToken("--borde", "#243540");
     const fuente = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
 
     return {
@@ -137,7 +122,7 @@ export default function BarrasMesGrafico({
         },
       },
       tooltip: {
-        theme: oscuro ? "dark" : "light",
+        theme: "dark",
         marker: { show: false },
         y: {
           formatter: (valor: number) => formatMoney(valor, moneda),
@@ -145,7 +130,7 @@ export default function BarrasMesGrafico({
         },
       },
     };
-  }, [etiquetas, moneda, oscuro, combinado]);
+  }, [etiquetas, moneda, combinado]);
 
   const serie = useMemo(
     () => [
@@ -154,6 +139,5 @@ export default function BarrasMesGrafico({
     [montos, moneda, combinado]
   );
 
-  // key={tema}: al cambiar de tema se vuelve a montar con los colores nuevos.
-  return <Chart key={tema} type="bar" options={opciones} series={serie} height={alto} />;
+  return <Chart type="bar" options={opciones} series={serie} height={alto} />;
 }

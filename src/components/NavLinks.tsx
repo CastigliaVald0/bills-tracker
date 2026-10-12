@@ -100,13 +100,13 @@ export function NavLinks() {
           <div
             // El botón queda a la izquierda de la barra, así que el menú se
             // abre hacia arriba y hacia la derecha para no salirse.
-            className="absolute bottom-full left-0 z-30 mb-4 flex w-52 flex-col gap-0.5 rounded-md border border-borde bg-superficie p-1.5 shadow-lg shadow-black/10"
+            className="absolute bottom-full left-0 z-30 mb-4 flex w-52 flex-col gap-0.5 rounded-xl border border-borde bg-superficie p-1.5 shadow-[var(--sombra-flotante)]"
           >
             {MENU_CELULAR.map((entrada) => (
               <Link
                 key={entrada.href}
                 href={entrada.href}
-                className={`flex items-center gap-3 rounded px-3 py-2.5 text-sm transition-colors ${
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                   pathname.startsWith(entrada.href)
                     ? "bg-superficie-alta font-medium text-texto"
                     : "text-suave hover:bg-superficie-alta hover:text-texto"

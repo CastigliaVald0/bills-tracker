@@ -69,7 +69,7 @@ export function CurrencyConverter({ rate }: { rate: UsdRate | null }) {
           <div
             role="group"
             aria-label="Sentido de la conversión"
-            className="flex rounded border border-borde p-0.5"
+            className="flex rounded-lg border border-borde p-0.5"
           >
             <SegmentoDireccion
               activo={direction === "USD_TO_UYU"}

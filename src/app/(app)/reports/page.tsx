@@ -124,7 +124,7 @@ export default async function ReportsPage({
   );
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <Pizarra
         rotulo="Gastado en el año"
         titulo="Resumen anual"

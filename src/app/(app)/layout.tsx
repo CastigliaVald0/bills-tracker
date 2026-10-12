@@ -5,6 +5,7 @@ import { CajonMenu } from "@/components/CajonMenu";
 import Link from "next/link";
 import { Marca } from "@/components/Marca";
 import { BotonAgregar } from "@/components/BotonAgregar";
+import { CargarGastoPc } from "@/components/CargarGastoPc";
 import { ActivarNotificaciones } from "@/components/ActivarNotificaciones";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           tres barritas van antes del nombre, que es de donde se las espera, y
           el nombre lleva al inicio. Así la cabecera queda con lo justo y el
           menú tiene lugar para agrupar las siete pantallas. */}
-      <header className="hidden border-b border-borde bg-superficie px-4 sm:block">
+      <header className="sticky top-0 z-20 hidden border-b border-borde bg-fondo/80 px-4 backdrop-blur-md sm:block">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <CajonMenu />
@@ -25,24 +26,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            {/* La acción principal, con nombre y en todas las pantallas. Antes
-                era un círculo flotante abajo a la derecha que solo existía en
-                el dashboard y, a diferencia del + del celular, no ofrecía
-                elegir entre gasto y gasto fijo: iba derecho a /expenses. */}
-            <Link href="/expenses" className="boton py-1.5">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                className="h-4 w-4"
-                aria-hidden
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Cargar gasto
-            </Link>
+            {/* La acción principal, con nombre y en todas las pantallas. Como
+                el + del celular, no va derecho a /expenses: despliega los
+                tipos de gasto para elegir cuál cargar. */}
+            <CargarGastoPc />
             {/* El conversor salió de la cabecera: se usa de vez en cuando, no
                 todos los días, y vive en el cajón bajo Herramientas. */}
             <UserMenu name={session?.user?.name} email={session?.user?.email} menuDirection="down" />
@@ -50,7 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">{children}</main>
+      <main className="mx-auto max-w-3xl px-4 py-7 sm:py-10">{children}</main>
 
       <ActivarNotificaciones />
 
@@ -65,7 +52,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           circular alrededor del botón: si el recorte se aplicara a la barra
           entera, también cortaría el botón y los menús que se abren arriba. */}
       <nav className="barra-flotante fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-20 grid h-14 grid-cols-[1fr_auto_1fr] items-center px-2 sm:hidden">
-        <div aria-hidden className="absolute inset-0 -z-10 drop-shadow-[0_6px_14px_rgb(0_0_0/0.16)]">
+        <div aria-hidden className="absolute inset-0 -z-10 drop-shadow-[0_8px_18px_rgb(0_0_0/0.45)]">
           {/* Dos capas con el mismo recorte, la de adentro 1px más chica: lo que
               asoma de la de atrás es el borde, que así sigue también la curva. */}
           <div className="barra-muesca absolute inset-0 rounded-full bg-borde" />

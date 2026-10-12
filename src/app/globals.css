@@ -3,104 +3,80 @@
 /* ==========================================================================
    Billions Tracker — sistema visual "Pizarra"
 
-   Dos materiales, una idea: lo que el mundo te informa (totales, cotización)
-   va sobre pizarra de tinta; lo que vos cargás va sobre papel. Las dos monedas
-   nunca se suman, así que nunca comparten color: el peso es celeste, el dólar
-   es verde.
+   Una sola idea: tinta. La app es siempre oscura, como la pizarra de
+   cotizaciones de un banco, y lo que cambia de una superficie a otra es
+   cuánta luz le llega: el fondo es la pared, las tarjetas son hojas apoyadas
+   encima, la pizarra es lo único que se permite gritar. Las dos monedas nunca
+   se suman, así que nunca comparten color: el peso es celeste, el dólar es
+   verde.
    ========================================================================== */
 
 :root {
-  /* papel */
-  --fondo: #eaede7;
-  --superficie: #fafbf8;
-  --superficie-alta: #f1f3ee;
-  --borde: #d6dbd3;
-  --borde-fuerte: #bcc4b9;
+  /* Sin tema claro: los controles nativos (calendario, barras de scroll,
+     autocompletado) también tienen que dibujarse oscuros. */
+  color-scheme: dark;
 
-  /* tinta sobre papel */
-  --texto: #15242e;
-  --texto-suave: #556970;
-  /* Oscurecido de #7c8b8a: a 11px daba 3,0:1 sobre el fondo, debajo del
-     mínimo de 4,5. Ahora 4,6:1 sobre papel y 5,2:1 sobre superficie. */
-  --texto-tenue: #606c6c;
+  /* las capas, de la más hundida a la más alta */
+  --fondo: #0b1318;
+  --superficie: #15212a;
+  --superficie-alta: #1c2b35;
+  --borde: #243540;
+  --borde-fuerte: #364a55;
 
-  /* la pizarra es una superficie propia: casi no cambia entre temas */
-  --pizarra: #132430;
-  --pizarra-alta: #1c3341;
-  --pizarra-borde: #2b4351;
+  /* la letra */
+  --texto: #e7ece6;
+  --texto-suave: #9aacb2;
+  /* 5,1:1 sobre el fondo y 4,6:1 sobre superficie: el mínimo para los rótulos
+     de 11px. */
+  --texto-tenue: #788b91;
+  /* Para lo pausado o vencido. Antes se resolvía con opacity, que apilaba
+     transparencia sobre texto ya suave y hundía el contraste a 2,3:1. */
+  --texto-apagado: #7f9096;
+
+  /* la pizarra es una superficie propia */
+  --pizarra: #08161f;
+  --pizarra-alta: #12242f;
+  --pizarra-borde: #24363f;
   --pizarra-texto: #edf1ec;
   --pizarra-suave: #91a7b2;
 
-  /* el ticket: la tira de papel de los últimos gastos. Tiene sus propios
-     colores para poder despegarse un poco del fondo en cada tema. */
-  --ticket: #fdfdf8;
-  --ticket-texto: #15242e;
-  --ticket-suave: #556970;
-  --ticket-linea: #aab4a9;
-  --ticket-peso: #1f6f96;
-  --ticket-dolar: #2f6e46;
+  /* el ticket: la tira de papel de los últimos gastos, apenas más clara que
+     las tarjetas para que se lea como una hoja apoyada encima */
+  --ticket: #1b2b35;
+  --ticket-texto: #e7ece6;
+  --ticket-suave: #9aacb2;
+  --ticket-linea: #3d5059;
+  --ticket-peso: #6fbee4;
+  --ticket-dolar: #7fc895;
 
   /* las dos monedas */
-  --peso: #1f6f96;
-  --dolar: #2f6e46;
+  --peso: #6fbee4;
+  --dolar: #7fc895;
   --peso-luz: #6ec3e8;
   --dolar-luz: #7ec894;
 
-  /* Para lo pausado o vencido. Antes se resolvía con opacity, que apilaba
-     transparencia sobre texto ya suave y hundía el contraste a 2,3:1. */
-  --texto-apagado: #616d70;
-
   /* acción y estado */
-  --accion: #132430;
-  --accion-alta: #23394a;
-  --accion-texto: #f6f8f4;
-  --alerta: #b23a28;
-  --alerta-fondo: #f7ebe8;
-  /* El rojo cambia de claridad entre temas, así que su texto también: blanco
-     sobre el rojo del tema oscuro da 3,1:1 y no llega al mínimo de 4,5. */
-  --alerta-texto: #ffffff;
-  --ok: #2f6e46;
-}
+  --accion: #dfe7e0;
+  --accion-alta: #ffffff;
+  --accion-texto: #101c22;
+  --alerta: #e4705c;
+  --alerta-fondo: #2c1b18;
+  /* Blanco sobre este rojo da 3,1:1 y no llega al mínimo de 4,5: va en tinta. */
+  --alerta-texto: #08161f;
+  --ok: #7fc895;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fondo: #0e161b;
-    --superficie: #16222a;
-    --superficie-alta: #1d2b34;
-    --borde: #26363f;
-    --borde-fuerte: #36484f;
+  /* Una sola escala de esquinas para toda la app: lo que se toca, lo que
+     contiene y lo que flota encima. */
+  --radio-control: 8px;
+  --radio-tarjeta: 12px;
+  --radio-flotante: 16px;
 
-    --texto: #e7ece6;
-    --texto-suave: #9aacb2;
-    /* Aclarado de #6d7f85 por lo mismo: 5,1:1 y 4,6:1. */
-    --texto-tenue: #788b91;
-
-    /* de noche el papel es oscuro como el resto de la app, apenas más claro
-       que las tarjetas para que se lea como una hoja apoyada encima */
-    --ticket: #1b2b35;
-    --ticket-texto: #e7ece6;
-    --ticket-suave: #9aacb2;
-    --ticket-linea: #3d5059;
-    --ticket-peso: #6fbee4;
-    --ticket-dolar: #7fc895;
-
-    --pizarra: #08161f;
-    --pizarra-alta: #12242f;
-    --pizarra-borde: #24363f;
-
-    --peso: #6fbee4;
-    --dolar: #7fc895;
-
-    --texto-apagado: #7f9096;
-
-    --accion: #dfe7e0;
-    --accion-alta: #ffffff;
-    --accion-texto: #101c22;
-    --alerta: #e4705c;
-    --alerta-fondo: #2c1b18;
-    --alerta-texto: #08161f;
-    --ok: #7fc895;
-  }
+  /* La luz viene de arriba: un filo claro en el borde superior y una sombra
+     corta debajo. Es lo que separa una tarjeta del fondo sin subirle el
+     contraste al borde. */
+  --relieve: inset 0 1px 0 rgb(255 255 255 / 0.035), 0 1px 2px rgb(0 0 0 / 0.3),
+    0 10px 24px -14px rgb(0 0 0 / 0.55);
+  --sombra-flotante: 0 2px 6px rgb(0 0 0 / 0.35), 0 24px 48px -16px rgb(0 0 0 / 0.7);
 }
 
 @theme inline {
@@ -140,8 +116,16 @@
 }
 
 @layer base {
+  /* El resplandor de la pizarra en la pared: celeste desde la izquierda, verde
+     desde la derecha, los dos colores de la marca. Muy tenue y fijo, para que
+     el fondo no sea un plano muerto sin competir con el contenido. */
   body {
     background-color: var(--fondo);
+    background-image:
+      radial-gradient(60rem 26rem at 12% -8rem, rgb(111 190 228 / 0.07), transparent 70%),
+      radial-gradient(60rem 26rem at 88% -8rem, rgb(127 200 149 / 0.055), transparent 70%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--texto);
     font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
   }
@@ -157,19 +141,19 @@
   :focus-visible {
     outline: 2px solid var(--peso);
     outline-offset: 2px;
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
   ::selection {
     background-color: var(--peso);
-    color: var(--superficie);
+    color: var(--fondo);
   }
 
-  /* el ícono nativo del date picker desaparece sobre fondo oscuro */
-  @media (prefers-color-scheme: dark) {
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1) opacity(0.6);
-    }
+  /* color-scheme ya lo pinta claro; solo se lo baja para que no pese más que
+     la fecha */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="month"]::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
   }
 }
 
@@ -187,6 +171,17 @@
     color: var(--texto-tenue);
   }
 
+  /* título de página: el único texto grande fuera de la pizarra. Va debajo de
+     su rótulo, que dice de qué se trata la pantalla en una línea. */
+  .titulo {
+    margin-top: 0.5rem;
+    font-size: 1.625rem;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--texto);
+  }
+
   /* monto: cifras tabulares, siempre en mono, siempre alineadas */
   .monto {
     font-family: var(--font-num), ui-monospace, monospace;
@@ -200,13 +195,15 @@
   .tarjeta {
     background-color: var(--superficie);
     border: 1px solid var(--borde);
-    border-radius: 6px;
+    border-radius: var(--radio-tarjeta);
+    box-shadow: var(--relieve);
   }
 
   .lista {
     background-color: var(--superficie);
     border: 1px solid var(--borde);
-    border-radius: 6px;
+    border-radius: var(--radio-tarjeta);
+    box-shadow: var(--relieve);
     overflow: hidden;
   }
 
@@ -221,7 +218,7 @@
     justify-content: space-between;
     gap: 0.75rem;
     /* el sangrado izquierdo deja respirar al filete de color */
-    padding: 0.6875rem 0.875rem 0.6875rem 1rem;
+    padding: 0.875rem 1rem 0.875rem 1.125rem;
     transition: background-color 0.15s ease;
   }
 
@@ -271,7 +268,7 @@
     animation: trazar 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  /* el mismo filo bicolor, sobre papel: para superficies claras */
+  /* el mismo filo bicolor, para una tarjeta común */
   .filo {
     position: relative;
     overflow: hidden;
@@ -296,7 +293,7 @@
     color: var(--ticket-texto);
     /* El serrucho de abajo cuelga fuera de la caja: drop-shadow lo sigue,
        box-shadow dibujaría un rectángulo. */
-    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.1)) drop-shadow(0 8px 14px rgb(0 0 0 / 0.12));
+    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.3)) drop-shadow(0 12px 18px rgb(0 0 0 / 0.4));
     margin-bottom: 7px;
     animation: imprimir 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
@@ -355,14 +352,31 @@
     transform: translateY(-3px);
   }
 
+  /* una letra del código de amigo. Va en casillas porque el código se dicta
+     o se copia a mano, y así no se pierde el lugar ni se confunde la longitud. */
+  .casilla {
+    display: flex;
+    height: 2.75rem;
+    width: 2.125rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--borde-fuerte);
+    border-radius: var(--radio-control);
+    background-color: var(--fondo);
+    font-family: var(--font-num), ui-monospace, monospace;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--texto);
+  }
+
   /* --- controles ------------------------------------------------------ */
 
   .campo {
     width: 100%;
     border: 1px solid var(--borde);
-    border-radius: 5px;
+    border-radius: var(--radio-control);
     background-color: var(--fondo);
-    padding: 0.5rem 0.6875rem;
+    padding: 0.5625rem 0.75rem;
     font-size: 0.875rem;
     transition: border-color 0.15s ease, background-color 0.15s ease,
       box-shadow 0.15s ease;
@@ -397,7 +411,7 @@
     gap: 0.625rem;
     width: 100%;
     border: 1px solid color-mix(in srgb, var(--moneda) 55%, var(--borde));
-    border-radius: 5px;
+    border-radius: var(--radio-control);
     background-color: color-mix(in srgb, var(--moneda) 7%, var(--fondo));
     padding: 0.4375rem 0.4375rem 0.4375rem 0.875rem;
     transition: border-color 0.15s ease, background-color 0.15s ease,
@@ -453,9 +467,9 @@
     display: flex;
     flex-shrink: 0;
     gap: 2px;
-    border-radius: 4px;
+    border-radius: var(--radio-control);
     background-color: var(--superficie-alta);
-    padding: 2px;
+    padding: 3px;
   }
 
   .segmento {
@@ -464,7 +478,7 @@
 
   .segmento > span {
     display: block;
-    border-radius: 3px;
+    border-radius: 5px;
     padding: 0.375rem 0.6875rem;
     font-family: var(--font-num), ui-monospace, monospace;
     font-size: 0.75rem;
@@ -535,13 +549,19 @@
     justify-content: center;
     gap: 0.5rem;
     border: 1px solid transparent;
-    border-radius: 5px;
+    border-radius: var(--radio-control);
     background-color: var(--accion);
-    padding: 0.5rem 1rem;
+    padding: 0.5625rem 1.125rem;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--accion-texto);
-    transition: background-color 0.15s ease, opacity 0.15s ease;
+    transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+  }
+
+  /* se hunde un pelo al apretarlo: la respuesta al dedo */
+  .boton:active:not(:disabled),
+  .boton-linea:active {
+    transform: scale(0.98);
   }
 
   .boton:hover:not(:disabled) {
@@ -569,13 +589,13 @@
     justify-content: center;
     gap: 0.375rem;
     border: 1px solid var(--borde);
-    border-radius: 5px;
+    border-radius: var(--radio-control);
     background-color: transparent;
-    padding: 0.5rem 0.875rem;
+    padding: 0.5625rem 1rem;
     font-size: 0.875rem;
     color: var(--texto-suave);
     transition: color 0.15s ease, border-color 0.15s ease,
-      background-color 0.15s ease;
+      background-color 0.15s ease, transform 0.1s ease;
   }
 
   .boton-linea:hover {
@@ -594,7 +614,7 @@
     border-radius: 9999px;
     background-color: var(--accion);
     color: var(--accion-texto);
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.14), 0 8px 20px rgb(0 0 0 / 0.12);
+    box-shadow: var(--sombra-flotante);
     transition: background-color 0.15s ease, transform 0.15s ease;
   }
 
@@ -676,13 +696,14 @@
     max-width: 26rem;
     padding: 0;
     border: 1px solid var(--borde);
-    border-radius: 8px;
+    border-radius: var(--radio-flotante);
     background-color: var(--superficie);
+    box-shadow: var(--sombra-flotante);
     color: var(--texto);
   }
 
   .dialogo::backdrop {
-    background-color: rgb(0 0 0 / 0.45);
+    background-color: rgb(4 9 12 / 0.65);
   }
 
   /* --- el cajón del menú ----------------------------------------------
@@ -724,7 +745,7 @@
   }
 
   .cajon[open]::backdrop {
-    background-color: rgb(0 0 0 / 0.45);
+    background-color: rgb(4 9 12 / 0.65);
   }
 
   @starting-style {
@@ -736,17 +757,17 @@
   /* --- datos ---------------------------------------------------------- */
 
   .barra-pista {
-    height: 4px;
+    height: 6px;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
-    border-radius: 2px;
+    border-radius: 3px;
     background-color: var(--borde);
   }
 
   .barra-valor {
     height: 100%;
-    border-radius: 2px;
+    border-radius: 3px;
   }
 
   /* el filete de color que identifica la categoría en el borde de su fila.
@@ -761,6 +782,7 @@
 
   /* el hueso del esqueleto: la silueta de un dato que todavía no llegó */
   .hueso {
+    border-radius: 4px;
     background-color: var(--borde);
     animation: latir 1.4s ease-in-out infinite;
   }
@@ -776,6 +798,12 @@
 }
 
 @layer utilities {
+  /* un menú que sale del botón que lo abre: crece desde su esquina */
+  .desplegar {
+    transform-origin: top right;
+    animation: desplegar 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
   .aparece {
     animation: aparece 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
@@ -810,6 +838,17 @@
   }
 }
 
+@keyframes desplegar {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes aparece {
   from {
     opacity: 0;
@@ -826,7 +865,8 @@
   .filo::before,
   .aparece,
   .hueso,
-  .ticket {
+  .ticket,
+  .desplegar {
     animation: none;
   }
 

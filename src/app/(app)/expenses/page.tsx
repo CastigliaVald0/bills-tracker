@@ -146,10 +146,10 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <header>
         <p className="rotulo">{monthLabel(currentMonth())}</p>
-        <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-texto">Gastos del mes</h1>
+        <h1 className="titulo">Gastos del mes</h1>
       </header>
 
       <form onSubmit={handleCreate} className="tarjeta flex flex-col gap-5 p-4 sm:p-5">

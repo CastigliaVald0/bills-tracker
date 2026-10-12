@@ -21,7 +21,7 @@ const DIA_EN_MS = 24 * 60 * 60 * 1000;
  *
  * Es la contracara de la pizarra: la pizarra es la tinta donde se publican los
  * totales, el ticket es el papel que te queda de cada compra. Sus colores
- * siguen el tema claro u oscuro de la app (ver .ticket en globals.css).
+ * están en globals.css (ver .ticket).
  *
  * Cada día es un tramo de la tira, separado del anterior por una línea de
  * corte; cada gasto, un renglón con los puntos que llevan el ojo hasta el
