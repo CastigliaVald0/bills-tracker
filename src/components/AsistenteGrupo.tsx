@@ -147,25 +147,27 @@ export function AsistenteGrupo() {
         </fieldset>
 
         <div className="flex flex-col gap-3 border-t border-borde pt-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="rotulo">Secciones</p>
-              <p className="mt-1.5 text-sm text-suave">
-                {conSecciones
-                  ? "Las partes en que se divide: los ambientes de la casa, las etapas del viaje. Podés dejarlas para después."
-                  : "Todos los gastos van juntos, en una sola lista. Si más adelante hacen falta, las prendés adentro del grupo."}
-              </p>
+          {/* Primero la elección y después qué significa: la explicación
+              cambia según el botón, así que va debajo de los dos. */}
+          <div className="flex flex-col gap-2.5">
+            <p className="rotulo">Secciones</p>
+            <div className="flex">
+              <Conmutador<"si" | "no">
+                nombreGrupo="usa-secciones"
+                etiqueta="¿Se divide en secciones?"
+                opciones={[
+                  { valor: "si", texto: "Con secciones" },
+                  { valor: "no", texto: "Sin secciones" },
+                ]}
+                valor={conSecciones ? "si" : "no"}
+                alCambiar={(v) => setConSecciones(v === "si")}
+              />
             </div>
-            <Conmutador<"si" | "no">
-              nombreGrupo="usa-secciones"
-              etiqueta="¿Se divide en secciones?"
-              opciones={[
-                { valor: "si", texto: "Con secciones" },
-                { valor: "no", texto: "Sin secciones" },
-              ]}
-              valor={conSecciones ? "si" : "no"}
-              alCambiar={(v) => setConSecciones(v === "si")}
-            />
+            <p className="text-sm text-suave">
+              {conSecciones
+                ? "Las partes en que se divide: los ambientes de la casa, las etapas del viaje. Podés dejarlas para después."
+                : "Todos los gastos van juntos, en una sola lista. Si más adelante hacen falta, las prendés adentro del grupo."}
+            </p>
           </div>
 
           {conSecciones && secciones.length > 0 && (
