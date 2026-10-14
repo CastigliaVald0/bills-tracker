@@ -10,6 +10,8 @@ export type GastoReciente = {
   descripcion: string | null;
   categoria: { nombre: string; color: string };
   fijo: boolean;
+  /** El nombre del grupo, si el gasto se cargó dentro de uno. */
+  grupo?: string | null;
 };
 
 type Dia = { clave: string; fecha: Date; gastos: GastoReciente[] };
@@ -99,9 +101,13 @@ export function UltimosGastos({
                     {formatMoney(gasto.monto, gasto.moneda)}
                   </span>
                 </div>
-                {(gasto.descripcion || gasto.fijo) && (
+                {(gasto.descripcion || gasto.fijo || gasto.grupo) && (
                   <p className="ticket-renglon mt-1 truncate pl-4">
-                    {[gasto.descripcion && gasto.categoria.nombre, gasto.fijo && "fijo"]
+                    {[
+                      gasto.descripcion && gasto.categoria.nombre,
+                      gasto.fijo && "fijo",
+                      gasto.grupo && `grupo ${gasto.grupo}`,
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>

@@ -118,6 +118,22 @@ const GASTOS_FIJOS: EntradaNav = {
   icono: <IconoCalendario />,
 };
 
+/** Una carpeta: los gastos de algo puntual, guardados juntos. */
+export function IconoGrupo({ className }: { className?: string }) {
+  return (
+    <Icono className={className}>
+      <path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />
+      <path d="M3.5 11h17" />
+    </Icono>
+  );
+}
+
+const GRUPOS: EntradaNav = {
+  href: "/grupos",
+  label: "Gastos grupales",
+  icono: <IconoGrupo />,
+};
+
 const CATEGORIAS: EntradaNav = {
   href: "/categories",
   label: "Categorías",
@@ -162,7 +178,7 @@ const CONVERSOR: EntradaNav = {
 /* --- cómo se agrupan en cada lado -------------------------------------- */
 
 /** El cajón de PC: todo, en tres bloques. */
-export const CAJON_DIARIO = [INICIO, GASTOS, GASTOS_FIJOS, CATEGORIAS];
+export const CAJON_DIARIO = [INICIO, GASTOS, GASTOS_FIJOS, GRUPOS, CATEGORIAS];
 export const CAJON_RESUMENES = [RESUMEN_MENSUAL, RESUMEN_ANUAL];
 export const CAJON_HERRAMIENTAS = [CONVERSOR];
 

@@ -61,7 +61,7 @@ export default async function MonthlyPage({
           lt: new Date(Date.UTC(anio, mes, 1)),
         },
       },
-      include: { category: true },
+      include: { category: true, grupo: { select: { nombre: true } } },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     }),
     getUsdRate(),
@@ -127,6 +127,7 @@ export default async function MonthlyPage({
     descripcion: g.description,
     categoria: { nombre: g.category.name, color: g.category.color },
     fijo: g.recurringExpenseId !== null,
+    grupo: g.grupo?.nombre ?? null,
     montoComparable: enPesos(g),
   }));
 

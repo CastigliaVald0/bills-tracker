@@ -31,7 +31,7 @@ export default async function DashboardPage() {
   const [expenses, anteriores, fijos] = await Promise.all([
     prisma.expense.findMany({
       where: { userId, date: { gte: start, lt: end } },
-      include: { category: true },
+      include: { category: true, grupo: { select: { nombre: true } } },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     }),
     prisma.expense.groupBy({
@@ -128,6 +128,7 @@ export default async function DashboardPage() {
                 descripcion: expense.description,
                 categoria: { nombre: expense.category.name, color: expense.category.color },
                 fijo: expense.recurringExpenseId !== null,
+                grupo: expense.grupo?.nombre ?? null,
               }))}
             />
             <LoQueViene pendientes={pendientes} hoy={hoy.dia} nombreMes={nombreMes} />

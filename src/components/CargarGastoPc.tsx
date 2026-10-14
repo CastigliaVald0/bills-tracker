@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconoTicket, IconoCalendario } from "@/components/navegacion";
+import { IconoTicket, IconoCalendario, IconoGrupo } from "@/components/navegacion";
 
 /**
  * El botón "Cargar gasto" de la cabecera de PC. Es el mismo gesto que el + de
@@ -26,6 +26,12 @@ const OPCIONES = [
     titulo: "Gasto fijo",
     detalle: "Se repite todos los meses, o en cuotas.",
     icono: <IconoCalendario className="h-5 w-5" />,
+  },
+  {
+    href: "/grupos",
+    titulo: "Gasto grupal",
+    detalle: "Dentro de un grupo: una obra, un viaje.",
+    icono: <IconoGrupo className="h-5 w-5" />,
   },
 ];
 

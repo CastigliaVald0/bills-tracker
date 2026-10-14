@@ -15,6 +15,8 @@ export type Expense = {
   categoryId: string;
   category: Category;
   recurringExpenseId: string | null;
+  /** El grupo al que pertenece, si se cargó dentro de uno. */
+  grupo?: { id: string; nombre: string; color: string } | null;
 };
 
 export type RecurringExpense = {

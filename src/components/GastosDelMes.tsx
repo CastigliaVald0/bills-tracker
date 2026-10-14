@@ -12,6 +12,8 @@ export type GastoDelMes = {
   descripcion: string | null;
   categoria: { nombre: string; color: string };
   fijo: boolean;
+  /** El nombre del grupo, si el gasto se cargó dentro de uno. */
+  grupo?: string | null;
   /**
    * El monto llevado a pesos, solo para ordenar la lista cuando hay gastos en
    * las dos monedas. Los dólares usan la cotización guardada en cada gasto.
@@ -280,6 +282,7 @@ export function GastosDelMes({
                 <p className="rotulo mt-1 truncate normal-case tracking-normal">
                   {fechaCorta(g.dia)} · {g.categoria.nombre}
                   {g.fijo && " · fijo"}
+                  {g.grupo && ` · grupo ${g.grupo}`}
                 </p>
               </div>
             </div>

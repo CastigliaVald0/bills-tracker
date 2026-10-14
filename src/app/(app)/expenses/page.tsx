@@ -266,6 +266,7 @@ export default function ExpensesPage() {
                       {" · "}
                       {expense.category.name}
                       {expense.recurringExpenseId && " · fijo"}
+                      {expense.grupo && ` · grupo ${expense.grupo.nombre}`}
                     </p>
                   </div>
                 </div>

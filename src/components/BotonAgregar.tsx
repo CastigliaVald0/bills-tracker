@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconoTicket, IconoCalendario } from "@/components/navegacion";
+import { IconoTicket, IconoCalendario, IconoGrupo } from "@/components/navegacion";
 
 /**
- * El botón central de la barra flotante. Al tocarlo se despliegan arriba dos
- * círculos más chicos, uno por cada tipo de gasto que se puede cargar: el de
- * todos los días y el fijo. El + gira y pasa a ser la × que los cierra.
+ * El botón central de la barra flotante. Al tocarlo se despliegan arriba tres
+ * círculos más chicos, en abanico, uno por cada tipo de gasto que se puede
+ * cargar: el de todos los días, el fijo y el grupal. El + gira y pasa a ser
+ * la × que los cierra.
  *
  * `x` e `y` son hasta dónde se corre cada círculo desde el centro del botón.
  */
@@ -16,8 +17,9 @@ import { IconoTicket, IconoCalendario } from "@/components/navegacion";
 const TAMANO_BARRA = "h-[22px] w-[22px]";
 
 const OPCIONES = [
-  { href: "/expenses", etiqueta: "Gasto", x: -42, y: -72, icono: <IconoTicket className={TAMANO_BARRA} /> },
-  { href: "/recurring", etiqueta: "Gasto fijo", x: 42, y: -72, icono: <IconoCalendario className={TAMANO_BARRA} /> },
+  { href: "/expenses", etiqueta: "Gasto", x: -62, y: -56, icono: <IconoTicket className={TAMANO_BARRA} /> },
+  { href: "/recurring", etiqueta: "Gasto fijo", x: 0, y: -86, icono: <IconoCalendario className={TAMANO_BARRA} /> },
+  { href: "/grupos", etiqueta: "Gasto grupal", x: 62, y: -56, icono: <IconoGrupo className={TAMANO_BARRA} /> },
 ];
 
 export function BotonAgregar() {

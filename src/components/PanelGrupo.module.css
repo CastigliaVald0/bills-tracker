@@ -1,0 +1,184 @@
+/* ==========================================================================
+   La página de un grupo.
+
+   Tiene su propia forma, distinta de las tarjetas del resto de la app: las
+   secciones se ven como un mosaico donde cada una ocupa lo que se gastó en
+   ella, y ese mismo mosaico es el filtro de la página.
+
+   El color del grupo (--grupo) es un acento, no un fondo: marca la sección
+   elegida, el filete de cada sección y el mes en la lista. Todo lo demás es
+   neutro.
+   ========================================================================== */
+
+.sala {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+/* --- el mosaico de secciones -------------------------------------------- */
+
+.mosaico {
+  position: relative;
+  width: 100%;
+}
+
+.seccion {
+  position: absolute;
+  padding: 3px;
+  text-align: left;
+  animation: asomar 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* El botón ocupa el hueco que le toca; el recuadro visible va adentro, así la
+   separación entre secciones es pareja sin depender de cuánto mide cada una. */
+.seccionCaja {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.25rem;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  /* --peso va de 0 a 1 según cuánto del grupo se llevó la sección: las que
+     más pesan quedan apenas más claras, sin cambiar de color */
+  background-color: color-mix(in srgb, var(--texto) calc(var(--peso) * 5%), var(--superficie));
+  padding: 0.75rem 0.875rem 0.75rem 1rem;
+  color: var(--texto);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* el filete del grupo: lo único de color en una sección sin elegir */
+.seccionCaja::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 3px;
+  background-color: var(--grupo);
+  opacity: calc(0.35 + var(--peso) * 0.65);
+}
+
+.seccion:hover .seccionCaja {
+  border-color: var(--borde-fuerte);
+}
+
+/* el botón invisible que cubre la pieza entera y la elige */
+.seleccionar {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  cursor: pointer;
+}
+
+.seleccionar:focus-visible {
+  outline: 2px solid var(--peso);
+  outline-offset: -2px;
+}
+
+/* lo que se lee no tapa al botón: los toques pasan de largo hasta él */
+.seccionCaja > span {
+  pointer-events: none;
+}
+
+.activa .seccionCaja {
+  border-color: var(--grupo);
+  background-color: color-mix(in srgb, var(--grupo) 10%, var(--superficie));
+}
+
+/* lo que no tiene sección no es una sección: borde punteado y sin filete */
+.sinSeccion .seccionCaja {
+  border-style: dashed;
+  background-color: transparent;
+}
+
+.sinSeccion .seccionCaja::before {
+  display: none;
+}
+
+.vacia .seccionCaja::before {
+  opacity: 0.2;
+}
+
+/* los botones de la barra de la sección elegida */
+.accionSeccion {
+  border: 1px solid var(--borde-fuerte);
+  border-radius: 7px;
+  background-color: var(--fondo);
+  padding: 0.3125rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--texto);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.accionSeccion:hover {
+  border-color: var(--texto-suave);
+}
+
+.accionPeligro:hover {
+  border-color: var(--alerta);
+  color: var(--alerta);
+}
+
+.seccionNombre {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chica .seccionCaja {
+  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+}
+
+.chica .seccionNombre {
+  font-size: 0.75rem;
+}
+
+/* --- los movimientos ---------------------------------------------------- */
+
+/* el punto del color del grupo que encabeza cada mes */
+.mes::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--grupo);
+  vertical-align: middle;
+  transform: translateY(-1px);
+}
+
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--borde);
+  border-radius: 9999px;
+  padding: 0.0625rem 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--texto-suave);
+}
+
+@keyframes asomar {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seccion {
+    animation: none;
+  }
+}

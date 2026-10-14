@@ -22,6 +22,7 @@ model User {
   recurringExpenses   RecurringExpense[]
   passwordResetTokens PasswordResetToken[]
   pushSubscriptions   PushSubscription[]
+  grupos              Grupo[]
 
   /// Código corto para que otro te agregue, y que también es tu enlace de
   /// invitación. Se genera la primera vez que entrás a Amigos, así las cuentas
@@ -102,7 +103,17 @@ model Expense {
   /// columna, y cuando no se pudo leer la cotización al crearlos.
   usdRate            Decimal?          @db.Decimal(12, 4)
 
+  /// Si el gasto pertenece a un grupo. Sigue siendo un gasto personal más (suma
+  /// en el mes como cualquier otro); el grupo solo lo agrupa y lo muestra aparte.
+  /// Al borrar el grupo el gasto no se pierde: queda como gasto común.
+  grupoId            String?
+  grupo              Grupo?            @relation(fields: [grupoId], references: [id], onDelete: SetNull)
+  /// La sección del grupo (los "mini grupos": Cocina, Baño...). Null = sin sección.
+  seccionId          String?
+  seccion            SeccionGrupo?     @relation(fields: [seccionId], references: [id], onDelete: SetNull)
+
   @@index([userId, date])
+  @@index([grupoId])
 }
 
 model RecurringExpense {
@@ -174,4 +185,52 @@ model Amistad {
   @@unique([solicitanteId, destinatarioId])
   @@index([destinatarioId, estado])
   @@index([solicitanteId, estado])
+}
+
+/// Ya no se usa: todos los grupos son iguales y las herramientas se prenden
+/// adentro de cada uno. Queda en la base hasta la migración de herramientas,
+/// que lo reemplaza.
+enum TipoGrupo {
+  proyecto
+  compartido
+  meta
+}
+
+/// Un grupo de gastos: todo lo que se gasta en algo puntual, como la obra de
+/// una casa o un viaje.
+model Grupo {
+  id          String         @id @default(cuid())
+  creadorId   String
+  creador     User           @relation(fields: [creadorId], references: [id], onDelete: Cascade)
+  nombre      String
+  /// Ya no se usa (ver TipoGrupo).
+  tipo        TipoGrupo      @default(proyecto)
+  color       String         @default("#6fbee4")
+  descripcion String?
+  /// Si el grupo se divide en secciones. Se elige al crearlo; uno sin
+  /// secciones muestra sus gastos en una sola lista.
+  usaSecciones Boolean       @default(true)
+  /// Con valor, el grupo está archivado: no se le cargan gastos y sale de la
+  /// lista principal, pero se puede seguir consultando.
+  archivadoEn DateTime?
+  createdAt   DateTime       @default(now())
+  secciones   SeccionGrupo[]
+  gastos      Expense[]
+
+  @@index([creadorId, archivadoEn])
+}
+
+/// Una división dentro de un grupo: los ambientes de la casa, las etapas del
+/// viaje. Un solo nivel.
+model SeccionGrupo {
+  id        String    @id @default(cuid())
+  grupoId   String
+  grupo     Grupo     @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  nombre    String
+  /// Posición en la lista, en el orden en que se crearon.
+  orden     Int       @default(0)
+  createdAt DateTime  @default(now())
+  gastos    Expense[]
+
+  @@unique([grupoId, nombre])
 }
