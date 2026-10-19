@@ -16,10 +16,12 @@ const azeretMono = Azeret_Mono({
 
 // Solo para los títulos de página y de sección: una voz con más carácter que
 // la letra de todos los días, usada poco para que no canse.
+// Es una fuente variable: se carga entera (todos los pesos en un archivo) en
+// vez de pedir pesos sueltos. Pedir pesos sueltos rompía el build de
+// producción de Turbopack ("next/font/google queries have exactly one entry").
 const bricolage = Bricolage_Grotesque({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
