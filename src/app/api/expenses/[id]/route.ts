@@ -18,6 +18,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { id } = await params;
   const existing = await prisma.expense.findFirst({ where: { id, userId } });
   if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+  // La parte de un gasto de grupo se maneja desde el grupo: tocarla acá
+  // descuadraría las cuentas de los demás.
+  if (existing.gastoGrupalId) {
+    return NextResponse.json({ error: "Este gasto es de un grupo: se cambia desde el grupo." }, { status: 400 });
+  }
 
   const parsed = updateSchema.safeParse(await request.json());
   if (!parsed.success) {
@@ -41,6 +46,11 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const { id } = await params;
   const existing = await prisma.expense.findFirst({ where: { id, userId } });
   if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+  // La parte de un gasto de grupo se maneja desde el grupo: tocarla acá
+  // descuadraría las cuentas de los demás.
+  if (existing.gastoGrupalId) {
+    return NextResponse.json({ error: "Este gasto es de un grupo: se cambia desde el grupo." }, { status: 400 });
+  }
 
   await prisma.expense.delete({ where: { id } });
   return NextResponse.json({ ok: true });

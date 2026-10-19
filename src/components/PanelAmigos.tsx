@@ -22,6 +22,22 @@ type Modo = "codigo" | "nombre";
 const nombreDe = (p: Persona | Hallazgo) =>
   ("name" in p ? p.name : p.nombre)?.trim() || "Sin nombre";
 
+/** Las letras que pasan por una casilla antes de frenar en la suya. */
+const LETRAS_DEL_RODILLO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+/**
+ * El relleno del rodillo de una casilla. No es azar: tiene que salir igual en
+ * el servidor y en el navegador, o React avisa que el HTML no coincide. Cada
+ * casilla lleva tres letras más que la anterior, así gira más y frena después.
+ */
+function rellenoDelRodillo(letra: string, orden: number) {
+  const base = letra.charCodeAt(0) + orden * 7;
+  return Array.from(
+    { length: 6 + orden * 3 },
+    (_, k) => LETRAS_DEL_RODILLO[(base + k * 11) % LETRAS_DEL_RODILLO.length]
+  );
+}
+
 /** "12 oct" o "oct 2026", siempre en hora de Uruguay para que servidor y
     navegador escriban lo mismo. */
 function fecha(valor: string | Date, opciones: Intl.DateTimeFormatOptions) {
@@ -129,8 +145,21 @@ export function PanelAmigos({
           </span>
           <span aria-hidden className="flex gap-1.5">
             {letras.split("").map((letra, i) => (
-              <span key={i} className="casilla">
-                {letra}
+              <span
+                key={i}
+                className="casilla casilla-rodillo"
+                style={{ "--orden": i } as React.CSSProperties}
+              >
+                {/* El rodillo: letras de relleno y al final la de verdad. La
+                    animación (globals.css) lo hace girar hasta frenar en ella;
+                    cada casilla gira un poco más que la anterior, así frenan
+                    en orden, de izquierda a derecha. */}
+                <span className="casilla-tira">
+                  {rellenoDelRodillo(letra, i).map((c, k) => (
+                    <span key={k}>{c}</span>
+                  ))}
+                  <span>{letra}</span>
+                </span>
               </span>
             ))}
           </span>
@@ -339,7 +368,7 @@ export function PanelAmigos({
                 if (!ok) setVisible(!nuevoValor);
               }}
               className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                visible ? "bg-peso" : "bg-borde-fuerte"
+                visible ? "bg-foco" : "bg-borde-fuerte"
               }`}
             >
               <span
@@ -462,11 +491,11 @@ function Encabezado({
 }) {
   return (
     <div className="mb-3 flex items-center gap-2">
-      <h2 className="rotulo">{titulo}</h2>
+      <h2 className="seccion-titulo">{titulo}</h2>
       {cantidad !== undefined && (
         <span
           className={`monto rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-            destacado ? "bg-peso/15 text-peso" : "bg-superficie-alta text-suave"
+            destacado ? "bg-foco/12 text-texto" : "bg-superficie-alta text-suave"
           }`}
         >
           {cantidad}

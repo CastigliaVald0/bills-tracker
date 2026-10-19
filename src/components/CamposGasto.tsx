@@ -145,17 +145,22 @@ export function CampoCategoria({
   valor,
   alCambiar,
   nombreGrupo,
+  etiqueta = "Categoría",
+  alCrearNueva,
 }: {
   categorias: Category[];
   valor: string;
   alCambiar: (id: string) => void;
   nombreGrupo: string;
+  etiqueta?: string;
+  /** Si viene, al final va una ficha "+ Nueva" que la llama (crear sin salir del formulario). */
+  alCrearNueva?: () => void;
 }) {
-  if (categorias.length === 0) return null;
+  if (categorias.length === 0 && !alCrearNueva) return null;
 
   return (
     <fieldset>
-      <legend className="rotulo mb-2">Categoría</legend>
+      <legend className="rotulo mb-2">{etiqueta}</legend>
 
       <div className="flex flex-wrap gap-1.5">
         {categorias.map((cat) => {
@@ -181,12 +186,22 @@ export function CampoCategoria({
                     : undefined
                 }
               >
-                <span aria-hidden className="punto" style={{ backgroundColor: cat.color }} />
+                {/* Con emoji, el emoji; si no, el punto de su color. */}
+                {cat.emoji ? (
+                  <span aria-hidden className="text-base leading-none">{cat.emoji}</span>
+                ) : (
+                  <span aria-hidden className="punto" style={{ backgroundColor: cat.color }} />
+                )}
                 {cat.name}
               </span>
             </label>
           );
         })}
+        {alCrearNueva && (
+          <button type="button" onClick={alCrearNueva} aria-haspopup="dialog" className="ficha-nueva">
+            + Nueva
+          </button>
+        )}
       </div>
     </fieldset>
   );

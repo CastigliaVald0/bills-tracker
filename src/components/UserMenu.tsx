@@ -58,11 +58,13 @@ export function UserMenu({
 
       {open && (
         <div
+          // En el celular sube desde el botón con las opciones de a una; en PC
+          // baja desde la esquina, como el menú de "Cargar gasto".
           className={`absolute right-0 z-30 flex w-60 flex-col gap-0.5 rounded-xl border border-borde bg-superficie p-1.5 shadow-[var(--sombra-flotante)] ${
-            menuDirection === "up" ? "bottom-full mb-4" : "top-full mt-3"
+            menuDirection === "up" ? "menu-sube origin-bottom-right bottom-full mb-4" : "desplegar top-full mt-3"
           }`}
         >
-          <div className="truncate border-b border-borde px-3 pb-2.5 pt-2 mb-0.5">
+          <div className="truncate border-b border-borde px-3 pb-2.5 pt-2 mb-0.5" style={{ "--i": 0 } as React.CSSProperties}>
             {trimmedName && (
               <p className="truncate text-sm font-medium text-texto">{trimmedName}</p>
             )}
@@ -70,11 +72,11 @@ export function UserMenu({
           </div>
           {/* Amigos vive acá y no en el cajón: es parte de tu perfil, no de la
               navegación de gastos. */}
-          <Link href="/amigos" className={FILA}>
+          <Link href="/amigos" className={FILA} style={{ "--i": 1 } as React.CSSProperties}>
             <IconoAmigos className={TAMANO_ICONO} />
             Amigos
           </Link>
-          <Link href="/account" className={FILA}>
+          <Link href="/account" className={FILA} style={{ "--i": 2 } as React.CSSProperties}>
             <IconoCuenta className={TAMANO_ICONO} />
             Mi cuenta
           </Link>
@@ -82,6 +84,7 @@ export function UserMenu({
             type="button"
             onClick={() => signOut({ callbackUrl: "/login" })}
             className={`${FILA} w-full text-left`}
+            style={{ "--i": 3 } as React.CSSProperties}
           >
             <IconoSalir className={TAMANO_ICONO} />
             Cerrar sesión

@@ -23,6 +23,14 @@ model User {
   passwordResetTokens PasswordResetToken[]
   pushSubscriptions   PushSubscription[]
   grupos              Grupo[]
+  membresias          MiembroGrupo[]       @relation("Membresias")
+  invitacionesHechas  MiembroGrupo[]       @relation("InvitacionesHechas")
+  gastosPagados       GastoGrupal[]        @relation("GastosPagados")
+  gastosCargados      GastoGrupal[]        @relation("GastosCargados")
+  partesDeGastos      ParteGasto[]
+  pagosHechos         PagoGrupo[]          @relation("PagosHechos")
+  pagosRecibidos      PagoGrupo[]          @relation("PagosRecibidos")
+  pagosRegistrados    PagoGrupo[]          @relation("PagosRegistrados")
 
   /// Código corto para que otro te agregue, y que también es tu enlace de
   /// invitación. Se genera la primera vez que entrás a Amigos, así las cuentas
@@ -77,6 +85,9 @@ model Category {
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   name              String
   color             String             @default("#64748b")
+  /// Un emoji que la representa en el círculo de las listas. Opcional: sin
+  /// él se ve el ícono (si es una de las que trae la cuenta) o la inicial.
+  emoji             String?
   createdAt         DateTime           @default(now())
   expenses          Expense[]
   recurringExpenses RecurringExpense[]
@@ -103,6 +114,10 @@ model Expense {
   /// columna, y cuando no se pudo leer la cotización al crearlos.
   usdRate            Decimal?          @db.Decimal(12, 4)
 
+  /// Si es la parte de este usuario en un gasto de grupo. Al borrar el gasto
+  /// del grupo se borra también esta parte (ver la ruta de borrado).
+  gastoGrupalId      String?
+  gastoGrupal        GastoGrupal?      @relation(fields: [gastoGrupalId], references: [id], onDelete: SetNull)
   /// Si el gasto pertenece a un grupo. Sigue siendo un gasto personal más (suma
   /// en el mes como cualquier otro); el grupo solo lo agrupa y lo muestra aparte.
   /// Al borrar el grupo el gasto no se pierde: queda como gasto común.
@@ -114,6 +129,7 @@ model Expense {
 
   @@index([userId, date])
   @@index([grupoId])
+  @@index([gastoGrupalId])
 }
 
 model RecurringExpense {
@@ -216,6 +232,9 @@ model Grupo {
   createdAt   DateTime       @default(now())
   secciones   SeccionGrupo[]
   gastos      Expense[]
+  miembros    MiembroGrupo[]
+  gastosGrupales GastoGrupal[]
+  pagos       PagoGrupo[]
 
   @@index([creadorId, archivadoEn])
 }
@@ -227,10 +246,100 @@ model SeccionGrupo {
   grupoId   String
   grupo     Grupo     @relation(fields: [grupoId], references: [id], onDelete: Cascade)
   nombre    String
+  /// Color propio de la sección. Sin él, se usa el del grupo.
+  color     String?
+  /// Un emoji que la representa en el mosaico y en los gastos. Opcional.
+  emoji     String?
   /// Posición en la lista, en el orden en que se crearon.
   orden     Int       @default(0)
   createdAt DateTime  @default(now())
   gastos    Expense[]
+  gastosGrupales GastoGrupal[]
 
   @@unique([grupoId, nombre])
+}
+
+enum EstadoMiembro {
+  pendiente
+  aceptado
+}
+
+/// Un amigo sumado a un grupo. Quien crea el grupo no tiene fila acá: es el
+/// administrador y siempre es miembro. Los demás entran invitados y recién
+/// cuentan cuando aceptan.
+model MiembroGrupo {
+  id            String        @id @default(cuid())
+  grupoId       String
+  grupo         Grupo         @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User          @relation("Membresias", fields: [userId], references: [id], onDelete: Cascade)
+  invitadoPorId String
+  invitadoPor   User          @relation("InvitacionesHechas", fields: [invitadoPorId], references: [id], onDelete: Cascade)
+  estado        EstadoMiembro @default(pendiente)
+  createdAt     DateTime      @default(now())
+  respondidoEn  DateTime?
+
+  @@unique([grupoId, userId])
+  @@index([userId, estado])
+}
+
+/// Un gasto del grupo, tal como pasó: quién pagó y cuánto. Cómo se reparte
+/// está en sus partes, y cada parte es además un gasto personal (Expense) de
+/// quien la debe: eso es lo que suma en su mes.
+model GastoGrupal {
+  id           String        @id @default(cuid())
+  grupoId      String
+  grupo        Grupo         @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  seccionId    String?
+  seccion      SeccionGrupo? @relation(fields: [seccionId], references: [id], onDelete: SetNull)
+  pagadorId    String
+  pagador      User          @relation("GastosPagados", fields: [pagadorId], references: [id], onDelete: Cascade)
+  cargadoPorId String
+  cargadoPor   User          @relation("GastosCargados", fields: [cargadoPorId], references: [id], onDelete: Cascade)
+  monto        Decimal       @db.Decimal(12, 2)
+  moneda       Currency
+  fecha        DateTime
+  descripcion  String?
+  /// Cotización del día, como en Expense: solo en gastos en dólares.
+  usdRate      Decimal?      @db.Decimal(12, 4)
+  createdAt    DateTime      @default(now())
+  partes       ParteGasto[]
+  gastos       Expense[]
+
+  @@index([grupoId, fecha])
+}
+
+/// Cuánto le toca a cada uno de un gasto del grupo. Las partes de un gasto
+/// suman exactamente su monto.
+model ParteGasto {
+  id            String      @id @default(cuid())
+  gastoGrupalId String
+  gastoGrupal   GastoGrupal @relation(fields: [gastoGrupalId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monto         Decimal     @db.Decimal(12, 2)
+
+  @@unique([gastoGrupalId, userId])
+  @@index([userId])
+}
+
+/// Plata que un miembro le devolvió a otro dentro del grupo. Baja los saldos;
+/// no es un gasto nuevo, porque la parte de cada uno ya se contó cuando se
+/// cargó el gasto.
+model PagoGrupo {
+  id               String   @id @default(cuid())
+  grupoId          String
+  grupo            Grupo    @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  deId             String
+  de               User     @relation("PagosHechos", fields: [deId], references: [id], onDelete: Cascade)
+  aId              String
+  a                User     @relation("PagosRecibidos", fields: [aId], references: [id], onDelete: Cascade)
+  monto            Decimal  @db.Decimal(12, 2)
+  moneda           Currency
+  fecha            DateTime
+  registradoPorId  String
+  registradoPor    User     @relation("PagosRegistrados", fields: [registradoPorId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+
+  @@index([grupoId])
 }

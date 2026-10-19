@@ -175,7 +175,7 @@ export default function AccountPage() {
       </header>
 
       <section>
-        <h2 className="rotulo mb-3">Cambiar contraseña</h2>
+        <h2 className="seccion-titulo mb-3 px-1">Cambiar contraseña</h2>
         <form onSubmit={handleSubmit} className="tarjeta flex max-w-sm flex-col gap-4 p-4 sm:p-5">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="pass-actual" className="rotulo">Contraseña actual</label>
@@ -225,7 +225,7 @@ export default function AccountPage() {
       </section>
 
       <section>
-        <h2 className="rotulo mb-3">Notificaciones</h2>
+        <h2 className="seccion-titulo mb-3 px-1">Notificaciones</h2>
         <div className="tarjeta flex max-w-sm flex-col">
           <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
             <div className="min-w-0">
@@ -278,7 +278,7 @@ export default function AccountPage() {
       </section>
 
       <section>
-        <h2 className="rotulo mb-3 text-alerta">Zona de peligro</h2>
+        <h2 className="seccion-titulo mb-3 px-1 text-alerta">Zona de peligro</h2>
         <div className="max-w-sm rounded-md border border-alerta/40 bg-alerta-fondo p-4 sm:p-5">
           <p className="text-sm leading-relaxed text-suave">
             Eliminar tu cuenta borra permanentemente todos tus gastos, categorías y gastos fijos.
@@ -375,7 +375,7 @@ function Interruptor({
       disabled={disabled}
       onClick={() => onChange(!activo)}
       className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-        activo ? "bg-peso" : "bg-borde-fuerte"
+        activo ? "bg-foco" : "bg-borde-fuerte"
       }`}
     >
       <span

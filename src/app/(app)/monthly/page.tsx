@@ -8,7 +8,8 @@ import { fechaEnUruguay } from "@/lib/monthly-summary";
 import { Pizarra } from "@/components/Pizarra";
 import { RepartoFijos } from "@/components/RepartoFijos";
 import { Vacio, IconoCalendario } from "@/components/Vacio";
-import { ListaCategorias, type TotalCategoria } from "@/components/ListaCategorias";
+import type { TotalCategoria } from "@/components/ListaCategorias";
+import { AnilloCategorias } from "@/components/AnilloCategorias";
 import { GastosDelMes, type GastoDelMes } from "@/components/GastosDelMes";
 
 type Moneda = "UYU" | "USD";
@@ -101,6 +102,7 @@ export default async function MonthlyPage({
     const entrada = porCategoria.get(g.categoryId) ?? {
       name: g.category.name,
       color: g.category.color,
+      emoji: g.category.emoji,
       UYU: 0,
       USD: 0,
       antes: { UYU: 0, USD: 0 },
@@ -113,7 +115,7 @@ export default async function MonthlyPage({
     .filter((c) => c.UYU > 0 || c.USD > 0)
     .sort((a, b) => b.UYU + b.USD * tasaDeRespaldo - (a.UYU + a.USD * tasaDeRespaldo));
 
-  // El gasto más grande del mes: su día se marca más oscuro en el calendario.
+  // El gasto más grande del mes: su día va en el color de alerta en el calendario.
   const mayorGasto = delMes.reduce<(typeof delMes)[number] | null>(
     (mayor, g) => (!mayor || enPesos(g) > enPesos(mayor) ? g : mayor),
     null
@@ -125,7 +127,7 @@ export default async function MonthlyPage({
     monto: Number(g.amount),
     moneda: g.currency,
     descripcion: g.description,
-    categoria: { nombre: g.category.name, color: g.category.color },
+    categoria: { nombre: g.category.name, color: g.category.color, emoji: g.category.emoji },
     fijo: g.recurringExpenseId !== null,
     grupo: g.grupo?.nombre ?? null,
     montoComparable: enPesos(g),
@@ -178,11 +180,6 @@ export default async function MonthlyPage({
   }
   const monedasConGasto = (Object.keys(reparto) as Moneda[]).length;
 
-  // Lo que gastó cada categoría el mes pasado, para el cambio por fila.
-  const categoriasAntes = new Map(
-    [...porCategoria.values()].map((c) => [c.name, c.antes])
-  );
-
   const mesPrevio = moverMes(anio, mes, -1);
   const mesSiguiente = moverMes(anio, mes, 1);
 
@@ -215,7 +212,7 @@ export default async function MonthlyPage({
   );
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-8">
       <Pizarra
         rotulo="Gastado en el mes"
         titulo={monthLabel(claveMes)}
@@ -239,10 +236,10 @@ export default async function MonthlyPage({
         />
       ) : (
         <>
-          {/* El calendario con el filtro por día: la idea queda, el envoltorio
-              se aligeró (ver GastosDelMes). */}
+          {/* El calendario de círculos, el mismo del dashboard, que acá
+              además filtra la lista por día (ver GastosDelMes). */}
           <section>
-            <h2 className="rotulo mb-3">Gastos del mes</h2>
+            <h2 className="seccion-titulo mb-3 px-1">Gastos del mes</h2>
             <GastosDelMes
               gastos={gastosDelMes}
               anio={anio}
@@ -260,16 +257,9 @@ export default async function MonthlyPage({
             />
           </section>
 
-          {/* Cada fila trae su propio cambio contra el mes anterior, así que
-              ya no hace falta la sección "Qué cambió", que además solo
-              mostraba dos categorías de todas. */}
           <section>
-            <h2 className="rotulo mb-3">Por categoría</h2>
-            <ListaCategorias
-              categorias={categoriasDelMes}
-              totales={actual.totales}
-              antes={anterior.cantidad > 0 ? categoriasAntes : undefined}
-            />
+            <h2 className="seccion-titulo mb-3 px-1">Por categoría</h2>
+            <AnilloCategorias categorias={categoriasDelMes} />
           </section>
         </>
       )}

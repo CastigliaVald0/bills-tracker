@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
+import { emojiSchema } from "@/lib/emoji";
 
 const createSchema = z.object({
   name: z.string().min(1).max(50),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#64748b"),
+  emoji: emojiSchema.optional(),
 });
 
 export async function GET() {

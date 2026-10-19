@@ -4,6 +4,8 @@ export type Category = {
   id: string;
   name: string;
   color: string;
+  /** El emoji que la representa, si se le puso uno. */
+  emoji?: string | null;
 };
 
 export type Expense = {

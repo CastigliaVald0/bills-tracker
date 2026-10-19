@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
+import { Insignia } from "@/components/Insignia";
 
 export type GastoReciente = {
   id: string;
@@ -8,7 +9,7 @@ export type GastoReciente = {
   monto: number;
   moneda: "UYU" | "USD";
   descripcion: string | null;
-  categoria: { nombre: string; color: string };
+  categoria: { nombre: string; color: string; emoji?: string | null };
   fijo: boolean;
   /** El nombre del grupo, si el gasto se cargó dentro de uno. */
   grupo?: string | null;
@@ -19,15 +20,9 @@ type Dia = { clave: string; fecha: Date; gastos: GastoReciente[] };
 const DIA_EN_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Los últimos gastos como una tira de ticket de caja.
- *
- * Es la contracara de la pizarra: la pizarra es la tinta donde se publican los
- * totales, el ticket es el papel que te queda de cada compra. Sus colores
- * están en globals.css (ver .ticket).
- *
- * Cada día es un tramo de la tira, separado del anterior por una línea de
- * corte; cada gasto, un renglón con los puntos que llevan el ojo hasta el
- * monto, como en cualquier ticket.
+ * Los últimos gastos, agrupados por día: "Hoy", "Ayer" y después el nombre del
+ * día. Cada gasto lleva la insignia de su categoría y el monto en el color de
+ * su moneda, como en el resto de la app.
  *
  * `hoy` es la fecha de hoy en Uruguay a las 00:00 UTC, igual que se guardan
  * las fechas de los gastos, para poder compararlas sin corrimientos de zona.
@@ -39,7 +34,7 @@ export function UltimosGastos({
 }: {
   gastos: GastoReciente[];
   hoy: Date;
-  /** Cuántos gastos tiene el mes en total; la tira muestra solo los últimos. */
+  /** Cuántos gastos tiene el mes en total; acá se muestran solo los últimos. */
   totalDelMes: number;
 }) {
   // Vienen ordenados del más nuevo al más viejo: los del mismo día quedan juntos.
@@ -54,80 +49,90 @@ export function UltimosGastos({
     dia.gastos.push(gasto);
   }
 
-  // "vie 09 oct": sin los puntos de abreviatura, que en mayúsculas ensucian.
-  const fechaDeTicket = (fecha: Date) =>
-    new Intl.DateTimeFormat("es-UY", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
+  // "Viernes 16 de octubre", o "Hoy" / "Ayer" cuando corresponde.
+  function nombreDelDia(fecha: Date) {
+    const distancia = Math.round((hoy.getTime() - fecha.getTime()) / DIA_EN_MS);
+    if (distancia === 0) return "Hoy";
+    if (distancia === 1) return "Ayer";
+    const texto = new Intl.DateTimeFormat("es-UY", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
       timeZone: "UTC",
     })
       .format(fecha)
-      .replace(/[.,]/g, "");
-
-  function cercania(fecha: Date) {
-    const distancia = Math.round((hoy.getTime() - fecha.getTime()) / DIA_EN_MS);
-    return distancia === 0 ? "Hoy" : distancia === 1 ? "Ayer" : null;
+      .replace(",", "");
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
   return (
-    <div className="ticket mx-auto w-full max-w-md">
-      {dias.map((dia) => (
-        <section key={dia.clave} className="ticket-tramo px-4 py-3.5 sm:px-5">
-          <h3 className="ticket-renglon flex items-baseline justify-between gap-3">
-            <span>{fechaDeTicket(dia.fecha)}</span>
-            {cercania(dia.fecha) && <span>{cercania(dia.fecha)}</span>}
-          </h3>
-
-          <ul className="mt-2.5 flex flex-col gap-2.5">
-            {dia.gastos.map((gasto) => (
-              <li key={gasto.id}>
-                <div className="flex items-baseline gap-2">
-                  <span
-                    aria-hidden
-                    className="h-2 w-2 shrink-0 translate-y-[-1px] rounded-full"
-                    style={{ backgroundColor: gasto.categoria.color }}
-                  />
-                  <span className="min-w-0 truncate text-sm font-medium">
-                    {gasto.descripcion || gasto.categoria.nombre}
-                  </span>
-                  <span aria-hidden className="ticket-puntos" />
-                  <span
-                    className="monto shrink-0 text-sm"
-                    style={{
-                      color: gasto.moneda === "UYU" ? "var(--ticket-peso)" : "var(--ticket-dolar)",
-                    }}
-                  >
-                    {formatMoney(gasto.monto, gasto.moneda)}
-                  </span>
-                </div>
-                {(gasto.descripcion || gasto.fijo || gasto.grupo) && (
-                  <p className="ticket-renglon mt-1 truncate pl-4">
-                    {[
-                      gasto.descripcion && gasto.categoria.nombre,
-                      gasto.fijo && "fijo",
-                      gasto.grupo && `grupo ${gasto.grupo}`,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-
-      <div className="ticket-pie flex items-baseline justify-between gap-3 px-4 pt-3.5 pb-4 sm:px-5">
-        <span className="ticket-renglon">
+    <section className="flex min-w-0 flex-col gap-3">
+      <div className="flex items-baseline justify-between gap-3 px-1">
+        <h2 className="seccion-titulo">Lo último que cargaste</h2>
+        <span className="text-xs text-tenue">
           {gastos.length < totalDelMes
-            ? `Últimos ${gastos.length} de ${totalDelMes}`
-            : `${totalDelMes} ${totalDelMes === 1 ? "gasto" : "gastos"} este mes`}
+            ? `${gastos.length} de ${totalDelMes}`
+            : `${totalDelMes} ${totalDelMes === 1 ? "gasto" : "gastos"}`}
         </span>
-        <Link href="/monthly" className="ticket-renglon ticket-enlace">
-          Ver todo el mes <span aria-hidden>→</span>
+      </div>
+
+      <div className="tarjeta aparece overflow-hidden">
+        {dias.map((dia) => {
+          const sumaDia = { UYU: 0, USD: 0 };
+          for (const g of dia.gastos) sumaDia[g.moneda] += g.monto;
+          return (
+            <div key={dia.clave} className="border-b border-borde/70 last:border-b-0">
+              <h3 className="flex items-baseline justify-between gap-3 bg-fondo/35 px-4 py-2 text-xs font-medium text-suave">
+                <span>{nombreDelDia(dia.fecha)}</span>
+                <span className="monto text-tenue">
+                  {[
+                    sumaDia.UYU > 0 && formatMoney(sumaDia.UYU, "UYU"),
+                    sumaDia.USD > 0 && formatMoney(sumaDia.USD, "USD"),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </h3>
+
+              <ul className="lista rounded-none border-0 bg-transparent shadow-none">
+                {dia.gastos.map((gasto) => (
+                  <li key={gasto.id} className="flex items-center gap-3 px-4 py-3">
+                    <Insignia nombre={gasto.categoria.nombre} color={gasto.categoria.color} emoji={gasto.categoria.emoji} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-medium text-texto">
+                        {gasto.descripcion || gasto.categoria.nombre}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-tenue">
+                        {[
+                          gasto.categoria.nombre,
+                          gasto.fijo && "Gasto fijo",
+                          gasto.grupo && `Grupo ${gasto.grupo}`,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    <span
+                      className={`monto shrink-0 text-[15px] font-medium ${
+                        gasto.moneda === "UYU" ? "text-peso" : "text-dolar"
+                      }`}
+                    >
+                      {formatMoney(gasto.monto, gasto.moneda)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+
+        <Link
+          href="/monthly"
+          className="flex items-center justify-center gap-1.5 border-t border-borde px-4 py-3.5 text-sm font-medium text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
+        >
+          Ver todos los gastos del mes <span aria-hidden>→</span>
         </Link>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Familjen_Grotesk, Azeret_Mono } from "next/font/google";
+import { Familjen_Grotesk, Azeret_Mono, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 
 const familjenGrotesk = Familjen_Grotesk({
@@ -12,6 +12,14 @@ const azeretMono = Azeret_Mono({
   variable: "--font-num",
   subsets: ["latin"],
   weight: ["300", "400", "500"],
+});
+
+// Solo para los títulos de página y de sección: una voz con más carácter que
+// la letra de todos los días, usada poco para que no canse.
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -30,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${familjenGrotesk.variable} ${azeretMono.variable} h-full antialiased`}
+      className={`${familjenGrotesk.variable} ${azeretMono.variable} ${bricolage.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

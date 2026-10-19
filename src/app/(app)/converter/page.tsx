@@ -15,7 +15,7 @@ export default async function ConverterPage() {
         <p className="rotulo">Cotización del día</p>
         <h1 className="titulo">Conversor UYU / USD</h1>
         <p className="mt-2 max-w-prose text-sm text-suave">
-          Para estimar a cuántos pesos te va a salir una compra en dólares, por ejemplo en MercadoLibre.
+          Converti el monto que quieras para estimar lo que cuesta, por ejemplo en MercadoLibre.
         </p>
       </header>
 

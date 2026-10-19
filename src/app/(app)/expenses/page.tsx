@@ -1,5 +1,6 @@
 "use client";
 
+import { Insignia } from "@/components/Insignia";
 import { useEffect, useRef, useState } from "react";
 import type { Category, Expense } from "@/lib/types";
 import { Vacio, IconoTicket } from "@/components/Vacio";
@@ -203,7 +204,7 @@ export default function ExpensesPage() {
         {categories.length === 0 && !loading && (
           <p className="text-sm text-suave">
             Necesitás al menos una categoría para cargar un gasto.{" "}
-            <Link href="/categories" className="text-peso underline underline-offset-2">
+            <Link href="/categories" className="text-texto underline underline-offset-2">
               Crear una
             </Link>
           </p>
@@ -224,7 +225,7 @@ export default function ExpensesPage() {
       </form>
 
       <section>
-        <h2 className="rotulo mb-3">Cargados este mes</h2>
+        <h2 className="seccion-titulo mb-3 px-1">Cargados este mes</h2>
 
         {borrado && (
           <div
@@ -255,31 +256,43 @@ export default function ExpensesPage() {
           <div className="lista">
             {expenses.map((expense) => (
               <div key={expense.id} className="fila">
-                <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                  <span aria-hidden className="filete" style={{ backgroundColor: expense.category.color }} />
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <Insignia nombre={expense.category.name} color={expense.category.color} emoji={expense.category.emoji} />
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-texto">
+                    <p className="truncate text-[15px] font-medium text-texto">
                       {expense.description || expense.category.name}
                     </p>
-                    <p className="rotulo mt-1 truncate normal-case tracking-normal">
-                      {new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "short" }).format(new Date(expense.date))}
+                    <p className="mt-0.5 truncate text-xs text-tenue">
+                      {new Intl.DateTimeFormat("es-UY", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(expense.date))}
                       {" · "}
                       {expense.category.name}
-                      {expense.recurringExpenseId && " · fijo"}
-                      {expense.grupo && ` · grupo ${expense.grupo.nombre}`}
+                      {expense.recurringExpenseId && " · Gasto fijo"}
+                      {expense.grupo && ` · Grupo ${expense.grupo.nombre}`}
                     </p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-                  <span className="monto text-sm text-texto">
+                  <span
+                    className={`monto text-[15px] font-medium ${
+                      expense.currency === "UYU" ? "text-peso" : "text-dolar"
+                    }`}
+                  >
                     {formatMoney(expense.amount, expense.currency)}
                   </span>
-                  <button
-                    onClick={() => handleDelete(expense)}
-                    className="boton-mini boton-mini-peligro"
-                  >
-                    Eliminar
-                  </button>
+                  {/* La parte de un gasto de grupo se borra desde el grupo:
+                      acá descuadraría las cuentas de los demás. */}
+                  {expense.grupo ? (
+                    <Link href={`/grupos/${expense.grupo.id}`} className="boton-mini">
+                      Ver grupo
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleDelete(expense)}
+                      className="boton-mini boton-mini-peligro"
+                    >
+                      Eliminar
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

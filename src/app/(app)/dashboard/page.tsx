@@ -89,7 +89,7 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-8">
       <Pizarra
         rotulo="Gastado este mes"
         titulo={monthLabel(month)}
@@ -112,11 +112,18 @@ export default async function DashboardPage() {
         </>
       ) : (
         <>
-          <TiraDelMes dias={porDia} hoy={hoy.dia} nombreMes={nombreMes} comparacion={comparacion} />
+          <TiraDelMes
+            dias={porDia}
+            hoy={hoy.dia}
+            nombreMes={nombreMes}
+            comparacion={comparacion}
+            // getUTCDay: 0 = domingo. Se corre para que el lunes sea la primera columna.
+            huecoInicial={(start.getUTCDay() + 6) % 7}
+          />
 
-          {/* En PC, el ticket y lo que falta van lado a lado: lo que ya pasó a
+          {/* En PC, lo último y lo que falta van lado a lado: lo que ya pasó a
               la izquierda, lo que viene a la derecha. */}
-          <div className="grid grid-cols-1 items-start gap-10 sm:grid-cols-[minmax(0,1fr)_17.5rem] sm:gap-6">
+          <div className="grid grid-cols-1 items-start gap-8 sm:grid-cols-[minmax(0,1fr)_17.5rem] sm:gap-6">
             <UltimosGastos
               totalDelMes={expenses.length}
               hoy={new Date(Date.UTC(hoy.anio, hoy.mes - 1, hoy.dia))}
@@ -126,7 +133,7 @@ export default async function DashboardPage() {
                 monto: Number(expense.amount),
                 moneda: expense.currency,
                 descripcion: expense.description,
-                categoria: { nombre: expense.category.name, color: expense.category.color },
+                categoria: { nombre: expense.category.name, color: expense.category.color, emoji: expense.category.emoji },
                 fijo: expense.recurringExpenseId !== null,
                 grupo: expense.grupo?.nombre ?? null,
               }))}

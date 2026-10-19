@@ -1,6 +1,6 @@
 import { formatMoney } from "@/lib/format";
 
-export type TotalCategoria = { name: string; color: string; UYU: number; USD: number };
+export type TotalCategoria = { name: string; color: string; emoji?: string | null; UYU: number; USD: number };
 
 const MONEDAS = ["UYU", "USD"] as const;
 type Moneda = (typeof MONEDAS)[number];

@@ -59,17 +59,21 @@ export function AsistenteGrupo() {
 
     setGuardando(true);
     try {
+      // Lo que quedó escrito sin agregar también cuenta: es fácil olvidarse
+      // de apretar "Agregar" en la última.
+      const seccionesFinales = conSecciones ? limpiarSecciones([...secciones, nueva]) : [];
       const res = await fetch("/api/grupos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Lo que quedó escrito sin agregar también cuenta: es fácil olvidarse
-        // de apretar "Agregar" en la última.
         body: JSON.stringify({
           nombre,
           color,
           descripcion: descripcion || undefined,
-          usaSecciones: conSecciones,
-          secciones: conSecciones ? limpiarSecciones([...secciones, nueva]) : [],
+          // "Con secciones" sin ninguna escrita es un grupo sin secciones: si
+          // no, el primer gasto aparecía en el mosaico como una pieza
+          // "Sin sección" que parecía una sección más.
+          usaSecciones: seccionesFinales.length > 0,
+          secciones: seccionesFinales,
         }),
       });
       const datos = await res.json().catch(() => ({}));
@@ -137,7 +141,7 @@ export function AsistenteGrupo() {
                   className="peer sr-only"
                 />
                 <span
-                  className="block h-8 w-8 rounded-full ring-offset-2 ring-offset-superficie transition-shadow peer-checked:ring-2 peer-checked:ring-texto peer-focus-visible:ring-2 peer-focus-visible:ring-peso"
+                  className="block h-8 w-8 rounded-full ring-offset-2 ring-offset-superficie transition-shadow peer-checked:ring-2 peer-checked:ring-texto peer-focus-visible:ring-2 peer-focus-visible:ring-foco"
                   style={{ backgroundColor: opcion }}
                 />
                 <span className="sr-only">Color {opcion}</span>

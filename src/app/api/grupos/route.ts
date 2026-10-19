@@ -40,10 +40,13 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Revisá los datos del grupo." }, { status: 400 });
   }
-  const { nombre, color, descripcion, usaSecciones } = parsed.data;
+  const { nombre, color, descripcion } = parsed.data;
 
-  // Un grupo sin secciones no guarda ninguna, aunque vengan en el pedido.
-  const secciones = usaSecciones ? limpiarSecciones(parsed.data.secciones) : [];
+  // Un grupo sin secciones no guarda ninguna, aunque vengan en el pedido. Y
+  // uno que pidió secciones pero no trae ninguna queda sin secciones: se
+  // pueden activar después desde los ajustes del grupo.
+  const secciones = parsed.data.usaSecciones ? limpiarSecciones(parsed.data.secciones) : [];
+  const usaSecciones = secciones.length > 0;
 
   const grupo = await prisma.grupo.create({
     data: {

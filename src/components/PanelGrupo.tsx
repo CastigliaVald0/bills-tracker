@@ -1,26 +1,35 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import type { Category } from "@/lib/types";
-import { CampoMonto, CampoCategoria } from "@/components/CamposGasto";
-import { Aviso, useAvisoTemporal, enfocarCampoConError } from "@/components/Aviso";
+import { Aviso, useAvisoTemporal } from "@/components/Aviso";
 import { Confirmar } from "@/components/Confirmar";
-import { formatMoney, parseMoneyInput } from "@/lib/format";
-import { MAXIMO_NOMBRE_SECCION } from "@/lib/grupos";
+import { DetalleGasto } from "@/components/DetalleGasto";
+import { FormularioGastoGrupal } from "@/components/FormularioGastoGrupal";
+import { EditorSeccion, type SeccionEditable } from "@/components/EditorSeccion";
+import { formatMoney } from "@/lib/format";
 import { trazarMosaico } from "@/lib/mosaico";
 import estilos from "./PanelGrupo.module.css";
 
-type Seccion = { id: string; nombre: string };
+type Seccion = { id: string; nombre: string; color: string | null; emoji: string | null };
 type GastoDeGrupo = {
   id: string;
   monto: number;
   moneda: "UYU" | "USD";
   fecha: string;
   descripcion: string | null;
-  categoria: string;
   seccionId: string | null;
+  pagadorId: string;
+  cargadoPorId: string;
+  /** Cuántas personas se reparten el gasto. */
+  personasEnReparto: number;
+  /** Lo que me toca a mí, o null si no participo. */
+  miParte: number | null;
+  /** Lo que le toca a cada uno: el detalle del gasto y la planilla. */
+  partes: { userId: string; monto: number }[];
+  /** La categoría de mi parte, para editar el gasto sin moverla. */
+  miCategoriaId: string | null;
   /** El monto llevado a pesos. Solo dimensiona el mosaico; nunca se muestra. */
   enPesos: number;
 };
@@ -31,15 +40,14 @@ const SIN_SECCION = "__sin__";
 type Resumen = {
   id: string;
   nombre: string;
+  /** El color propio de la sección; null usa el del grupo. */
+  color: string | null;
+  emoji: string | null;
   UYU: number;
   USD: number;
   cantidad: number;
   enPesos: number;
 };
-
-function hoyIso() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 /**
  * La página de un grupo: sus secciones, el formulario para cargar un gasto y
@@ -54,35 +62,58 @@ function hoyIso() {
  */
 export function PanelGrupo({
   grupo,
+  yo,
+  esAdmin,
+  personas,
   secciones,
   categorias,
   gastos,
+  miSaldo,
+  pagos,
+  saldos,
+  personasDelGrupo,
 }: {
   grupo: { id: string; nombre: string; color: string; archivado: boolean; usaSecciones: boolean };
+  yo: string;
+  /** Quien creó el grupo: maneja secciones, personas y el cierre. */
+  esAdmin: boolean;
+  /** Todos los que participan, para elegir quién pagó y el reparto. */
+  personas: { id: string; nombre: string }[];
   secciones: Seccion[];
   categorias: Category[];
   gastos: GastoDeGrupo[];
+  /** Mi saldo en el grupo por moneda (positivo: me deben). Null si no es compartido. */
+  miSaldo: { UYU: number; USD: number } | null;
+  /** Los pagos entre personas, para la planilla. */
+  pagos: { deId: string; aId: string; monto: number; moneda: "UYU" | "USD"; fecha: string }[];
+  /** El contenido de la pestaña Saldos; no viene si el grupo no es compartido. */
+  saldos?: React.ReactNode;
+  /** Las personas del grupo, para la pestaña Grupo. */
+  personasDelGrupo?: React.ReactNode;
 }) {
   const router = useRouter();
   const [aviso, mostrarAviso] = useAvisoTemporal();
-  const [error, setError] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   /** La sección elegida en el mosaico. Null = todo el grupo. */
   const [elegido, setElegido] = useState<string | null>(null);
-  const [anotando, setAnotando] = useState(false);
+  /** El formulario abierto: para un gasto nuevo (gasto null) o para editar uno. */
+  const [formulario, setFormulario] = useState<{
+    gasto: GastoDeGrupo | null;
+    /** La caja del botón que lo abrió: el formulario se expande desde ahí. */
+    origen?: { x: number; y: number; ancho: number; alto: number };
+  } | null>(null);
+  const compartido = personas.length > 1;
 
-  const [monto, setMonto] = useState("");
-  const [moneda, setMoneda] = useState<"UYU" | "USD">("UYU");
-  const [categoriaId, setCategoriaId] = useState(categorias[0]?.id ?? "");
-  const [fecha, setFecha] = useState(hoyIso());
-  const [descripcion, setDescripcion] = useState("");
-
-  const [nuevaSeccion, setNuevaSeccion] = useState("");
-  const [errorSeccion, setErrorSeccion] = useState<string | null>(null);
+  /** El editor de secciones abierto: para una nueva (seccion null) o para editar una. */
+  const [editorSeccion, setEditorSeccion] = useState<{ seccion: SeccionEditable | null } | null>(null);
+  /** El gasto abierto en el detalle. */
+  const [detalle, setDetalle] = useState<GastoDeGrupo | null>(null);
+  /** La pestaña abierta: los gastos, las cuentas entre personas o el grupo. */
+  const [pestana, setPestana] = useState<"gastos" | "saldos" | "grupo">("gastos");
   const [confirmar, setConfirmar] = useState<
     | { que: "gasto"; gasto: GastoDeGrupo }
-    | { que: "seccion"; seccion: Seccion }
+    | { que: "seccion"; seccion: { id: string; nombre: string } }
     | { que: "grupo" }
     | null
   >(null);
@@ -90,12 +121,16 @@ export function PanelGrupo({
   // Cada sección con lo suyo, más lo que quedó sin sección si hay algo.
   const resumenes = useMemo(() => {
     const mapa = new Map<string, Resumen>(
-      secciones.map((s) => [s.id, { id: s.id, nombre: s.nombre, UYU: 0, USD: 0, cantidad: 0, enPesos: 0 }])
+      secciones.map((s) => [
+        s.id,
+        { id: s.id, nombre: s.nombre, color: s.color, emoji: s.emoji, UYU: 0, USD: 0, cantidad: 0, enPesos: 0 },
+      ])
     );
     for (const gasto of gastos) {
       const clave = gasto.seccionId && mapa.has(gasto.seccionId) ? gasto.seccionId : SIN_SECCION;
       const resumen =
-        mapa.get(clave) ?? { id: SIN_SECCION, nombre: "Sin sección", UYU: 0, USD: 0, cantidad: 0, enPesos: 0 };
+        mapa.get(clave) ??
+        { id: SIN_SECCION, nombre: "Sin sección", color: null, emoji: null, UYU: 0, USD: 0, cantidad: 0, enPesos: 0 };
       resumen[gasto.moneda] += gasto.monto;
       resumen.cantidad++;
       resumen.enPesos += gasto.enPesos;
@@ -114,6 +149,14 @@ export function PanelGrupo({
     ? gastos.filter((g) => (g.seccionId ?? SIN_SECCION) === filtro)
     : gastos;
 
+  // Mi total y el total de lo que se está viendo (todo el grupo o una sección).
+  const misTotales = { UYU: 0, USD: 0 };
+  const totalesVisibles = { UYU: 0, USD: 0 };
+  for (const gasto of visibles) {
+    totalesVisibles[gasto.moneda] += gasto.monto;
+    misTotales[gasto.moneda] += gasto.miParte ?? 0;
+  }
+
   // Los movimientos, por mes: del más nuevo al más viejo, como llegan.
   const meses: { clave: string; gastos: GastoDeGrupo[]; UYU: number; USD: number }[] = [];
   for (const gasto of visibles) {
@@ -128,6 +171,12 @@ export function PanelGrupo({
   }
 
   const nombreDeSeccion = (id: string | null) => secciones.find((s) => s.id === id)?.nombre ?? null;
+  /** El nombre con su emoji delante, para mostrar (la planilla usa solo el nombre). */
+  const etiquetaDeSeccion = (id: string | null) => {
+    const seccion = secciones.find((s) => s.id === id);
+    return seccion ? `${seccion.emoji ? `${seccion.emoji} ` : ""}${seccion.nombre}` : null;
+  };
+  const nombreDe = (id: string) => personas.find((p) => p.id === id)?.nombre ?? "alguien";
 
   /** Un pedido a la API con el manejo de errores de siempre. */
   async function pedir(url: string, metodo: string, cuerpo?: unknown) {
@@ -140,58 +189,49 @@ export function PanelGrupo({
     return { ok: res.ok, error: (datos.error as string | undefined) ?? null };
   }
 
-  async function anotarGasto(e: React.FormEvent) {
-    e.preventDefault();
-    if (ocupado) return;
-    setError(null);
+  /**
+   * Descarga la planilla del grupo: un gasto por fila con la parte de cada
+   * persona en su columna, y abajo los pagos entre personas. Es un CSV
+   * separado por punto y coma, con coma decimal y la marca UTF-8 al
+   * principio: así Excel en español lo abre directo, con tildes y en columnas.
+   */
+  function exportarPlanilla() {
+    const celda = (valor: string | number | null) => {
+      const texto = valor === null ? "" : typeof valor === "number" ? valor.toFixed(2).replace(".", ",") : valor;
+      return /[";\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+    };
+    const fechaCorta = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+    const fila = (valores: (string | number | null)[]) => valores.map(celda).join(";");
 
-    const montoNumerico = parseMoneyInput(monto);
-    if (!Number.isFinite(montoNumerico) || montoNumerico <= 0) {
-      setError("Escribí un monto mayor que cero.");
-      enfocarCampoConError("monto-grupo");
-      return;
-    }
-
-    setOcupado(true);
-    try {
-      const res = await pedir("/api/expenses", "POST", {
-        amount: montoNumerico,
-        currency: moneda,
-        categoryId: categoriaId,
-        date: new Date(fecha).toISOString(),
-        description: descripcion || undefined,
-        grupoId: grupo.id,
-        seccionId: seccionDelGasto,
-      });
-      if (!res.ok) {
-        setError(res.error ?? "No se pudo cargar el gasto.");
-        return;
+    const lineas = [
+      fila(["Fecha", "Descripción", "Sección", "Pagó", "Moneda", "Monto", ...personas.map((p) => `Parte de ${p.nombre}`)]),
+      ...[...gastos]
+        .sort((a, b) => a.fecha.localeCompare(b.fecha))
+        .map((g) =>
+          fila([
+            fechaCorta(g.fecha),
+            g.descripcion || "Gasto",
+            nombreDeSeccion(g.seccionId) ?? "",
+            nombreDe(g.pagadorId),
+            g.moneda,
+            g.monto,
+            ...personas.map((p) => g.partes.find((x) => x.userId === p.id)?.monto ?? null),
+          ])
+        ),
+    ];
+    if (pagos.length > 0) {
+      lineas.push("", fila(["Pagos entre personas"]), fila(["Fecha", "De", "A", "Moneda", "Monto"]));
+      for (const pago of [...pagos].sort((a, b) => a.fecha.localeCompare(b.fecha))) {
+        lineas.push(fila([fechaCorta(pago.fecha), nombreDe(pago.deId), nombreDe(pago.aId), pago.moneda, pago.monto]));
       }
-      mostrarAviso(`Gasto de ${formatMoney(montoNumerico, moneda)} cargado.`);
-      setMonto("");
-      setDescripcion("");
-      router.refresh();
-    } finally {
-      setOcupado(false);
     }
-  }
 
-  async function agregarSeccion(e: React.FormEvent) {
-    e.preventDefault();
-    if (ocupado || nuevaSeccion.trim() === "") return;
-    setErrorSeccion(null);
-    setOcupado(true);
-    try {
-      const res = await pedir(`/api/grupos/${grupo.id}/secciones`, "POST", { nombre: nuevaSeccion });
-      if (!res.ok) {
-        setErrorSeccion(res.error ?? "No se pudo agregar la sección.");
-        return;
-      }
-      setNuevaSeccion("");
-      router.refresh();
-    } finally {
-      setOcupado(false);
-    }
+    const archivo = new Blob(["\uFEFF" + lineas.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const enlace = document.createElement("a");
+    enlace.href = URL.createObjectURL(archivo);
+    enlace.download = `${grupo.nombre.replace(/[\\/:*?"<>|]/g, "").trim() || "grupo"} - gastos.csv`;
+    enlace.click();
+    URL.revokeObjectURL(enlace.href);
   }
 
   async function ejecutarConfirmado() {
@@ -200,7 +240,7 @@ export function PanelGrupo({
     if (!pedido) return;
 
     if (pedido.que === "gasto") {
-      const res = await pedir(`/api/expenses/${pedido.gasto.id}`, "DELETE");
+      const res = await pedir(`/api/grupos/${grupo.id}/gastos/${pedido.gasto.id}`, "DELETE");
       if (res.ok) mostrarAviso("Gasto borrado.");
       router.refresh();
     } else if (pedido.que === "seccion") {
@@ -288,6 +328,8 @@ export function PanelGrupo({
                     width: `${ancho}%`,
                     height: `${alto}%`,
                     "--peso": totalEnPesos > 0 ? dato.enPesos / totalEnPesos : 0,
+                    // la sección con color propio pinta su filete y su borde de elegida
+                    ...(dato.color ? { "--grupo": dato.color } : {}),
                     animationDelay: `${i * 40}ms`,
                   } as React.CSSProperties
                 }
@@ -306,7 +348,10 @@ export function PanelGrupo({
                     </span>
                   </button>
 
-                  <span className={estilos.seccionNombre}>{dato.nombre}</span>
+                  <span className={estilos.seccionNombre}>
+                    {dato.emoji && <span aria-hidden className="mr-1.5">{dato.emoji}</span>}
+                    {dato.nombre}
+                  </span>
 
                   <span className="monto flex min-w-0 flex-col text-xs leading-snug">
                     {dato.cantidad === 0 ? (
@@ -334,7 +379,10 @@ export function PanelGrupo({
         {elegida && (
           <div className="desplegar mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[10px] border border-borde bg-superficie px-4 py-2.5">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-texto">{elegida.dato.nombre}</p>
+              <p className="truncate text-sm font-medium text-texto">
+                {elegida.dato.emoji && `${elegida.dato.emoji} `}
+                {elegida.dato.nombre}
+              </p>
               <p className="mt-0.5 text-xs text-tenue">
                 {elegida.dato.cantidad} {elegida.dato.cantidad === 1 ? "gasto" : "gastos"}
                 {elegida.dato.id !== SIN_SECCION &&
@@ -346,7 +394,26 @@ export function PanelGrupo({
               <button type="button" onClick={verMovimientos} className={estilos.accionSeccion}>
                 Ver
               </button>
-              {!grupo.archivado && elegida.dato.id !== SIN_SECCION && (
+              {esAdmin && !grupo.archivado && elegida.dato.id !== SIN_SECCION && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditorSeccion({
+                      seccion: {
+                        id: elegida.dato.id,
+                        nombre: elegida.dato.nombre,
+                        color: elegida.dato.color,
+                        emoji: elegida.dato.emoji,
+                      },
+                    })
+                  }
+                  aria-haspopup="dialog"
+                  className={estilos.accionSeccion}
+                >
+                  Editar
+                </button>
+              )}
+              {esAdmin && !grupo.archivado && elegida.dato.id !== SIN_SECCION && (
                 <button
                   type="button"
                   onClick={() => pedirBorrarSeccion(elegida.dato.id, elegida.dato.nombre)}
@@ -362,384 +429,494 @@ export function PanelGrupo({
     );
   }
 
+  const puedeEditar = esAdmin && !grupo.archivado;
+
+  /** Una fila de "Ajustes del grupo": ícono, qué hace y el botón. */
+  function filaDeAjuste(icono: React.ReactNode, titulo: string, detalle: string, boton: React.ReactNode) {
+    return (
+      <li className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3.5">
+        <span
+          aria-hidden
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-superficie-alta text-suave"
+        >
+          {icono}
+        </span>
+        <div className="min-w-0 flex-1 basis-48">
+          <p className="text-sm font-medium text-texto">{titulo}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-tenue">{detalle}</p>
+        </div>
+        {boton}
+      </li>
+    );
+  }
+
+  /** "$ 12.800,00 y US$ 190,00": los montos de una lista, sin mezclar monedas. */
+  const enMonedas = (montos: { monto: number; moneda: "UYU" | "USD" }[]) =>
+    montos.map((m) => formatMoney(m.monto, m.moneda)).join(" y ");
+
+  // Mi situación en una frase, como abren su página de grupo las apps de
+  // gastos compartidos: lo que me deben y lo que debo, cada moneda aparte.
+  const aFavor = miSaldo
+    ? (["UYU", "USD"] as const)
+        .filter((m) => miSaldo[m] >= 0.005)
+        .map((m) => ({ monto: miSaldo[m], moneda: m }))
+    : [];
+  const enContra = miSaldo
+    ? (["UYU", "USD"] as const)
+        .filter((m) => miSaldo[m] <= -0.005)
+        .map((m) => ({ monto: -miSaldo[m], moneda: m }))
+    : [];
+
+  const pestanas = [
+    { id: "gastos" as const, texto: "Gastos", cuenta: gastos.length },
+    ...(saldos ? [{ id: "saldos" as const, texto: "Saldos", cuenta: null }] : []),
+    { id: "grupo" as const, texto: "Grupo", cuenta: personas.length > 1 ? personas.length : null },
+  ];
+
+  /**
+   * Lo que un gasto significa para mí, que es lo que va a la derecha de cada
+   * fila (como en Splitwise): si pagué yo, cuánto me deben los demás; si pagó
+   * otro, cuánto le debo. El total del gasto queda en la línea de abajo.
+   */
+  function efectoParaMi(gasto: GastoDeGrupo) {
+    if (gasto.pagadorId === yo) {
+      const prestado = gasto.monto - (gasto.miParte ?? 0);
+      return prestado >= 0.005
+        ? { texto: "Te deben", monto: prestado }
+        : { texto: "Tu gasto", monto: gasto.monto };
+    }
+    if (gasto.miParte === null) return { texto: "No participás", monto: null };
+    return { texto: "Debés", monto: gasto.miParte };
+  }
+
   return (
     <div className={estilos.sala} style={{ "--grupo": grupo.color } as React.CSSProperties}>
       {/* ---------------------------------------------------------------- */}
-      {grupo.usaSecciones ? (
-        <section aria-labelledby="titulo-secciones">
-          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h2 id="titulo-secciones" className="rotulo">Secciones</h2>
-            {resumenes.length > 0 && (
-              <p className="text-xs text-tenue">
-                Cada una ocupa lo que se gastó en ella. Tocá una para filtrar.
-              </p>
-            )}
-          </div>
-
-          {resumenes.length === 0 ? (
-            <div className="rounded-[10px] border border-dashed border-borde-fuerte px-6 py-10 text-center">
-              <p className="text-sm font-medium text-texto">Este grupo todavía no tiene secciones</p>
-              <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-suave">
-                Sirven para ver cuánto se fue en cada parte. Agregá la primera acá abajo.
-              </p>
-            </div>
-          ) : (
-            // El margen negativo compensa el aire de cada pieza, para que el
-            // mosaico quede alineado con el resto de la página.
-            <div className="-m-[3px]">
-              {dibujarMosaico(2.3, "hidden sm:block")}
-              {dibujarMosaico(1, "sm:hidden")}
+      {/* Mi situación y la acción principal, pegadas a la pizarra. */}
+      {(miSaldo || !grupo.archivado) && (
+        <div className="-mt-2 flex flex-col gap-3">
+          {miSaldo && (
+            <div className="tarjeta flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3.5">
+              <div className="min-w-0">
+                {aFavor.length === 0 && enContra.length === 0 ? (
+                  <p className="text-[15px] font-medium text-texto">Estás al día con el grupo</p>
+                ) : (
+                  <>
+                    {aFavor.length > 0 && (
+                      <p className="text-sm text-suave">
+                        Te deben <span className="monto text-[15px] font-semibold text-texto">{enMonedas(aFavor)}</span>
+                      </p>
+                    )}
+                    {enContra.length > 0 && (
+                      <p className="text-sm text-suave">
+                        Debés <span className="monto text-[15px] font-semibold text-texto">{enMonedas(enContra)}</span>
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+              {saldos && pestana !== "saldos" && (
+                <button type="button" onClick={() => setPestana("saldos")} className="boton-mini -mx-2.5">
+                  Ver saldos <span aria-hidden>→</span>
+                </button>
+              )}
             </div>
           )}
 
           {!grupo.archivado && (
-            <form onSubmit={agregarSeccion} className="mt-4 flex gap-2">
-              <input
-                value={nuevaSeccion}
-                onChange={(e) => setNuevaSeccion(e.target.value)}
-                placeholder="Nueva sección"
-                aria-label="Nombre de la nueva sección"
-                maxLength={MAXIMO_NOMBRE_SECCION}
-                className="campo min-w-0 flex-1 sm:max-w-xs"
-              />
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
               <button
-                type="submit"
-                disabled={ocupado || nuevaSeccion.trim() === ""}
-                className="boton-linea shrink-0 disabled:opacity-45"
+                type="button"
+                onClick={(e) => {
+                  const caja = e.currentTarget.getBoundingClientRect();
+                  setFormulario({
+                    gasto: null,
+                    origen: {
+                      x: caja.left + caja.width / 2,
+                      y: caja.top + caja.height / 2,
+                      ancho: caja.width,
+                      alto: caja.height,
+                    },
+                  });
+                }}
+                aria-haspopup="dialog"
+                className="boton w-full py-2.5 sm:w-auto"
               >
-                Agregar
-              </button>
-            </form>
-          )}
-          {errorSeccion && (
-            <div className="mt-2">
-              <Aviso tono="error">{errorSeccion}</Aviso>
-            </div>
-          )}
-        </section>
-      ) : (
-        // Sin secciones los gastos van en una sola lista. Si después hacen
-        // falta, se prenden acá; apagarlas no, para no dejar gastos colgando.
-        !grupo.archivado && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-dashed border-borde-fuerte px-4 py-3">
-            <p className="text-sm text-suave">
-              Este grupo no se divide en secciones: todos sus gastos van juntos.
-            </p>
-            <button
-              type="button"
-              disabled={ocupado}
-              onClick={usarSecciones}
-              className="boton-linea py-1.5"
-            >
-              Dividir en secciones
-            </button>
-          </div>
-        )
-      )}
-
-      {/* ---------------------------------------------------------------- */}
-      {!grupo.archivado && (
-        <section aria-label="Cargar un gasto">
-          {!anotando ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={() => setAnotando(true)} className="boton">
                 <span aria-hidden className="text-base leading-none">+</span>
                 Cargar gasto
                 {seccionDelGasto && ` en ${nombreDeSeccion(seccionDelGasto)}`}
               </button>
               {aviso && <Aviso tono="ok">{aviso}</Aviso>}
             </div>
-          ) : (
-            <form onSubmit={anotarGasto} className="tarjeta flex flex-col gap-5 p-4 sm:p-5">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="rotulo">Nuevo gasto en {grupo.nombre}</p>
-                <button
-                  type="button"
-                  onClick={() => setAnotando(false)}
-                  className="text-sm text-suave underline underline-offset-4 hover:text-texto"
-                >
-                  Cerrar
-                </button>
-              </div>
-
-              <CampoMonto
-                id="monto-grupo"
-                idError={error ? "error-gasto-grupo" : undefined}
-                monto={monto}
-                alCambiarMonto={setMonto}
-                moneda={moneda}
-                alCambiarMoneda={setMoneda}
-                nombreGrupo="moneda-gasto-grupo"
-              />
-
-              {/* La misma sección que está elegida en el mosaico: cambiarla acá
-                  o tocarla allá es lo mismo. */}
-              {secciones.length > 0 && (
-                <fieldset>
-                  <legend className="rotulo mb-2">Sección</legend>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[{ id: "", nombre: "Sin sección" }, ...secciones].map((seccion) => {
-                      const activa = seccion.id === (seccionDelGasto ?? "");
-                      return (
-                        <label key={seccion.id || "ninguna"} className="ficha">
-                          <input
-                            type="radio"
-                            name="seccion-gasto-grupo"
-                            value={seccion.id}
-                            checked={activa}
-                            onChange={() => setElegido(seccion.id || null)}
-                            className="sr-only"
-                          />
-                          <span
-                            style={
-                              activa
-                                ? {
-                                    borderColor: grupo.color,
-                                    backgroundColor: `color-mix(in srgb, ${grupo.color} 14%, transparent)`,
-                                    color: "var(--texto)",
-                                  }
-                                : undefined
-                            }
-                          >
-                            {seccion.nombre}
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-              )}
-
-              <CampoCategoria
-                categorias={categorias}
-                valor={categoriaId}
-                alCambiar={setCategoriaId}
-                nombreGrupo="categoria-gasto-grupo"
-              />
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="fecha-grupo" className="rotulo">Fecha</label>
-                  <input
-                    id="fecha-grupo"
-                    type="date"
-                    value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
-                    required
-                    className="campo monto"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="descripcion-grupo" className="rotulo">Descripción</label>
-                  <input
-                    id="descripcion-grupo"
-                    type="text"
-                    placeholder="Opcional"
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value)}
-                    maxLength={200}
-                    className="campo"
-                  />
-                </div>
-              </div>
-
-              {categorias.length === 0 && (
-                <p className="text-sm text-suave">
-                  Necesitás al menos una categoría para cargar un gasto.{" "}
-                  <Link href="/categories" className="text-peso underline underline-offset-2">
-                    Crear una
-                  </Link>
-                </p>
-              )}
-
-              {error && <Aviso id="error-gasto-grupo" tono="error">{error}</Aviso>}
-
-              <div className="flex flex-wrap items-center gap-3 border-t border-borde pt-4">
-                {aviso ? (
-                  <Aviso tono="ok">{aviso}</Aviso>
-                ) : (
-                  <p className="text-xs text-tenue">También cuenta en tu mes, marcado como del grupo.</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={ocupado || categorias.length === 0}
-                  className="boton ml-auto"
-                >
-                  {ocupado ? "Cargando..." : "Cargar gasto"}
-                </button>
-              </div>
-            </form>
           )}
-        </section>
+        </div>
       )}
 
       {/* ---------------------------------------------------------------- */}
-      <section aria-labelledby="titulo-movimientos">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="titulo-movimientos" className="rotulo">
-            Movimientos{resumenElegido ? ` · ${resumenElegido.nombre}` : ""}
-          </h2>
-          <p className="monto text-xs text-tenue">
-            {visibles.length} {visibles.length === 1 ? "gasto" : "gastos"}
-          </p>
+      {/* Las pestañas: lo que se mira por separado no comparte pantalla. */}
+      <div>
+        <div role="tablist" aria-label="Partes del grupo" className="pestanas">
+          {pestanas.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              role="tab"
+              id={`pestana-${p.id}`}
+              aria-selected={pestana === p.id}
+              aria-controls={`panel-${p.id}`}
+              onClick={() => setPestana(p.id)}
+              className="pestana"
+            >
+              {p.texto}
+              {p.cuenta !== null && <span className="pestana-cuenta">{p.cuenta}</span>}
+            </button>
+          ))}
         </div>
 
-        {visibles.length === 0 ? (
-          <p className="rounded-[10px] border border-dashed border-borde-fuerte px-6 py-8 text-center text-sm leading-relaxed text-suave">
-            {resumenElegido
-              ? `Todavía no hay gastos en ${resumenElegido.nombre}.`
-              : grupo.archivado
-                ? "Este grupo no llegó a tener gastos."
-                : "Todavía no hay gastos. El primero que cargues aparece acá."}
-          </p>
-        ) : (
-          <div className="flex flex-col gap-7">
-            {meses.map((mes) => (
-              <div key={mes.clave}>
-                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-borde pb-2">
-                  <h3 className={`${estilos.mes} text-sm font-semibold text-texto`}>
-                    <span className="inline-block first-letter:uppercase">{nombreDelMes(mes.clave)}</span>
-                  </h3>
-                  <p className="monto flex gap-3 text-xs text-suave">
-                    {mes.UYU > 0 && <span>{formatMoney(mes.UYU, "UYU")}</span>}
-                    {mes.USD > 0 && <span className="text-dolar">{formatMoney(mes.USD, "USD")}</span>}
-                  </p>
+        <div
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`pestana-${pestana}`}
+          // `key`: al cambiar de pestaña el contenido entra de nuevo, suave.
+          key={pestana}
+          className="aparece flex flex-col gap-8 pt-6"
+        >
+          {pestana === "gastos" && (
+            <>
+              {grupo.usaSecciones && (
+                <section aria-labelledby="titulo-secciones">
+                  <div className="mb-3 flex items-baseline justify-between gap-3 px-1">
+                    <h2 id="titulo-secciones" className="seccion-titulo">Secciones</h2>
+                    {puedeEditar && (
+                      <button
+                        type="button"
+                        onClick={() => setEditorSeccion({ seccion: null })}
+                        aria-haspopup="dialog"
+                        className="boton-mini"
+                      >
+                        + Nueva sección
+                      </button>
+                    )}
+                  </div>
+
+                  {/* El mosaico solo con secciones de verdad: sin ninguna, los
+                      gastos se veían como una única pieza "Sin sección". */}
+                  {secciones.length === 0 ? (
+                    <div className="rounded-[var(--radio-tarjeta)] border border-dashed border-borde-fuerte px-6 py-8 text-center">
+                      <p className="text-sm font-medium text-texto">Este grupo todavía no tiene secciones</p>
+                      <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-suave">
+                        Sirven para ver cuánto se fue en cada parte.
+                        {puedeEditar && " Agregá la primera con «+ Nueva sección»."}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* El margen negativo compensa el aire de cada pieza, para que
+                          el mosaico quede alineado con el resto de la página. */}
+                      <div className="-m-[3px]">
+                        {dibujarMosaico(2.3, "hidden sm:block")}
+                        {dibujarMosaico(1, "sm:hidden")}
+                      </div>
+                      <p className="mt-2.5 px-1 text-xs text-tenue">
+                        Cada sección ocupa lo que se gastó en ella. Tocá una para ver solo sus gastos.
+                      </p>
+                    </>
+                  )}
+
+                </section>
+              )}
+
+              <section aria-labelledby="titulo-movimientos">
+                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 px-1">
+                  <h2 id="titulo-movimientos" className="seccion-titulo">
+                    {resumenElegido ? resumenElegido.nombre : "Todos los gastos"}
+                  </h2>
+                  <span className="-mr-2 flex items-center gap-1">
+                    {resumenElegido && (
+                      <button type="button" onClick={() => setElegido(null)} className="boton-mini">
+                        Ver todos
+                      </button>
+                    )}
+                    {gastos.length > 0 && (
+                      <button type="button" onClick={exportarPlanilla} className="boton-mini">
+                        Exportar a Excel
+                      </button>
+                    )}
+                  </span>
                 </div>
 
-                <ul className="flex flex-col">
-                  {mes.gastos.map((gasto) => {
-                    const seccion = nombreDeSeccion(gasto.seccionId);
-                    return (
-                      <li
-                        key={gasto.id}
-                        className="flex items-center gap-3 border-borde py-3 not-first:border-t"
-                      >
-                        <span className="monto w-7 shrink-0 text-sm text-tenue">
-                          {gasto.fecha.slice(8, 10)}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-texto">
-                            {gasto.descripcion || gasto.categoria}
-                          </p>
-                          {((seccion && !resumenElegido) || gasto.descripcion) && (
-                            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-tenue">
-                              {seccion && !resumenElegido && (
-                                <span className={estilos.etiqueta}>{seccion}</span>
+                {/* Mi total contra el de la sección elegida, como la barra de
+                    abajo de Tricount. */}
+                {/* Con todo el grupo a la vista, lo tuyo y lo general ya están en
+                    la pizarra; acá solo hace falta con una sección elegida. */}
+                {compartido && resumenElegido && visibles.length > 0 && (
+                  <dl className="mb-4 grid grid-cols-2 gap-3">
+                    {[
+                      { titulo: "Tu parte", montos: misTotales },
+                      { titulo: "Total de la sección", montos: totalesVisibles },
+                    ].map((bloque) => (
+                      <div key={bloque.titulo} className="rounded-2xl bg-superficie px-4 py-3 ring-1 ring-borde">
+                        <dt className="text-xs text-tenue">{bloque.titulo}</dt>
+                        <dd className="mt-1 flex flex-col">
+                          {bloque.montos.UYU === 0 && bloque.montos.USD === 0 ? (
+                            <span className="monto text-[15px] font-semibold text-texto">{formatMoney(0, "UYU")}</span>
+                          ) : (
+                            <>
+                              {bloque.montos.UYU > 0 && (
+                                <span className="monto text-[15px] font-semibold text-peso">
+                                  {formatMoney(bloque.montos.UYU, "UYU")}
+                                </span>
                               )}
-                              {gasto.descripcion && <span>{gasto.categoria}</span>}
-                            </p>
+                              {bloque.montos.USD > 0 && (
+                                <span className="monto text-[15px] font-semibold text-dolar">
+                                  {formatMoney(bloque.montos.USD, "USD")}
+                                </span>
+                              )}
+                            </>
                           )}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+
+                {visibles.length === 0 ? (
+                  <p className="rounded-[var(--radio-tarjeta)] border border-dashed border-borde-fuerte px-6 py-8 text-center text-sm leading-relaxed text-suave">
+                    {resumenElegido
+                      ? `Todavía no hay gastos en ${resumenElegido.nombre}.`
+                      : grupo.archivado
+                        ? "Este grupo no llegó a tener gastos."
+                        : "Todavía no hay gastos. El primero que cargues aparece acá."}
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-5">
+                    {meses.map((mes) => (
+                      <div key={mes.clave} className="tarjeta overflow-hidden">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 bg-fondo/35 px-4 py-2.5">
+                          <h3 className={`${estilos.mes} text-sm font-semibold text-texto`}>
+                            <span className="inline-block first-letter:uppercase">{nombreDelMes(mes.clave)}</span>
+                          </h3>
+                          <p className="monto flex gap-3 text-xs text-suave">
+                            {mes.UYU > 0 && <span>{formatMoney(mes.UYU, "UYU")}</span>}
+                            {mes.USD > 0 && <span className="text-dolar">{formatMoney(mes.USD, "USD")}</span>}
+                          </p>
                         </div>
-                        <span
-                          className={`monto shrink-0 text-sm ${
-                            gasto.moneda === "UYU" ? "text-texto" : "text-dolar"
-                          }`}
-                        >
-                          {formatMoney(gasto.monto, gasto.moneda)}
-                        </span>
-                        {!grupo.archivado && (
-                          <button
-                            type="button"
-                            onClick={() => setConfirmar({ que: "gasto", gasto })}
-                            className="boton-mini boton-mini-peligro shrink-0"
-                          >
-                            Eliminar
-                          </button>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
 
-      {/* ---------------------------------------------------------------- */}
-      <section aria-labelledby="titulo-cierre">
-        <h2 id="titulo-cierre" className="rotulo mb-3">Cuando termine</h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {/* Archivar es lo esperable cuando algo termina: va primero y es
-              reversible. Borrar queda al lado, con su advertencia. */}
-          <div className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
-            <div className="flex items-start gap-3">
-              <span
-                aria-hidden
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-borde bg-superficie-alta text-suave"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-[18px] w-[18px]"
-                >
-                  <rect x="3.5" y="4.5" width="17" height="4.5" rx="1" />
-                  <path d="M5 9v9.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4" />
-                </svg>
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-texto">
-                  {grupo.archivado ? "Reabrir el grupo" : "Archivar el grupo"}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-suave">
-                  {grupo.archivado
-                    ? "Vuelve a la lista principal y se le pueden cargar gastos otra vez."
-                    : "Para cuando ya terminó. Sale de la lista principal y no admite gastos nuevos, pero queda guardado para consultarlo y se puede reabrir."}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              disabled={ocupado}
-              onClick={() => archivar(!grupo.archivado)}
-              className="boton-linea mt-auto self-start"
-            >
-              {grupo.archivado ? "Reabrir" : "Archivar"}
-            </button>
-          </div>
+                        <ul className="lista rounded-none border-0 bg-transparent shadow-none">
+                          {mes.gastos.map((gasto) => {
+                            const seccion = nombreDeSeccion(gasto.seccionId);
+                            const efecto = compartido ? efectoParaMi(gasto) : null;
+                            return (
+                              <li key={gasto.id}>
+                                {/* Toda la fila abre el detalle, donde se edita
+                                    o se borra, como en Tricount. */}
+                                <button
+                                  type="button"
+                                  onClick={() => setDetalle(gasto)}
+                                  aria-haspopup="dialog"
+                                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-superficie-alta/60"
+                                >
+                                {/* el día, como la hoja de un almanaque */}
+                                <span className="monto flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl bg-fondo/70 ring-1 ring-borde">
+                                  <span className="text-[15px] font-semibold leading-none text-texto">
+                                    {Number(gasto.fecha.slice(8, 10))}
+                                  </span>
+                                </span>
 
-          <div className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
-            <div className="flex items-start gap-3">
-              <span
-                aria-hidden
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-borde bg-superficie-alta text-suave"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-[18px] w-[18px]"
-                >
-                  <path d="M4.5 7h15M9.5 7V5h5v2M6.5 7l1 12.5h9l1-12.5M10 11v5.5M14 11v5.5" />
-                </svg>
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-texto">Borrar el grupo</p>
-                <p className="mt-1 text-xs leading-relaxed text-suave">
-                  Se borran el grupo y sus secciones, y no se puede deshacer.
-                  {gastos.length === 1 && " Su gasto no se pierde: queda como un gasto común en tu mes."}
-                  {gastos.length > 1 &&
-                    ` Sus ${gastos.length} gastos no se pierden: quedan como gastos comunes en tus meses.`}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setConfirmar({ que: "grupo" })}
-              className="boton-linea mt-auto self-start hover:border-alerta hover:text-alerta"
-            >
-              Borrar
-            </button>
-          </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-[15px] font-medium text-texto">
+                                    {gasto.descripcion || "Gasto"}
+                                  </p>
+                                  <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-tenue">
+                                    {seccion && !resumenElegido && (
+                                      <span className={`${estilos.etiqueta} mr-0.5`}>{etiquetaDeSeccion(gasto.seccionId)}</span>
+                                    )}
+                                    {compartido ? (
+                                      <span>
+                                        {gasto.pagadorId === yo ? "Pagaste" : `Pagó ${nombreDe(gasto.pagadorId)}`}{" "}
+                                        <span className={`monto ${gasto.moneda === "USD" ? "text-dolar" : ""}`}>
+                                          {formatMoney(gasto.monto, gasto.moneda)}
+                                        </span>
+                                      </span>
+                                    ) : null}
+                                  </p>
+                                </div>
+
+                                <div className="flex shrink-0 flex-col items-end text-right">
+                                  {efecto ? (
+                                    <>
+                                      <span className="text-[11px] text-tenue">{efecto.texto}</span>
+                                      {efecto.monto !== null && (
+                                        <span
+                                          className={`monto text-[15px] font-semibold ${
+                                            gasto.moneda === "UYU" ? "text-peso" : "text-dolar"
+                                          }`}
+                                        >
+                                          {formatMoney(efecto.monto, gasto.moneda)}
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <span
+                                      className={`monto text-[15px] font-semibold ${
+                                        gasto.moneda === "UYU" ? "text-peso" : "text-dolar"
+                                      }`}
+                                    >
+                                      {formatMoney(gasto.monto, gasto.moneda)}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <span aria-hidden className="-mr-1 shrink-0 text-lg leading-none text-tenue">
+                                  ›
+                                </span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+
+          {/* Los elementos que arma la página (en el servidor) van cada uno
+              en su propio Fragment con key: sueltos en una lista de hijos,
+              React en desarrollo los marca como "hijo sin key". */}
+          {pestana === "saldos" && <Fragment key="saldos">{saldos}</Fragment>}
+
+          {pestana === "grupo" && (
+            <>
+              <Fragment key="personas">{personasDelGrupo}</Fragment>
+              {esAdmin && (
+                <section aria-labelledby="titulo-ajustes">
+                  <h2 id="titulo-ajustes" className="seccion-titulo mb-3 px-1">Ajustes del grupo</h2>
+                  <ul className="lista">
+                    {!grupo.usaSecciones &&
+                      !grupo.archivado &&
+                      filaDeAjuste(
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
+                          <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+                          <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+                          <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+                          <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+                        </svg>,
+                        "Dividir en secciones",
+                        "Hoy todos los gastos van juntos. Con secciones ves cuánto se fue en cada parte.",
+                        <button type="button" disabled={ocupado} onClick={usarSecciones} className="boton-linea shrink-0 py-1.5">
+                          Dividir
+                        </button>
+                      )}
+                    {filaDeAjuste(
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
+                        <rect x="3.5" y="4.5" width="17" height="4.5" rx="1" />
+                        <path d="M5 9v9.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4" />
+                      </svg>,
+                      grupo.archivado ? "Reabrir el grupo" : "Archivar el grupo",
+                      grupo.archivado
+                        ? "Vuelve a la lista principal y se le pueden cargar gastos otra vez."
+                        : "Para cuando ya terminó. No admite gastos nuevos, pero queda guardado y se puede reabrir.",
+                      <button
+                        type="button"
+                        disabled={ocupado}
+                        onClick={() => archivar(!grupo.archivado)}
+                        className="boton-linea shrink-0 py-1.5"
+                      >
+                        {grupo.archivado ? "Reabrir" : "Archivar"}
+                      </button>
+                    )}
+                    {filaDeAjuste(
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
+                        <path d="M4.5 7h15M9.5 7V5h5v2M6.5 7l1 12.5h9l1-12.5M10 11v5.5M14 11v5.5" />
+                      </svg>,
+                      "Borrar el grupo",
+                      `No se puede deshacer.${
+                        gastos.length === 1
+                          ? " Su gasto queda como un gasto común en tu mes."
+                          : gastos.length > 1
+                            ? ` Sus ${gastos.length} gastos quedan como gastos comunes en tus meses.`
+                            : ""
+                      }`,
+                      <button
+                        type="button"
+                        onClick={() => setConfirmar({ que: "grupo" })}
+                        className="boton-linea shrink-0 py-1.5 hover:border-alerta hover:text-alerta"
+                      >
+                        Borrar
+                      </button>
+                    )}
+                  </ul>
+                </section>
+              )}
+              {!personasDelGrupo && !esAdmin && (
+                <p className="text-sm text-suave">Este grupo es de una sola persona.</p>
+              )}
+            </>
+          )}
         </div>
-      </section>
+      </div>
+
+      {/* Se monta al abrirse, así cada vez arranca con los datos del gasto
+          (o en blanco, si es nuevo). */}
+      {formulario && (
+        <FormularioGastoGrupal
+          grupo={grupo}
+          yo={yo}
+          personas={personas}
+          secciones={grupo.usaSecciones ? secciones : []}
+          categorias={categorias}
+          gasto={formulario.gasto}
+          seccionInicial={seccionDelGasto}
+          origen={formulario.origen ?? null}
+          puedeCrearSecciones={esAdmin && grupo.usaSecciones}
+          colorDelGrupo={grupo.color}
+          alCrear={() => router.refresh()}
+          alCerrar={() => setFormulario(null)}
+          alGuardar={(texto) => {
+            setFormulario(null);
+            setPestana("gastos");
+            mostrarAviso(texto);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {editorSeccion && (
+        <EditorSeccion
+          grupoId={grupo.id}
+          colorDelGrupo={grupo.color}
+          seccion={editorSeccion.seccion}
+          alCerrar={() => setEditorSeccion(null)}
+          alGuardar={(texto) => {
+            setEditorSeccion(null);
+            mostrarAviso(texto);
+            router.refresh();
+          }}
+        />
+      )}
+
+      <DetalleGasto
+        gasto={detalle}
+        seccion={detalle ? etiquetaDeSeccion(detalle.seccionId) : null}
+        yo={yo}
+        nombreDe={nombreDe}
+        puedeEditar={!!detalle && !grupo.archivado && (esAdmin || detalle.cargadoPorId === yo)}
+        motivoSinEdicion={grupo.archivado ? "El grupo está archivado." : "Lo edita quien lo cargó."}
+        alEditar={() => {
+          if (!detalle) return;
+          setFormulario({ gasto: detalle });
+          setDetalle(null);
+        }}
+        alEliminar={() => {
+          if (!detalle) return;
+          setConfirmar({ que: "gasto", gasto: detalle });
+          setDetalle(null);
+        }}
+        alCerrar={() => setDetalle(null)}
+      />
 
       <Confirmar
         abierto={confirmar !== null}
@@ -752,7 +929,7 @@ export function PanelGrupo({
         }
         detalle={
           confirmar?.que === "gasto"
-            ? `${confirmar.gasto.descripcion || confirmar.gasto.categoria}, ${formatMoney(confirmar.gasto.monto, confirmar.gasto.moneda)}. Se borra del grupo y también de tu mes.`
+            ? `${confirmar.gasto.descripcion || "Gasto"}, ${formatMoney(confirmar.gasto.monto, confirmar.gasto.moneda)}. Se borra del grupo y del mes de ${compartido ? "cada uno" : "vos"}.`
             : confirmar?.que === "seccion"
               ? "Sus gastos siguen en el grupo, sin sección."
               : "Se borran el grupo y sus secciones. Sus gastos quedan como gastos comunes en los meses donde estaban."

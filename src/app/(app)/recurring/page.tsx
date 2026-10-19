@@ -1,5 +1,6 @@
 "use client";
 
+import { Insignia } from "@/components/Insignia";
 import { useEffect, useState } from "react";
 import type { Category, RecurringExpense } from "@/lib/types";
 import { formatMoney, parseMoneyInput } from "@/lib/format";
@@ -257,7 +258,7 @@ export default function RecurringPage() {
         {categories.length === 0 && !loading && (
           <p className="text-sm text-suave">
             Necesitás al menos una categoría para cargar un gasto fijo.{" "}
-            <Link href="/categories" className="text-peso underline underline-offset-2">
+            <Link href="/categories" className="text-texto underline underline-offset-2">
               Crear una
             </Link>
           </p>
@@ -278,7 +279,7 @@ export default function RecurringPage() {
       </form>
 
       <section>
-        <h2 className="rotulo mb-3">Activos y pausados</h2>
+        <h2 className="seccion-titulo mb-3 px-1">Activos y pausados</h2>
         {loading ? (
           <EsqueletoLista />
         ) : recurring.length === 0 ? (
@@ -306,17 +307,17 @@ export default function RecurringPage() {
 
               return (
                 <div key={item.id} className="fila">
-                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                    <span aria-hidden className="filete" style={{ backgroundColor: item.category.color }} />
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <Insignia nombre={item.category.name} color={item.category.color} emoji={item.category.emoji} />
                     <div className="min-w-0">
                       <p
-                        className={`truncate text-sm ${
+                        className={`truncate text-[15px] font-medium ${
                           atenuado ? "text-apagado line-through" : "text-texto"
                         }`}
                       >
                         {item.description || item.category.name}
                       </p>
-                      <p className="rotulo mt-1 truncate normal-case tracking-normal">
+                      <p className="mt-0.5 truncate text-xs text-tenue">
                         Día {item.dayOfMonth} · {item.category.name}
                       </p>
 
@@ -339,7 +340,7 @@ export default function RecurringPage() {
                               />
                             </span>
                           )}
-                          <span className="rotulo truncate normal-case tracking-normal">
+                          <span className="truncate text-xs text-tenue">
                             {finalizado
                               ? `${progreso.total} cuotas, terminado`
                               : progreso.actual === 0

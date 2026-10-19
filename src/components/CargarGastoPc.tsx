@@ -103,7 +103,7 @@ export function CargarGastoPc() {
                   aria-hidden
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors ${
                     activa
-                      ? "border-peso bg-peso/15 text-peso"
+                      ? "border-foco/70 bg-foco/12 text-texto"
                       : "border-borde bg-fondo text-suave group-hover:border-borde-fuerte group-hover:text-texto"
                   }`}
                 >

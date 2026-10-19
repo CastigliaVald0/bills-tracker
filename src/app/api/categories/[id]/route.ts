@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/require-user";
+import { emojiSchema } from "@/lib/emoji";
 
 const updateSchema = z.object({
   name: z.string().min(1).max(50).optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  /** null lo saca. */
+  emoji: emojiSchema.optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -19,6 +22,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const parsed = updateSchema.safeParse(await request.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  }
+
+  if (parsed.data.name && parsed.data.name !== existing.name) {
+    const repetida = await prisma.category.findFirst({ where: { userId, name: parsed.data.name, NOT: { id } } });
+    if (repetida) return NextResponse.json({ error: "Ya tenés una categoría con ese nombre." }, { status: 409 });
   }
 
   const category = await prisma.category.update({ where: { id }, data: parsed.data });

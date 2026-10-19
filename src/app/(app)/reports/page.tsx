@@ -6,7 +6,7 @@ import { formatMoney } from "@/lib/format";
 import { Pizarra } from "@/components/Pizarra";
 import { Vacio, IconoCalendario } from "@/components/Vacio";
 import { BarrasMes } from "@/components/BarrasMes";
-import { ListaCategorias } from "@/components/ListaCategorias";
+import { AnilloCategorias } from "@/components/AnilloCategorias";
 import { getUsdRate } from "@/lib/exchange-rate";
 import { combinarPorMes } from "@/lib/combinar-monedas";
 
@@ -21,22 +21,14 @@ export default async function ReportsPage({
   const { year: yearParam } = await searchParams;
   const year = yearParam ? Number(yearParam) : new Date().getUTCFullYear();
 
-  // Se traen dos años de una: el que se mira y el anterior, para comparar las
-  // categorías. Una consulta sola sale más barata que dos.
-  const desde = new Date(Date.UTC(year - 1, 0, 1));
-  const hasta = new Date(Date.UTC(year + 1, 0, 1));
-
-  const todos = await prisma.expense.findMany({
-    where: { userId, date: { gte: desde, lt: hasta } },
+  const expenses = await prisma.expense.findMany({
+    where: { userId, date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) } },
     include: { category: true },
   });
 
-  const expenses = todos.filter((e) => e.date.getUTCFullYear() === year);
-  const delAnioPrevio = todos.filter((e) => e.date.getUTCFullYear() === year - 1);
-
   const yearTotals = { UYU: 0, USD: 0 };
   const monthlyTotals = Array.from({ length: 12 }, () => ({ UYU: 0, USD: 0 }));
-  const byCategory = new Map<string, { name: string; color: string; UYU: number; USD: number }>();
+  const byCategory = new Map<string, { name: string; color: string; emoji: string | null; UYU: number; USD: number }>();
 
   for (const expense of expenses) {
     const amount = Number(expense.amount);
@@ -48,6 +40,7 @@ export default async function ReportsPage({
     const entry = byCategory.get(expense.categoryId) ?? {
       name: expense.category.name,
       color: expense.category.color,
+      emoji: expense.category.emoji,
       UYU: 0,
       USD: 0,
     };
@@ -55,18 +48,8 @@ export default async function ReportsPage({
     byCategory.set(expense.categoryId, entry);
   }
 
-  // Sin ordenar: ListaCategorias arma un bloque por moneda y ordena cada uno
-  // por su propio monto. El orden que había acá usaba un dólar a 40 escrito a
-  // mano y ya no hacía nada.
+  // Sin ordenar: el anillo ordena cada moneda por su propio monto.
   const categoryTotals = Array.from(byCategory.values());
-
-  /** Lo que gastó cada categoría el año pasado, para el cambio por fila. */
-  const categoriasAntes = new Map<string, { UYU: number; USD: number }>();
-  for (const e of delAnioPrevio) {
-    const previo = categoriasAntes.get(e.category.name) ?? { UYU: 0, USD: 0 };
-    previo[e.currency] += Number(e.amount);
-    categoriasAntes.set(e.category.name, previo);
-  }
 
   // Los meses que todavía no llegaron no se muestran. En un año pasado se ven
   // los 12; en el año en curso, hasta el mes actual inclusive; en uno futuro,
@@ -147,7 +130,7 @@ export default async function ReportsPage({
               de mi año fue marzo?"). Los dos desgloses por moneda van abajo. */}
           {mesesVisibles > 0 && gajosCombinados.length > 0 && cotizacion && combinado && (
             <section>
-              <h2 className="rotulo mb-3">Mes a mes · todo junto</h2>
+              <h2 className="seccion-titulo mb-3 px-1">Mes a mes · todo junto</h2>
               <div className="tarjeta px-2 pt-3 pb-1 sm:px-3">
                 <BarrasMes
                   meses={combinado.porMes
@@ -176,7 +159,7 @@ export default async function ReportsPage({
 
           {mesesVisibles > 0 && (
             <section>
-              <h2 className="rotulo mb-3">
+              <h2 className="seccion-titulo mb-3 px-1">
                 Mes a mes <span className="text-peso">· pesos</span>
               </h2>
               <div className="tarjeta px-2 pt-3 pb-1 sm:px-3">
@@ -187,7 +170,7 @@ export default async function ReportsPage({
 
           {mesesVisibles > 0 && hayUSD && (
             <section>
-              <h2 className="rotulo mb-3">
+              <h2 className="seccion-titulo mb-3 px-1">
                 Mes a mes <span className="text-dolar">· dólares</span>
               </h2>
               <div className="tarjeta px-2 pt-3 pb-1 sm:px-3">
@@ -197,17 +180,8 @@ export default async function ReportsPage({
           )}
 
           <section>
-            <h2 className="rotulo mb-3">
-              Categorías del año
-              {delAnioPrevio.length > 0 && (
-                <span className="text-tenue"> · cambio contra {year - 1}</span>
-              )}
-            </h2>
-            <ListaCategorias
-              categorias={categoryTotals}
-              totales={yearTotals}
-              antes={delAnioPrevio.length > 0 ? categoriasAntes : undefined}
-            />
+            <h2 className="seccion-titulo mb-3 px-1">Categorías del año</h2>
+            <AnilloCategorias categorias={categoryTotals} />
           </section>
         </>
       )}

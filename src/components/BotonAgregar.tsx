@@ -65,7 +65,7 @@ export function BotonAgregar() {
             aria-hidden={!abierto}
             onClick={() => setAbierto(false)}
             className={`absolute left-1/2 top-1/2 -ml-6 -mt-6 flex h-12 w-12 items-center justify-center rounded-full border shadow-lg shadow-black/20 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-              activa ? "border-peso bg-superficie text-peso" : "border-borde bg-superficie text-texto"
+              activa ? "border-foco bg-superficie-alta text-texto" : "border-borde bg-superficie text-texto"
             } ${abierto ? "opacity-100" : "pointer-events-none opacity-0"}`}
             style={{
               transform: abierto

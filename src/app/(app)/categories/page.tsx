@@ -1,49 +1,25 @@
 "use client";
 
+import { Insignia } from "@/components/Insignia";
 import { useEffect, useState } from "react";
 import type { Category } from "@/lib/types";
 import { Vacio, IconoEtiqueta } from "@/components/Vacio";
+import { EditorCategoria } from "@/components/EditorCategoria";
 import { Aviso, useAvisoTemporal, enfocarCampoConError } from "@/components/Aviso";
 import { EsqueletoLista } from "@/components/Esqueleto";
 import { Confirmar } from "@/components/Confirmar";
 
 /** Con qué color arranca el formulario. Tiene que ser un #rrggbb válido: la API
- *  rechaza cualquier otra cosa y el selector nativo no acepta un valor vacío. */
+ *  rechaza cualquier otra cosa. */
 const COLOR_INICIAL = "#3b82f6";
-
-const HEX_VALIDO = /^#[0-9a-f]{6}$/;
-
-/** Luminancia relativa WCAG de un color #rrggbb. */
-function luminancia(hex: string) {
-  const [r, g, b] = [1, 3, 5].map((i) => {
-    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function contraste(a: string, b: string) {
-  const [claro, oscuro] = [luminancia(a), luminancia(b)].sort((x, y) => y - x);
-  return (claro + 0.05) / (oscuro + 0.05);
-}
-
-/**
- * Con colores libres existe el riesgo de elegir uno que se confunda con el
- * fondo. El color vive en filetes y barras finas, así que se avisa cuando no
- * llega a 1,5:1 contra la superficie de las tarjetas.
- */
-function avisoDeContraste(hex: string) {
-  if (contraste(hex, "#15212a") < 1.5) return "Muy oscuro: casi no se va a ver sobre el fondo de la app.";
-  return null;
-}
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState("");
   const [color, setColor] = useState(COLOR_INICIAL);
-  // Lo que el usuario va escribiendo en el campo hex, aunque todavía no sea
-  // un color completo. El color real solo cambia cuando el texto es válido.
-  const [hexTexto, setHexTexto] = useState(COLOR_INICIAL);
+  const [emoji, setEmoji] = useState<string | null>(null);
+  /** La categoría que se está editando en el formulario; null si se crea una nueva. */
+  const [editando, setEditando] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
@@ -62,50 +38,54 @@ export default function CategoriesPage() {
     load();
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
+  function limpiar() {
+    setEditando(null);
+    setName("");
+    setColor(COLOR_INICIAL);
+    setEmoji(null);
+    setError(null);
+  }
+
+  /** Lleva una categoría al formulario de arriba para cambiarla. */
+  function empezarEdicion(cat: Category) {
+    setEditando(cat);
+    setName(cat.name);
+    setColor(cat.color.toLowerCase());
+    setEmoji(cat.emoji ?? null);
+    setError(null);
+    document.getElementById("formulario-categoria")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (guardando) return;
 
     setError(null);
     setGuardando(true);
     try {
-      const res = await fetch("/api/categories", {
-        method: "POST",
+      const res = await fetch(editando ? `/api/categories/${editando.id}` : "/api/categories", {
+        method: editando ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, color }),
+        body: JSON.stringify({ name: name.trim(), color, emoji }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "No se pudo crear la categoría");
-        enfocarCampoConError("nombre-categoria");
+        setError(data.error ?? (editando ? "No se pudo guardar la categoría" : "No se pudo crear la categoría"));
+        enfocarCampoConError("categoria-nombre");
         return;
       }
 
-      mostrarAvisoGuardado(`Categoría "${name}" creada.`);
-      setName("");
-      elegirColor(COLOR_INICIAL);
+      mostrarAvisoGuardado(editando ? `Categoría "${name.trim()}" guardada.` : `Categoría "${name.trim()}" creada.`);
+      limpiar();
       await load();
     } finally {
       setGuardando(false);
     }
   }
 
-  function elegirColor(nuevo: string) {
-    const normalizado = nuevo.toLowerCase();
-    setColor(normalizado);
-    setHexTexto(normalizado);
-  }
-
-  function escribirHex(texto: string) {
-    const conNumeral = (texto.startsWith("#") ? texto : `#${texto}`).toLowerCase().slice(0, 7);
-    setHexTexto(conNumeral);
-    if (HEX_VALIDO.test(conNumeral)) setColor(conNumeral);
-  }
-
-  const aviso = avisoDeContraste(color);
-
   async function handleDelete(cat: Category) {
     setPorEliminar(null);
+    if (editando?.id === cat.id) limpiar();
     await fetch(`/api/categories/${cat.id}`, { method: "DELETE" });
     mostrarAvisoGuardado(`Categoría "${cat.name}" eliminada.`);
     load();
@@ -114,102 +94,71 @@ export default function CategoriesPage() {
   return (
     <div className="flex flex-col gap-10">
       <header>
-        <p className="rotulo">El color identifica cada gasto en las listas</p>
+        <p className="rotulo">El color y el emoji identifican cada gasto en las listas</p>
         <h1 className="titulo">Categorías</h1>
       </header>
 
-      <form onSubmit={handleCreate} className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
-        <p className="rotulo">Nueva categoría</p>
+      <form
+        id="formulario-categoria"
+        onSubmit={handleSubmit}
+        className="tarjeta flex scroll-mt-20 flex-col gap-5 p-4 sm:p-5"
+      >
+        <p className="seccion-titulo">{editando ? `Editar «${editando.name}»` : "Nueva categoría"}</p>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="nombre-categoria" className="rotulo">Nombre</label>
-          <input
-            id="nombre-categoria"
-            type="text"
-            aria-describedby={error ? "error-categoria" : undefined}
-            placeholder="Ej: Alimentación"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="campo"
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <span className="rotulo">seleccion de color</span>
-          <div className="flex flex-wrap items-center gap-3">
-            {/* El input nativo va invisible encima de la muestra: tocarla abre
-                la paleta del sistema, también en el celular. */}
-            <label
-              className="relative h-10 w-14 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-borde transition-transform hover:scale-105"
-              style={{ backgroundColor: color }}
-              title="Elegir color"
-            >
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => elegirColor(e.target.value)}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                aria-label="Elegir color"
-              />
-            </label>
-
-            <input
-              type="text"
-              value={hexTexto}
-              onChange={(e) => escribirHex(e.target.value)}
-              onBlur={() => setHexTexto(color)}
-              maxLength={7}
-              spellCheck={false}
-              aria-label="Código hexadecimal del color"
-              className={`campo monto w-24 uppercase ${
-                HEX_VALIDO.test(hexTexto) ? "" : "border-alerta"
-              }`}
-            />
-          </div>
-          <p className="text-xs text-tenue">
-            {aviso ?? "Tocá el cuadro para abrir la paleta, o escribí el código."}
-          </p>
-        </div>
+        <EditorCategoria
+          id="categoria"
+          placeholder="Ej: Alimentación"
+          nombre={name}
+          alCambiarNombre={setName}
+          color={color}
+          alCambiarColor={setColor}
+          emoji={emoji}
+          alCambiarEmoji={setEmoji}
+          idError={error ? "error-categoria" : undefined}
+          maximoNombre={50}
+        />
 
         {error && <Aviso id="error-categoria" tono="error">{error}</Aviso>}
         {avisoGuardado && <Aviso tono="ok">{avisoGuardado}</Aviso>}
 
-        <div className="flex items-center justify-between gap-3 border-t border-borde pt-4">
-          <span className="flex min-w-0 items-center gap-2.5">
-            <span className="punto" style={{ backgroundColor: color }} />
-            <span className="truncate text-sm text-suave">{name || "Sin nombre"}</span>
-          </span>
+        <div className="flex items-center justify-end gap-2 border-t border-borde pt-4">
+          {editando && (
+            <button type="button" onClick={limpiar} className="boton-linea">
+              Cancelar
+            </button>
+          )}
           <button type="submit" disabled={guardando} className="boton">
-            {guardando ? "Agregando..." : "Agregar"}
+            {guardando ? "Guardando..." : editando ? "Guardar cambios" : "Agregar"}
           </button>
         </div>
       </form>
 
       <section>
-        <h2 className="rotulo mb-3">Tus categorías</h2>
+        <h2 className="seccion-titulo mb-3 px-1">Tus categorías</h2>
         {loading ? (
           <EsqueletoLista dosLineas={false} />
         ) : categories.length === 0 ? (
           <Vacio
             icono={<IconoEtiqueta />}
             titulo="Sin categorías propias"
-            detalle="Creá la primera con el formulario de arriba. El color que le pongas es el que va a identificar sus gastos en todas las listas."
+            detalle="Creá la primera con el formulario de arriba. El color y el emoji que le pongas son los que van a identificar sus gastos en todas las listas."
           />
         ) : (
           <div className="lista">
             {categories.map((cat) => (
-              <div key={cat.id} className="fila">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <span aria-hidden className="filete" style={{ backgroundColor: cat.color }} />
-                  <span className="truncate text-sm text-texto">{cat.name}</span>
+              <div key={cat.id} className={`fila ${editando?.id === cat.id ? "bg-superficie-alta" : ""}`}>
+                <div className="flex min-w-0 items-center gap-3">
+                  <Insignia nombre={cat.name} color={cat.color} emoji={cat.emoji} />
+                  <span className="truncate text-[15px] font-medium text-texto">{cat.name}</span>
                 </div>
-                <button
-                  onClick={() => setPorEliminar(cat)}
-                  className="boton-mini boton-mini-peligro shrink-0"
-                >
-                  Eliminar
-                </button>
+                <span className="flex shrink-0 items-center gap-1">
+                  <button onClick={() => empezarEdicion(cat)} className="boton-mini">
+                    Editar
+                  </button>
+                  <button onClick={() => setPorEliminar(cat)} className="boton-mini boton-mini-peligro">
+                    Eliminar
+                  </button>
+                </span>
               </div>
             ))}
           </div>

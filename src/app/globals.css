@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   Billions Tracker — sistema visual "Pizarra"
+   Billions Tracker — sistema visual
 
-   Una sola idea: tinta. La app es siempre oscura, como la pizarra de
-   cotizaciones de un banco, y lo que cambia de una superficie a otra es
-   cuánta luz le llega: el fondo es la pared, las tarjetas son hojas apoyadas
-   encima, la pizarra es lo único que se permite gritar. Las dos monedas nunca
-   se suman, así que nunca comparten color: el peso es celeste, el dólar es
-   verde.
+   La app es siempre oscura y la pizarra de pesos y dólares es lo único que
+   se permite gritar. Todo lo demás habla claro: frases en minúscula en vez de
+   rótulos en mayúsculas de máquina de escribir, tarjetas blandas, los montos
+   en la misma letra que el resto. La pizarra, el campo de monto, el cajón y
+   la barra del celular conservan su propio estilo (ver "lo que no cambia").
+   Las dos monedas nunca se suman, así que nunca comparten color: el peso es
+   celeste, el dólar es verde.
    ========================================================================== */
 
 :root {
@@ -25,10 +26,12 @@
 
   /* la letra */
   --texto: #e7ece6;
-  --texto-suave: #9aacb2;
-  /* 5,1:1 sobre el fondo y 4,6:1 sobre superficie: el mínimo para los rótulos
-     de 11px. */
-  --texto-tenue: #788b91;
+  --texto-suave: #a5b6bb;
+  /* Subido un punto: la fecha y la categoría debajo de cada gasto van en
+     12px y con el tenue anterior quedaban justo en el límite, sobre todo de
+     día en el celular. Ahora da 6,6:1 sobre el fondo y 5,7:1 sobre las
+     tarjetas (antes 5,3:1 y 4,6:1), y sigue por debajo del suave para no perder la jerarquía. */
+  --texto-tenue: #8a9ca2;
   /* Para lo pausado o vencido. Antes se resolvía con opacity, que apilaba
      transparencia sobre texto ya suave y hundía el contraste a 2,3:1. */
   --texto-apagado: #7f9096;
@@ -40,15 +43,6 @@
   --pizarra-texto: #edf1ec;
   --pizarra-suave: #91a7b2;
 
-  /* el ticket: la tira de papel de los últimos gastos, apenas más clara que
-     las tarjetas para que se lea como una hoja apoyada encima */
-  --ticket: #1b2b35;
-  --ticket-texto: #e7ece6;
-  --ticket-suave: #9aacb2;
-  --ticket-linea: #3d5059;
-  --ticket-peso: #6fbee4;
-  --ticket-dolar: #7fc895;
-
   /* las dos monedas */
   --peso: #6fbee4;
   --dolar: #7fc895;
@@ -59,17 +53,23 @@
   --accion: #dfe7e0;
   --accion-alta: #ffffff;
   --accion-texto: #101c22;
+  /* El estado de la interfaz (foco, activo, encendido) va en un claro
+     neutro: el celeste y el verde quedan solo para pesos y dólares. Donde
+     se carga un monto, el foco toma el color de la moneda (ver .campo-monto). */
+  --foco: #dfe7e0;
   --alerta: #e4705c;
   --alerta-fondo: #2c1b18;
   /* Blanco sobre este rojo da 3,1:1 y no llega al mínimo de 4,5: va en tinta. */
   --alerta-texto: #08161f;
-  --ok: #7fc895;
+  /* Lo que salió bien se dice en tinta plena, no en verde: el verde es el
+     dólar. */
+  --ok: var(--texto);
 
   /* Una sola escala de esquinas para toda la app: lo que se toca, lo que
      contiene y lo que flota encima. */
   --radio-control: 8px;
-  --radio-tarjeta: 12px;
-  --radio-flotante: 16px;
+  --radio-tarjeta: 18px;
+  --radio-flotante: 20px;
 
   /* La luz viene de arriba: un filo claro en el borde superior y una sombra
      corta debajo. Es lo que separa una tarjeta del fondo sin subirle el
@@ -110,8 +110,10 @@
   --color-alerta-fondo: var(--alerta-fondo);
   --color-alerta-texto: var(--alerta-texto);
   --color-ok: var(--ok);
+  --color-foco: var(--foco);
 
   --font-sans: var(--font-ui);
+  --font-display: var(--font-display);
   --font-mono: var(--font-num);
 }
 
@@ -139,13 +141,13 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--peso);
+    outline: 2px solid var(--foco);
     outline-offset: 2px;
     border-radius: 4px;
   }
 
   ::selection {
-    background-color: var(--peso);
+    background-color: var(--foco);
     color: var(--fondo);
   }
 
@@ -160,33 +162,71 @@
 @layer components {
   /* --- tipografía de servicio ---------------------------------------- */
 
-  /* rótulo: el mono en versalitas que nombra cada bloque */
+  /* rótulo: nombra un campo o un bloque chico. Antes era mono en mayúsculas
+     espaciadas; se leía como una pantalla de terminal y pesaba igual en
+     todos lados. Ahora es una frase corta, como se escribe. */
   .rotulo {
+    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--texto-suave);
+  }
+
+  /* "octubre de 2026" arriba de un título se lee como el comienzo de una
+     frase: la primera letra va en mayúscula. */
+  .rotulo::first-letter {
+    text-transform: uppercase;
+  }
+
+  /* título de página: la letra con carácter, usada solo acá y en los títulos
+     de sección. Va debajo de su rótulo, que dice el contexto en una línea. */
+  .titulo {
+    margin-top: 0.25rem;
+    font-family: var(--font-display), var(--font-ui), sans-serif;
+    font-size: 2rem;
+    font-weight: 650;
+    font-variation-settings: "opsz" 48;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--texto);
+  }
+
+  /* título de sección: lo que antes era un rótulo gris sobre cada lista */
+  .seccion-titulo {
+    font-family: var(--font-display), var(--font-ui), sans-serif;
+    font-size: 1.125rem;
+    font-weight: 600;
+    font-variation-settings: "opsz" 24;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--texto);
+  }
+
+  /* monto: cifras tabulares en la letra de todos los días. El mono queda para
+     la pizarra y el campo de monto, donde la cifra es protagonista. */
+  .monto {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.01em;
+  }
+
+  /* --- lo que no cambia -----------------------------------------------
+     La pizarra, el campo de monto, el cajón del menú y la barra del celular
+     conservan su letra de siempre: rótulos en mono espaciado y cifras en mono. */
+  :is(.pizarra-panel, .campo-monto, .cajon, .barra-flotante, .clasico) .rotulo {
     font-family: var(--font-num), ui-monospace, monospace;
     font-size: 0.6875rem;
-    font-weight: 500;
     line-height: 1.2;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--texto-tenue);
   }
 
-  /* título de página: el único texto grande fuera de la pizarra. Va debajo de
-     su rótulo, que dice de qué se trata la pantalla en una línea. */
-  .titulo {
-    margin-top: 0.5rem;
-    font-size: 1.625rem;
-    font-weight: 600;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: var(--texto);
-  }
-
-  /* monto: cifras tabulares, siempre en mono, siempre alineadas */
-  .monto {
+  :is(.pizarra-panel, .campo-monto, .cajon, .barra-flotante, .clasico) .monto {
     font-family: var(--font-num), ui-monospace, monospace;
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum" 1;
     letter-spacing: -0.02em;
   }
 
@@ -207,8 +247,14 @@
     overflow: hidden;
   }
 
+  /* El separador no cruza la tarjeta de lado a lado: arranca después del
+     sangrado, como en las listas de un teléfono. Las filas quedan agrupadas
+     sin parecer una planilla. */
   .lista > * + * {
-    border-top: 1px solid var(--borde);
+    background-image: linear-gradient(var(--borde), var(--borde));
+    background-size: calc(100% - 2rem) 1px;
+    background-position: 1rem 0;
+    background-repeat: no-repeat;
   }
 
   .fila {
@@ -217,13 +263,50 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    /* el sangrado izquierdo deja respirar al filete de color */
-    padding: 0.875rem 1rem 0.875rem 1.125rem;
+    padding: 0.875rem 1rem;
     transition: background-color 0.15s ease;
   }
 
   .fila:hover {
-    background-color: var(--superficie-alta);
+    background-color: color-mix(in srgb, var(--superficie-alta) 70%, transparent);
+  }
+
+  /* --- insignia de categoría ------------------------------------------
+     El color de la categoría en un círculo con su inicial: se reconoce de
+     lejos y el color queda como acento, sin teñir la fila. El fondo es el
+     color muy diluido; la letra, el color tirado hacia la tinta para que
+     llegue al contraste sobre cualquier tono. */
+  .insignia {
+    --cat: var(--borde-fuerte);
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: 2.375rem;
+    width: 2.375rem;
+    border-radius: 9999px;
+    background-color: color-mix(in srgb, var(--cat) 20%, var(--superficie));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cat) 35%, transparent);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1;
+    color: color-mix(in srgb, var(--cat) 55%, var(--texto));
+  }
+
+  /* el emoji va un poco más grande que la letra: tiene su propio color */
+  .insignia-emoji {
+    font-size: 1.1875rem;
+    line-height: 1;
+  }
+
+  .insignia-chica .insignia-emoji {
+    font-size: 0.9375rem;
+  }
+
+  .insignia-chica {
+    height: 1.875rem;
+    width: 1.875rem;
+    font-size: 0.8125rem;
   }
 
   /* la pizarra: el único elemento que se permite gritar */
@@ -284,74 +367,6 @@
     animation: trazar 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  /* el ticket: la tira de papel donde quedan los últimos gastos. Sale de la
-     "caja" al cargar la página y termina en un borde cortado en serrucho. */
-  .ticket {
-    position: relative;
-    border-radius: 3px 3px 0 0;
-    background-color: var(--ticket);
-    color: var(--ticket-texto);
-    /* El serrucho de abajo cuelga fuera de la caja: drop-shadow lo sigue,
-       box-shadow dibujaría un rectángulo. */
-    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.3)) drop-shadow(0 12px 18px rgb(0 0 0 / 0.4));
-    margin-bottom: 7px;
-    animation: imprimir 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  }
-
-  .ticket::after {
-    content: "";
-    position: absolute;
-    inset: 100% 0 auto 0;
-    height: 7px;
-    background:
-      linear-gradient(135deg, var(--ticket) 50%, transparent 50%),
-      linear-gradient(225deg, var(--ticket) 50%, transparent 50%);
-    background-size: 14px 7px;
-    background-repeat: repeat-x;
-  }
-
-  /* la línea de corte entre un día y el siguiente */
-  .ticket-tramo + .ticket-tramo {
-    border-top: 1px dashed var(--ticket-linea);
-  }
-
-  /* el pie se separa con doble línea, como el total de un ticket */
-  .ticket-pie {
-    border-top: 3px double var(--ticket-linea);
-  }
-
-  /* renglón de servicio: fecha, categoría, pie. Todo en mono y mayúsculas. */
-  .ticket-renglon {
-    font-family: var(--font-num), ui-monospace, monospace;
-    font-size: 0.6875rem;
-    font-weight: 400;
-    line-height: 1.3;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ticket-suave);
-  }
-
-  .ticket-enlace {
-    color: var(--ticket-texto);
-    font-weight: 500;
-    text-decoration: underline;
-    text-decoration-color: var(--ticket-linea);
-    text-underline-offset: 4px;
-    transition: text-decoration-color 0.15s ease;
-  }
-
-  .ticket-enlace:hover {
-    text-decoration-color: var(--ticket-texto);
-  }
-
-  /* los puntos que llevan del nombre al monto */
-  .ticket-puntos {
-    flex: 1 1 1.5rem;
-    min-width: 1.5rem;
-    border-bottom: 2px dotted var(--ticket-linea);
-    transform: translateY(-3px);
-  }
-
   /* una letra del código de amigo. Va en casillas porque el código se dicta
      o se copia a mano, y así no se pierde el lugar ni se confunde la longitud. */
   .casilla {
@@ -367,6 +382,126 @@
     font-size: 1.25rem;
     font-weight: 500;
     color: var(--texto);
+  }
+
+  /* El código aparece como en un cartel de rodillos: cada casilla gira entre
+     letras y frena en la suya, una después de otra. Al frenar, el borde se
+     prende un instante. `--orden` lo pone el componente. */
+  .casilla-rodillo {
+    --giro: calc(0.85s + var(--orden) * 0.14s);
+    position: relative;
+    overflow: hidden;
+    /* `forwards` y no `both`: mientras gira, el borde queda en su gris de
+       siempre; se prende recién al frenar. */
+    animation: encajar 0.6s ease-out calc(0.2s + var(--giro)) forwards;
+  }
+
+  /* las letras entran y salen fundiéndose con el fondo por arriba y por
+     abajo; una máscara haría lo mismo pero se llevaría también el borde */
+  .casilla-rodillo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(var(--fondo), transparent 28%, transparent 72%, var(--fondo));
+    pointer-events: none;
+  }
+
+  .casilla-tira {
+    position: absolute;
+    inset: 0 0 auto 0;
+    display: flex;
+    flex-direction: column;
+    /* termina con la última letra, la de verdad, dentro de la casilla */
+    transform: translateY(calc(-100% + 2.75rem));
+    animation: girar var(--giro) cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  }
+
+  .casilla-tira > span {
+    display: flex;
+    height: 2.75rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Los círculos del calendario brotan al cargar, uno por día, con un rebote
+     corto: el mes se va llenando en el orden en que pasó. */
+  .burbuja {
+    animation: brotar 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) calc(0.1s + var(--dia) * 18ms) both;
+  }
+
+  /* El anillo de categorías se dibuja girando desde arriba, en el mismo
+     sentido en que van las porciones. Sin @property (navegadores viejos) el
+     barrido no se anima y el anillo aparece entero, que también está bien. */
+  .anillo-trazar {
+    -webkit-mask-image: conic-gradient(#000 var(--barrido), transparent 0);
+    mask-image: conic-gradient(#000 var(--barrido), transparent 0);
+    animation: barrer 0.9s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both;
+  }
+
+  /* --- pestañas -------------------------------------------------------
+     Las partes de una página que se miran por separado (en un grupo: los
+     gastos, los saldos y las personas). Una raya clara debajo marca la
+     abierta; el color de las monedas no se usa para esto. */
+  .pestanas {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--borde);
+  }
+
+  .pestana {
+    position: relative;
+    display: inline-flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--texto-tenue);
+    transition: color 0.15s ease;
+  }
+
+  @media (min-width: 40rem) {
+    .pestana {
+      flex: 0 0 auto;
+      padding-inline: 1rem;
+    }
+  }
+
+  .pestana:hover {
+    color: var(--texto);
+  }
+
+  .pestana[aria-selected="true"] {
+    color: var(--texto);
+  }
+
+  /* la raya de la abierta: se estira desde el centro al elegirla */
+  .pestana::after {
+    content: "";
+    position: absolute;
+    inset: auto 0.5rem -1px;
+    height: 2px;
+    border-radius: 2px;
+    background-color: var(--foco);
+    transform: scaleX(0);
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .pestana[aria-selected="true"]::after {
+    transform: scaleX(1);
+  }
+
+  .pestana-cuenta {
+    min-width: 1.375rem;
+    border-radius: 9999px;
+    background-color: var(--superficie-alta);
+    padding: 0.0625rem 0.4rem;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--texto-suave);
   }
 
   /* --- controles ------------------------------------------------------ */
@@ -392,9 +527,9 @@
 
   .campo:focus-visible {
     outline: none;
-    border-color: var(--peso);
+    border-color: color-mix(in srgb, var(--foco) 70%, var(--borde));
     background-color: var(--superficie);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--peso) 18%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--foco) 14%, transparent);
   }
 
   /* --- el campo de monto ----------------------------------------------
@@ -494,8 +629,9 @@
 
   /* el radio real va oculto pero sigue ahí: el teclado y el lector de
      pantalla lo manejan solo, sin que haya que reponer nada a mano */
+  /* adentro del campo de monto, el color de la moneda; afuera, el neutro */
   .segmento input:focus-visible + span {
-    outline: 2px solid var(--peso);
+    outline: 2px solid var(--moneda, var(--foco));
     outline-offset: 1px;
   }
 
@@ -525,8 +661,32 @@
     color: var(--texto);
   }
 
+  /* "+ Nueva" al final de las fichas: mismo tamaño, borde punteado, para
+     que se lea como una acción y no como una opción más. */
+  .ficha-nueva {
+    display: inline-flex;
+    align-items: center;
+    border: 1px dashed var(--borde-fuerte);
+    border-radius: 9999px;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--texto-suave);
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .ficha-nueva:hover {
+    border-color: var(--texto-suave);
+    color: var(--texto);
+  }
+
+  @media (pointer: coarse) {
+    .ficha-nueva {
+      padding-block: 0.75rem;
+    }
+  }
+
   .ficha input:focus-visible + span {
-    outline: 2px solid var(--peso);
+    outline: 2px solid var(--foco);
     outline-offset: 2px;
   }
 
@@ -660,14 +820,16 @@
   /* acciones secundarias de fila: mono, chicas, sin peso visual */
   /* Acciones de fila. Eran 10px en color tenue: tipografía por debajo del
      mínimo y 3,4:1 de contraste, en controles que se tocan de verdad. */
+  /* Una pastilla que solo aparece al pasar por encima: en reposo es texto
+     suave, sin mayúsculas ni mono, para que una columna de "Eliminar" no se
+     lea como un grito repetido. */
   .boton-mini {
-    font-family: var(--font-num), ui-monospace, monospace;
-    font-size: 0.75rem;
+    border-radius: 9999px;
+    padding: 0.3125rem 0.625rem;
+    font-size: 0.8125rem;
     font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--texto-suave);
-    transition: color 0.15s ease;
+    color: var(--texto-tenue);
+    transition: color 0.15s ease, background-color 0.15s ease;
   }
 
   /* El área tocable llega a 44px sin engordar el texto. */
@@ -681,10 +843,12 @@
 
   .boton-mini:hover {
     color: var(--texto);
+    background-color: var(--superficie-alta);
   }
 
   .boton-mini-peligro:hover {
     color: var(--alerta);
+    background-color: var(--alerta-fondo);
   }
 
   /* --- diálogo --------------------------------------------------------
@@ -700,6 +864,55 @@
     background-color: var(--superficie);
     box-shadow: var(--sombra-flotante);
     color: var(--texto);
+  }
+
+  /* Un diálogo grande con formulario (cargar un gasto del grupo). En el
+     celular es una hoja que sube desde abajo y ocupa el ancho; en PC, un
+     cuadro centrado más ancho que el cartel de confirmación. El contenido
+     hace scroll adentro, con el encabezado y el botón siempre a la vista. */
+  .hoja {
+    max-width: 34rem;
+    max-height: min(92dvh, 52rem);
+    overflow: hidden;
+  }
+
+  /* Entrada simple (al editar desde el detalle): aparece con un leve
+     acercamiento. En el celular, la hoja sube desde abajo (ver más abajo). */
+  .hoja[open] {
+    animation: hoja-aparece 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .hoja[open]::backdrop {
+    animation: hoja-fondo 0.3s ease-out both;
+  }
+
+  /* Abierto desde "Cargar gasto": el botón se transforma en el formulario.
+     Arranca con el tamaño, la forma y el color del botón, y se expande hasta
+     su lugar mientras pasa al color de la tarjeta; el contenido aparece al
+     final. `--desde-*` (posición y escala del botón respecto del formulario)
+     lo calcula FormularioGastoGrupal. */
+  .hoja-expandida[open] {
+    transform-origin: center;
+    animation: hoja-expandir 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .hoja-expandida[open] > * {
+    animation: hoja-contenido 0.2s ease-out 0.22s both;
+  }
+
+  @media (max-width: 39.99rem) {
+    .hoja {
+      margin: auto 0 0;
+      width: 100%;
+      max-width: none;
+      border-radius: var(--radio-flotante) var(--radio-flotante) 0 0;
+      border-bottom: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .hoja[open]:not(.hoja-expandida) {
+      animation-name: hoja-sube;
+    }
   }
 
   .dialogo::backdrop {
@@ -754,6 +967,50 @@
     }
   }
 
+  /* --- barra deslizable ------------------------------------------------
+     El selector de color de las categorías: la pista es el degradé (lo pone
+     el componente) y la perilla, un aro claro, se lee sobre cualquier color. */
+  .deslizador {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 14px;
+    border-radius: 9999px;
+    cursor: pointer;
+  }
+
+  .deslizador::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--texto);
+    border-radius: 9999px;
+    background: transparent;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 2px 6px rgb(0 0 0 / 0.4);
+  }
+
+  .deslizador::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 3px solid var(--texto);
+    border-radius: 9999px;
+    background: transparent;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 2px 6px rgb(0 0 0 / 0.4);
+  }
+
+  .deslizador:focus-visible {
+    outline: 2px solid var(--foco);
+    outline-offset: 4px;
+  }
+
+  /* En pantalla táctil la perilla crece hasta un objetivo cómodo. */
+  @media (pointer: coarse) {
+    .deslizador::-webkit-slider-thumb {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
   /* --- datos ---------------------------------------------------------- */
 
   .barra-pista {
@@ -804,6 +1061,19 @@
     animation: desplegar 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
+  /* Un menú que se abre hacia arriba desde la barra del celular: crece desde
+     el botón que lo abre (el origen lo pone la clase origin-* de al lado) y
+     sus opciones entran de a una, en el orden en que se leen. `--i` es la
+     posición de cada opción. */
+  .menu-sube {
+    animation: subir 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .menu-sube > * {
+    animation: aparece-opcion 0.26s cubic-bezier(0.2, 0.8, 0.2, 1)
+      calc(0.05s + var(--i, 0) * 0.04s) both;
+  }
+
   .aparece {
     animation: aparece 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
@@ -828,13 +1098,50 @@
   }
 }
 
-/* el ticket sale de arriba hacia abajo, como de la impresora de la caja */
-@keyframes imprimir {
+@keyframes girar {
   from {
-    clip-path: inset(0 0 100% 0);
+    transform: translateY(0);
   }
   to {
-    clip-path: inset(0 0 -10px 0);
+    transform: translateY(calc(-100% + 2.75rem));
+  }
+}
+
+/* el filo claro del momento en que la casilla frena */
+@keyframes encajar {
+  0% {
+    border-color: var(--foco);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--foco) 18%, transparent);
+  }
+  100% {
+    border-color: var(--borde-fuerte);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@property --barrido {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 360deg;
+}
+
+@keyframes barrer {
+  from {
+    --barrido: 0deg;
+  }
+  to {
+    --barrido: 360deg;
+  }
+}
+
+@keyframes brotar {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -842,6 +1149,84 @@
   from {
     opacity: 0;
     transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hoja-aparece {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hoja-sube {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes hoja-fondo {
+  from {
+    background-color: rgb(4 9 12 / 0);
+  }
+  to {
+    background-color: rgb(4 9 12 / 0.65);
+  }
+}
+
+/* del botón al formulario: la posición, la escala y el color del botón al
+   principio; el radio se divide por la escala para que, achicado, se vea
+   como el del botón */
+@keyframes hoja-expandir {
+  from {
+    transform: translate(var(--desde-x), var(--desde-y)) scale(var(--desde-sx), var(--desde-sy));
+    border-radius: calc(var(--radio-control) / var(--desde-sy));
+    background-color: var(--accion);
+    box-shadow: none;
+  }
+  40% {
+    background-color: var(--superficie);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes hoja-contenido {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aparece-opcion {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -865,8 +1250,16 @@
   .filo::before,
   .aparece,
   .hueso,
-  .ticket,
-  .desplegar {
+  .desplegar,
+  .menu-sube,
+  .menu-sube > *,
+  .hoja[open],
+  .hoja[open] > *,
+  .hoja[open]::backdrop,
+  .casilla-rodillo,
+  .casilla-tira,
+  .burbuja,
+  .anillo-trazar {
     animation: none;
   }
 

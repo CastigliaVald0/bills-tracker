@@ -138,7 +138,7 @@ function Grupo({
             }`}
           >
             {/* El mismo filete de color que marca la categoría en las listas. */}
-            {activo && <span aria-hidden className="filete rounded-l-md bg-peso" />}
+            {activo && <span aria-hidden className="filete rounded-l-md bg-foco" />}
             <span className="shrink-0">{entrada.icono}</span>
             {entrada.label}
           </Link>

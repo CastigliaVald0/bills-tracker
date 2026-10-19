@@ -1,21 +1,22 @@
 import { formatMoney } from "@/lib/format";
+import { CalendarioMes, type DiaDelMes } from "@/components/CalendarioMes";
 
-export type DiaDelMes = { UYU: number; USD: number };
+export type { DiaDelMes };
 
 /**
- * El mes, día por día: una columna por cada día, tan alta como lo gastado en
- * pesos ese día. Es el pulso del mes de un vistazo: cuánto va, qué días
- * pesaron y cuánto falta.
+ * El mes en el dashboard: a la izquierda lo que se lee de un vistazo (el
+ * promedio por día y cuántos días hubo gastos), a la derecha el calendario de
+ * círculos, el mismo del resumen mensual.
  *
- * Los dólares no se suman a la barra, como en el resto de la app: un día con
- * gastos en dólares lleva un punto verde arriba. Los días que todavía no
- * llegaron quedan como marcas apagadas en la base.
+ * Reemplaza a la tira de barras, que mostraba lo mismo pero obligaba a leer
+ * alturas sin referencia y a adivinar qué día era cada barra.
  */
 export function TiraDelMes({
   dias,
   hoy,
   nombreMes,
   comparacion,
+  huecoInicial,
 }: {
   /** Un elemento por día del mes; el índice 0 es el día 1. */
   dias: DiaDelMes[];
@@ -25,90 +26,49 @@ export function TiraDelMes({
   nombreMes: string;
   /** La frase que compara con el mes pasado; null si no hay con qué comparar. */
   comparacion: string | null;
+  /** Cuántos lugares vacíos van antes del día 1 (0 si el mes empieza en lunes). */
+  huecoInicial: number;
 }) {
-  const mayor = Math.max(...dias.map((d) => d.UYU), 0);
-  const diasConGasto = dias.filter((d, i) => i < hoy && (d.UYU > 0 || d.USD > 0)).length;
+  const transcurridos = dias.slice(0, hoy);
+  const diasConGasto = transcurridos.filter((d) => d.UYU > 0 || d.USD > 0).length;
+  const pesos = transcurridos.reduce((t, d) => t + d.UYU, 0);
+  const promedio = hoy > 0 ? pesos / hoy : 0;
 
   return (
-    <section className="tarjeta aparece px-4 pt-4 pb-3.5 sm:px-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="rotulo">El mes, día por día</h2>
-        <p className="monto text-xs text-suave">
-          Día {hoy} de {dias.length}
-        </p>
-      </div>
+    <section className="tarjeta aparece grid gap-6 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-8 sm:p-6">
+      {/* Lo que se lee de un vistazo: el promedio y cuántos días hubo gastos. */}
+      <div className="flex flex-col gap-5">
+        <div className="flex items-baseline justify-between gap-3 sm:flex-col sm:items-start sm:gap-1">
+          <h2 className="seccion-titulo">Tu mes, semana a semana</h2>
+          <p className="text-sm text-tenue">
+            Día {hoy} de {dias.length}
+          </p>
+        </div>
 
-      <div
-        role="img"
-        aria-label={`Gasto de cada día de ${nombreMes}. Gastaste en ${diasConGasto} de los ${hoy} días que van del mes.`}
-        className="mt-4 flex h-24 items-stretch gap-[2px] sm:gap-1"
-      >
-        {dias.map((dia, i) => {
-          const numero = i + 1;
-          const esHoy = numero === hoy;
-          const futuro = numero > hoy;
-          const altura = mayor > 0 ? (dia.UYU / mayor) * 100 : 0;
-          const detalle = [
-            dia.UYU > 0 && formatMoney(dia.UYU, "UYU"),
-            dia.USD > 0 && formatMoney(dia.USD, "USD"),
-          ]
-            .filter(Boolean)
-            .join(" · ");
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-1">
+          <div className="rounded-2xl bg-fondo/60 px-3.5 py-3">
+            <dt className="text-xs text-tenue">Promedio por día</dt>
+            <dd className="monto mt-1 text-lg font-semibold text-texto">
+              {formatMoney(promedio, "UYU")}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-fondo/60 px-3.5 py-3">
+            <dt className="text-xs text-tenue">Días con gastos</dt>
+            <dd className="monto mt-1 text-lg font-semibold text-texto">
+              {diasConGasto} <span className="text-sm font-normal text-tenue">de {hoy}</span>
+            </dd>
+          </div>
+        </dl>
 
-          return (
-            <div
-              key={numero}
-              title={`${numero} de ${nombreMes}${detalle ? `: ${detalle}` : futuro ? "" : ": sin gastos"}`}
-              className={`flex min-w-0 flex-1 flex-col justify-end rounded-[3px] ${
-                esHoy ? "bg-superficie-alta" : ""
-              }`}
-            >
-              {/* el punto de los dólares, apoyado sobre la barra */}
-              {dia.USD > 0 && (
-                <span className="mx-auto mb-1 h-1.5 w-1.5 shrink-0 rounded-full bg-dolar" />
-              )}
-              <span
-                className={`block w-full rounded-[2px] ${
-                  dia.UYU > 0 ? "bg-peso" : futuro ? "bg-borde" : "bg-borde-fuerte"
-                }`}
-                // Un día con gasto nunca baja de 3px: si no, al lado de un día
-                // caro desaparecería.
-                style={{ height: dia.UYU > 0 ? `max(3px, ${altura}%)` : "2px" }}
-              />
-            </div>
-          );
-        })}
-      </div>
+        {comparacion && <p className="text-sm leading-relaxed text-suave">{comparacion}</p>}
 
-      {/* La regla: el primero de cada semana, y hoy en lugar de su número. */}
-      <div aria-hidden className="mt-1.5 flex gap-[2px] sm:gap-1">
-        {dias.map((_, i) => {
-          const numero = i + 1;
-          const esHoy = numero === hoy;
-          const marca = numero % 7 === 1;
-          // Si hoy cae al lado de una marca, la marca se calla para no pisarse.
-          const tapada = Math.abs(numero - hoy) === 1 && marca;
-          return (
-            <span
-              key={numero}
-              className={`monto flex min-w-0 flex-1 justify-center text-[9px] leading-none whitespace-nowrap ${
-                esHoy ? "font-medium text-texto" : "text-tenue"
-              }`}
-            >
-              {esHoy ? "hoy" : marca && !tapada ? numero : ""}
-            </span>
-          );
-        })}
-      </div>
-
-      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-borde pt-3">
-        <p className="text-sm text-suave">
-          {comparacion ?? `Gastaste en ${diasConGasto} de los ${hoy} días que van del mes.`}
-        </p>
-        <p className="flex items-center gap-3 text-xs text-tenue">
+        <p className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-tenue">
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="h-2 w-2 rounded-[2px] bg-peso" />
-            Pesos
+            <span aria-hidden className="flex h-3.5 w-5 items-center gap-0.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-peso" />
+              <span className="h-3 w-3 rounded-full bg-peso" />
+            </span>
+            Más grande, más gastaste
           </span>
           <span className="flex items-center gap-1.5">
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-dolar" />
@@ -116,6 +76,8 @@ export function TiraDelMes({
           </span>
         </p>
       </div>
+
+      <CalendarioMes dias={dias} huecoInicial={huecoInicial} hoy={hoy} nombreMes={nombreMes} />
     </section>
   );
 }
