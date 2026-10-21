@@ -12,6 +12,10 @@ const updateSchema = z
     archivado: z.boolean().optional(),
     /** Solo se puede prender: apagarlo dejaría secciones con gastos colgando. */
     usaSecciones: z.literal(true).optional(),
+    /** La meta de ahorro; null la saca. */
+    metaMonto: z.number().positive().max(9_999_999_999).nullable().optional(),
+    /** La moneda de la meta. No cambia si ya hay aportes anotados. */
+    metaMoneda: z.enum(["UYU", "USD"]).optional(),
   })
   .refine((d) => Object.keys(d).length > 0, { message: "No hay nada para cambiar" });
 
@@ -27,7 +31,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!parsed.success) {
     return NextResponse.json({ error: "Revisá los datos del grupo." }, { status: 400 });
   }
-  const { archivado, color, descripcion, nombre, usaSecciones } = parsed.data;
+  const { archivado, color, descripcion, nombre, usaSecciones, metaMonto, metaMoneda } = parsed.data;
+
+  // Con aportes anotados, cambiar la moneda mezclaría pesos con dólares.
+  if (metaMoneda !== undefined && metaMoneda !== existente.metaMoneda) {
+    const aportes = await prisma.aporteMeta.count({ where: { grupoId: id } });
+    if (aportes > 0) {
+      return NextResponse.json(
+        { error: "La moneda no se puede cambiar porque ya hay aportes anotados." },
+        { status: 409 }
+      );
+    }
+  }
 
   const grupo = await prisma.grupo.update({
     where: { id },
@@ -37,6 +52,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       ...(descripcion !== undefined ? { descripcion: descripcion || null } : {}),
       ...(archivado !== undefined ? { archivadoEn: archivado ? new Date() : null } : {}),
       ...(usaSecciones ? { usaSecciones: true } : {}),
+      ...(metaMonto !== undefined ? { metaMonto } : {}),
+      ...(metaMoneda !== undefined ? { metaMoneda } : {}),
     },
   });
 

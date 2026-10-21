@@ -31,6 +31,8 @@ model User {
   pagosHechos         PagoGrupo[]          @relation("PagosHechos")
   pagosRecibidos      PagoGrupo[]          @relation("PagosRecibidos")
   pagosRegistrados    PagoGrupo[]          @relation("PagosRegistrados")
+  aportesHechos       AporteMeta[]         @relation("AportesHechos")
+  aportesRegistrados  AporteMeta[]         @relation("AportesRegistrados")
 
   /// Código corto para que otro te agregue, y que también es tu enlace de
   /// invitación. Se genera la primera vez que entrás a Amigos, así las cuentas
@@ -229,12 +231,18 @@ model Grupo {
   /// Con valor, el grupo está archivado: no se le cargan gastos y sale de la
   /// lista principal, pero se puede seguir consultando.
   archivadoEn DateTime?
+  /// La meta de ahorro: cuánto quieren juntar entre todos (por ejemplo, para
+  /// un viaje). Sin valor, el grupo no tiene meta.
+  metaMonto   Decimal?       @db.Decimal(12, 2)
+  /// En qué moneda es la meta. No cambia mientras haya aportes anotados.
+  metaMoneda  Currency       @default(UYU)
   createdAt   DateTime       @default(now())
   secciones   SeccionGrupo[]
   gastos      Expense[]
   miembros    MiembroGrupo[]
   gastosGrupales GastoGrupal[]
   pagos       PagoGrupo[]
+  aportes     AporteMeta[]
 
   @@index([creadorId, archivadoEn])
 }
@@ -342,4 +350,25 @@ model PagoGrupo {
   createdAt        DateTime @default(now())
 
   @@index([grupoId])
+}
+
+/// Plata que un integrante puso para la meta de ahorro del grupo. No es un
+/// gasto: no suma en el mes de nadie ni cambia los saldos entre personas.
+model AporteMeta {
+  id               String   @id @default(cuid())
+  grupoId          String
+  grupo            Grupo    @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  /// Quién puso la plata.
+  userId           String
+  user             User     @relation("AportesHechos", fields: [userId], references: [id], onDelete: Cascade)
+  /// En la moneda de la meta al momento de anotarlo.
+  monto            Decimal  @db.Decimal(12, 2)
+  moneda           Currency @default(UYU)
+  fecha            DateTime
+  /// Quién lo anotó (puede ser otro integrante).
+  registradoPorId  String
+  registradoPor    User     @relation("AportesRegistrados", fields: [registradoPorId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+
+  @@index([grupoId, fecha])
 }

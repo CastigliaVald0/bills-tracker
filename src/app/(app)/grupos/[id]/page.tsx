@@ -10,6 +10,8 @@ import { calcularSaldos, type MovimientoDeSaldo } from "@/lib/saldos";
 import { Pizarra } from "@/components/Pizarra";
 import { ParteEnPizarra } from "@/components/ParteEnPizarra";
 import { PanelGrupo } from "@/components/PanelGrupo";
+import { MetaGrupo } from "@/components/MetaGrupo";
+import { AjustesGrupo } from "@/components/AjustesGrupo";
 import { PersonasGrupo } from "@/components/PersonasGrupo";
 import { SaldosGrupo } from "@/components/SaldosGrupo";
 
@@ -40,6 +42,7 @@ export default async function GrupoPage({ params }: { params: Promise<{ id: stri
           orderBy: [{ fecha: "desc" }, { createdAt: "desc" }],
         },
         pagos: { orderBy: { createdAt: "desc" } },
+        aportes: { orderBy: [{ fecha: "desc" }, { createdAt: "desc" }] },
       },
     }),
     prisma.category.findMany({ where: { userId }, orderBy: { name: "asc" } }),
@@ -97,6 +100,7 @@ export default async function GrupoPage({ params }: { params: Promise<{ id: stri
   const miSaldo = { UYU: saldos.UYU.get(userId) ?? 0, USD: saldos.USD.get(userId) ?? 0 };
 
   const archivado = grupo.archivadoEn !== null;
+  const metaMonto = grupo.metaMonto === null ? null : Number(grupo.metaMonto);
   const cantidad = grupo.gastosGrupales.length;
 
   return (
@@ -131,10 +135,31 @@ export default async function GrupoPage({ params }: { params: Promise<{ id: stri
         />
       </div>
 
+      {/* La meta de ahorro, si el grupo tiene: lo que juntan entre todos. */}
+      {metaMonto !== null && (
+        <MetaGrupo
+          grupoId={grupo.id}
+          yo={userId}
+          esAdmin={esAdmin}
+          archivado={archivado}
+          personas={personas}
+          meta={metaMonto}
+          moneda={grupo.metaMoneda}
+          aportes={grupo.aportes.map((a) => ({
+            id: a.id,
+            userId: a.userId,
+            monto: Number(a.monto),
+            fecha: a.fecha.toISOString(),
+            registradoPorId: a.registradoPorId,
+          }))}
+        />
+      )}
+
       <PanelGrupo
         grupo={{
           id: grupo.id,
           nombre: grupo.nombre,
+          descripcion: grupo.descripcion,
           color: grupo.color,
           archivado,
           usaSecciones: grupo.usaSecciones,
@@ -186,6 +211,27 @@ export default async function GrupoPage({ params }: { params: Promise<{ id: stri
                 moneda: p.moneda,
                 fecha: p.fecha.toISOString(),
               }))}
+            />
+          ) : undefined
+        }
+        // Los ajustes, en una tuerca al final de la pestaña Grupo (solo el
+        // administrador).
+        ajustes={
+          esAdmin ? (
+            <AjustesGrupo
+              grupo={{
+                id: grupo.id,
+                nombre: grupo.nombre,
+                descripcion: grupo.descripcion,
+                color: grupo.color,
+                archivado,
+                usaSecciones: grupo.usaSecciones,
+              }}
+              metaMonto={metaMonto}
+              metaMoneda={grupo.metaMoneda}
+              hayAportes={grupo.aportes.length > 0}
+              personas={personas.length}
+              cantidadGastos={cantidad}
             />
           ) : undefined
         }

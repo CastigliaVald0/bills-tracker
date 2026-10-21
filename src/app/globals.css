@@ -915,6 +915,34 @@
     }
   }
 
+  /* --- la tuerca de ajustes del grupo ---------------------------------
+     Al tocarla gira media vuelta, la flecha pasa a apuntar hacia abajo y las
+     opciones se despliegan debajo, entrando de a una (`--i` es su orden). */
+  .tuerca svg {
+    transition: rotate 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+
+  .tuerca[aria-expanded="true"] svg {
+    rotate: 180deg;
+  }
+
+  .tuerca-flecha {
+    transition: rotate 0.2s ease;
+  }
+
+  .tuerca[aria-expanded="true"] .tuerca-flecha {
+    rotate: 90deg;
+  }
+
+  .ajustes-panel {
+    transform-origin: top center;
+    animation: desplegar 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .ajustes-panel li {
+    animation: aparece-opcion 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.06s + var(--i, 0) * 0.04s) both;
+  }
+
   .dialogo::backdrop {
     background-color: rgb(4 9 12 / 0.65);
   }
@@ -1308,6 +1336,8 @@
   .desplegar,
   .menu-sube,
   .menu-sube > *,
+  .ajustes-panel,
+  .ajustes-panel li,
   .hoja[open],
   .hoja[open] > *,
   .hoja[open]::backdrop,

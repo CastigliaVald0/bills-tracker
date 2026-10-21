@@ -72,8 +72,16 @@ export function PanelGrupo({
   pagos,
   saldos,
   personasDelGrupo,
+  ajustes,
 }: {
-  grupo: { id: string; nombre: string; color: string; archivado: boolean; usaSecciones: boolean };
+  grupo: {
+    id: string;
+    nombre: string;
+    descripcion: string | null;
+    color: string;
+    archivado: boolean;
+    usaSecciones: boolean;
+  };
   yo: string;
   /** Quien creó el grupo: maneja secciones, personas y el cierre. */
   esAdmin: boolean;
@@ -90,10 +98,11 @@ export function PanelGrupo({
   saldos?: React.ReactNode;
   /** Las personas del grupo, para la pestaña Grupo. */
   personasDelGrupo?: React.ReactNode;
+  /** La tuerca de ajustes (solo el administrador), al final de la pestaña Grupo. */
+  ajustes?: React.ReactNode;
 }) {
   const router = useRouter();
   const [aviso, mostrarAviso] = useAvisoTemporal();
-  const [ocupado, setOcupado] = useState(false);
 
   /** La sección elegida en el mosaico. Null = todo el grupo. */
   const [elegido, setElegido] = useState<string | null>(null);
@@ -114,7 +123,6 @@ export function PanelGrupo({
   const [confirmar, setConfirmar] = useState<
     | { que: "gasto"; gasto: GastoDeGrupo }
     | { que: "seccion"; seccion: { id: string; nombre: string } }
-    | { que: "grupo" }
     | null
   >(null);
 
@@ -247,34 +255,6 @@ export function PanelGrupo({
       await pedir(`/api/grupos/${grupo.id}/secciones/${pedido.seccion.id}`, "DELETE");
       setElegido(null);
       router.refresh();
-    } else {
-      const res = await pedir(`/api/grupos/${grupo.id}`, "DELETE");
-      if (res.ok) {
-        router.push("/grupos");
-        router.refresh();
-      }
-    }
-  }
-
-  async function usarSecciones() {
-    if (ocupado) return;
-    setOcupado(true);
-    try {
-      await pedir(`/api/grupos/${grupo.id}`, "PATCH", { usaSecciones: true });
-      router.refresh();
-    } finally {
-      setOcupado(false);
-    }
-  }
-
-  async function archivar(archivado: boolean) {
-    if (ocupado) return;
-    setOcupado(true);
-    try {
-      await pedir(`/api/grupos/${grupo.id}`, "PATCH", { archivado });
-      router.refresh();
-    } finally {
-      setOcupado(false);
     }
   }
 
@@ -430,25 +410,6 @@ export function PanelGrupo({
   }
 
   const puedeEditar = esAdmin && !grupo.archivado;
-
-  /** Una fila de "Ajustes del grupo": ícono, qué hace y el botón. */
-  function filaDeAjuste(icono: React.ReactNode, titulo: string, detalle: string, boton: React.ReactNode) {
-    return (
-      <li className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3.5">
-        <span
-          aria-hidden
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-superficie-alta text-suave"
-        >
-          {icono}
-        </span>
-        <div className="min-w-0 flex-1 basis-48">
-          <p className="text-sm font-medium text-texto">{titulo}</p>
-          <p className="mt-0.5 text-xs leading-relaxed text-tenue">{detalle}</p>
-        </div>
-        {boton}
-      </li>
-    );
-  }
 
   /** "$ 12.800,00 y US$ 190,00": los montos de una lista, sin mezclar monedas. */
   const enMonedas = (montos: { monto: number; moneda: "UYU" | "USD" }[]) =>
@@ -791,66 +752,7 @@ export function PanelGrupo({
           {pestana === "grupo" && (
             <>
               <Fragment key="personas">{personasDelGrupo}</Fragment>
-              {esAdmin && (
-                <section aria-labelledby="titulo-ajustes">
-                  <h2 id="titulo-ajustes" className="seccion-titulo mb-3 px-1">Ajustes del grupo</h2>
-                  <ul className="lista">
-                    {!grupo.usaSecciones &&
-                      !grupo.archivado &&
-                      filaDeAjuste(
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-                          <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
-                          <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
-                          <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
-                          <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
-                        </svg>,
-                        "Dividir en secciones",
-                        "Hoy todos los gastos van juntos. Con secciones ves cuánto se fue en cada parte.",
-                        <button type="button" disabled={ocupado} onClick={usarSecciones} className="boton-linea shrink-0 py-1.5">
-                          Dividir
-                        </button>
-                      )}
-                    {filaDeAjuste(
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-                        <rect x="3.5" y="4.5" width="17" height="4.5" rx="1" />
-                        <path d="M5 9v9.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4" />
-                      </svg>,
-                      grupo.archivado ? "Reabrir el grupo" : "Archivar el grupo",
-                      grupo.archivado
-                        ? "Vuelve a la lista principal y se le pueden cargar gastos otra vez."
-                        : "Para cuando ya terminó. No admite gastos nuevos, pero queda guardado y se puede reabrir.",
-                      <button
-                        type="button"
-                        disabled={ocupado}
-                        onClick={() => archivar(!grupo.archivado)}
-                        className="boton-linea shrink-0 py-1.5"
-                      >
-                        {grupo.archivado ? "Reabrir" : "Archivar"}
-                      </button>
-                    )}
-                    {filaDeAjuste(
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-                        <path d="M4.5 7h15M9.5 7V5h5v2M6.5 7l1 12.5h9l1-12.5M10 11v5.5M14 11v5.5" />
-                      </svg>,
-                      "Borrar el grupo",
-                      `No se puede deshacer.${
-                        gastos.length === 1
-                          ? " Su gasto queda como un gasto común en tu mes."
-                          : gastos.length > 1
-                            ? ` Sus ${gastos.length} gastos quedan como gastos comunes en tus meses.`
-                            : ""
-                      }`,
-                      <button
-                        type="button"
-                        onClick={() => setConfirmar({ que: "grupo" })}
-                        className="boton-linea shrink-0 py-1.5 hover:border-alerta hover:text-alerta"
-                      >
-                        Borrar
-                      </button>
-                    )}
-                  </ul>
-                </section>
-              )}
+              <Fragment key="ajustes">{ajustes}</Fragment>
               {!personasDelGrupo && !esAdmin && (
                 <p className="text-sm text-suave">Este grupo es de una sola persona.</p>
               )}
@@ -923,16 +825,12 @@ export function PanelGrupo({
         titulo={
           confirmar?.que === "gasto"
             ? "¿Borrar este gasto?"
-            : confirmar?.que === "seccion"
-              ? `¿Borrar la sección ${confirmar.seccion.nombre}?`
-              : `¿Borrar ${grupo.nombre}?`
+            : `¿Borrar la sección ${confirmar?.seccion.nombre ?? ""}?`
         }
         detalle={
           confirmar?.que === "gasto"
             ? `${confirmar.gasto.descripcion || "Gasto"}, ${formatMoney(confirmar.gasto.monto, confirmar.gasto.moneda)}. Se borra del grupo y del mes de ${compartido ? "cada uno" : "vos"}.`
-            : confirmar?.que === "seccion"
-              ? "Sus gastos siguen en el grupo, sin sección."
-              : "Se borran el grupo y sus secciones. Sus gastos quedan como gastos comunes en los meses donde estaban."
+            : "Sus gastos siguen en el grupo, sin sección."
         }
         textoConfirmar="Borrar"
         alConfirmar={ejecutarConfirmado}
