@@ -122,8 +122,10 @@ const GASTOS_FIJOS: EntradaNav = {
 export function IconoGrupo({ className }: { className?: string }) {
   return (
     <Icono className={className}>
-      <path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />
-      <path d="M3.5 11h17" />
+      {/* El ticket de "Gasto" con un corte punteado al medio: la cuenta que
+          se divide. Antes era una carpeta, que no decía nada de compartir. */}
+      <path d="M5 3.5h14v17l-2.33-1.5-2.34 1.5L12 19l-2.33 1.5L7.33 19 5 20.5z" />
+      <path d="M12 6v1.6M12 10.2v1.6M12 14.4v1.6" />
     </Icono>
   );
 }
