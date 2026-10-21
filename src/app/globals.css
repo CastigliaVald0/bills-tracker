@@ -1055,27 +1055,21 @@
 }
 
 @layer utilities {
-  /* Los títulos, con las dos piezas de la espalda de la camiseta titular del
-     PSG 2025/26.
-
-     La placa (el nombre): los títulos de sección sueltos, los que
-     identifican cada bloque, van como el nombre del jugador: un rectángulo
-     blanco de esquinas casi rectas con letras azul oscuro condensadas y muy
-     gruesas, pegadas entre sí y casi sin margen. Acá el blanco es el de la
-     letra de la app y el azul, la tinta de la pizarra. Los de adentro de una
-     tarjeta o un diálogo ya tienen marco y quedan como estaban.
-
-     Va en la capa de utilidades y con un selector más específico para ganarle
-     al px-1 que llevan esos títulos. */
-  .seccion-titulo:not(:is(.tarjeta, .lista, .dialogo, dialog, .pizarra-panel) .seccion-titulo) {
+  /* El título de cada página va como el nombre en la espalda de la camiseta
+     titular del PSG 2025/26: un rectángulo blanco de esquinas casi rectas
+     con letras azul oscuro condensadas y muy gruesas, pegadas entre sí y casi
+     sin margen. Acá el blanco es el de la letra de la app y el azul, la tinta
+     de la pizarra. Uno solo por pantalla, como el nombre en la camiseta. */
+  .titulo {
     display: block;
     width: fit-content;
     max-width: 100%;
+    margin-top: 0.5rem;
     border-radius: 2px;
     background-color: var(--texto);
     padding: 0.14em 0.32em 0.08em;
     font-family: var(--font-placa), var(--font-ui), sans-serif;
-    font-size: 1.125rem;
+    font-size: 2rem;
     font-weight: 800;
     font-variation-settings: normal;
     line-height: 1;
@@ -1084,30 +1078,36 @@
     color: var(--pizarra);
   }
 
-  /* Lo que va adentro del título (como el "· 2" de Personas) sigue la
-     tinta de la placa, apenas más suave. */
-  .seccion-titulo:not(:is(.tarjeta, .lista, .dialogo, dialog, .pizarra-panel) .seccion-titulo) * {
-    color: inherit;
-    opacity: 0.7;
+  /* Los títulos de sección sueltos (los de adentro de una tarjeta o un
+     diálogo quedan como estaban): la misma letra condensada, en mayúsculas
+     apenas espaciadas y en el tono suave, sin placa, para que no compitan con
+     el título de la página. Los distingue una rayita vertical en los dos
+     colores de la app, celeste arriba y verde abajo: el filo bicolor de la
+     pizarra, que también recuerda la franja del medio de la camiseta.
+
+     Va en la capa de utilidades y con un selector más específico para ganarle
+     a los utilitarios de tamaño y color que traen esos títulos. */
+  .seccion-titulo:not(:is(.tarjeta, .lista, .dialogo, dialog, .pizarra-panel) .seccion-titulo) {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-placa), var(--font-ui), sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-variation-settings: normal;
+    line-height: 1.1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
   }
 
-  /* El dorsal (el número): el título de cada página va como el número de la
-     camiseta, grande, blanco y sin placa, con su relieve: una franja del
-     color del fondo y, detrás, una línea clara corrida hacia abajo a la
-     derecha, como si el número tuviera volumen. */
-  .titulo {
-    margin-top: 0.375rem;
-    font-family: var(--font-placa), var(--font-ui), sans-serif;
-    font-size: 2.75rem;
-    font-weight: 800;
-    font-variation-settings: normal;
-    line-height: 0.95;
-    letter-spacing: 0.01em;
-    text-transform: uppercase;
-    color: var(--texto);
-    text-shadow:
-      2px 2px 0 var(--fondo),
-      3.25px 3.25px 0 color-mix(in srgb, var(--texto) 85%, transparent);
+  .seccion-titulo:not(:is(.tarjeta, .lista, .dialogo, dialog, .pizarra-panel) .seccion-titulo)::before {
+    content: "";
+    width: 3px;
+    height: 0.85em;
+    flex-shrink: 0;
+    border-radius: 1px;
+    background: linear-gradient(var(--peso) 0 50%, var(--dolar) 50% 100%);
   }
 
   /* un menú que sale del botón que lo abre: crece desde su esquina */
