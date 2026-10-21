@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Familjen_Grotesk, Azeret_Mono, Bricolage_Grotesque } from "next/font/google";
+import { Familjen_Grotesk, Azeret_Mono, Bricolage_Grotesque, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 
 const familjenGrotesk = Familjen_Grotesk({
@@ -24,6 +24,15 @@ const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
 });
 
+// La letra de la placa de los títulos sueltos: condensada y en negrita, como
+// el nombre en la espalda de una camiseta de fútbol. Pesos fijos (no es una
+// fuente variable), así que no tiene el problema de build de la de arriba.
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-placa",
+  subsets: ["latin"],
+  weight: ["700", "800"],
+});
+
 export const metadata: Metadata = {
   title: "Billions Tracker",
   description: "Control de gastos mensuales en pesos y dólares",
@@ -40,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${familjenGrotesk.variable} ${azeretMono.variable} ${bricolage.variable} h-full antialiased`}
+      className={`${familjenGrotesk.variable} ${azeretMono.variable} ${bricolage.variable} ${barlowCondensed.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
