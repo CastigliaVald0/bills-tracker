@@ -121,15 +121,40 @@
   /* El resplandor de la pizarra en la pared: celeste desde la izquierda, verde
      desde la derecha, los dos colores de la marca. Muy tenue y fijo, para que
      el fondo no sea un plano muerto sin competir con el contenido. */
+  /* La pared detrás de la ventana: un paisaje verde (cielo claro arriba, un
+     sol, cerros y árboles oscuros abajo) tan desenfocado que solo quedan
+     manchas de luz. Queda fijo al desplazarse, como el fondo de pantalla. */
   body {
+    background-color: #0c140f;
+    color: var(--texto);
+    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -80px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(7rem 7rem at 54% 44%, rgb(236 246 226 / 0.95), transparent 72%),
+      radial-gradient(22% 46% at 3% 66%, #0a130e 0 55%, transparent 78%),
+      radial-gradient(20% 50% at 98% 62%, #0a130e 0 55%, transparent 78%),
+      radial-gradient(70% 22% at 50% 70%, #2a6b47, transparent 72%),
+      linear-gradient(180deg, #33a67b 0%, #6cc183 30%, #95cf90 44%, #3f8f5f 58%, #12291d 74%, #0c140f 100%);
+    filter: blur(36px);
+  }
+
+  /* La app entera es una ventana al 90 %: deja pasar un poco del paisaje, lo
+     que tiñe de verde arriba y oscurece abajo sin cambiar ningún color. Los
+     diálogos van en la capa superior del navegador y no heredan esto. */
+  .ventana {
+    opacity: 0.9;
     background-color: var(--fondo);
     background-image:
       radial-gradient(60rem 26rem at 12% -8rem, rgb(111 190 228 / 0.07), transparent 70%),
       radial-gradient(60rem 26rem at 88% -8rem, rgb(127 200 149 / 0.055), transparent 70%);
     background-attachment: fixed;
     background-repeat: no-repeat;
-    color: var(--texto);
-    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
   }
 
   input,
@@ -1083,56 +1108,55 @@
 }
 
 @layer utilities {
-  /* El título de cada página va como el nombre en la espalda de la camiseta
-     titular del PSG 2025/26: un rectángulo blanco de esquinas casi rectas
-     con letras azul oscuro condensadas y muy gruesas, pegadas entre sí y casi
-     sin margen. Acá el blanco es el de la letra de la app y el azul, la tinta
-     de la pizarra. Uno solo por pantalla, como el nombre en la camiseta. */
+  /* El título de cada página: sobrio, en la letra de la app, seminegrita y
+     sin adornos. Lo firma una línea corta debajo en los dos colores de la
+     app, celeste y verde, el mismo filo bicolor de la pizarra. */
   .titulo {
     display: block;
-    width: fit-content;
-    max-width: 100%;
-    margin-top: 0.5rem;
-    border-radius: 2px;
-    background-color: var(--texto);
-    padding: 0.14em 0.32em 0.08em;
-    font-family: var(--font-placa), var(--font-ui), sans-serif;
-    font-size: 2rem;
-    font-weight: 800;
+    margin-top: 0.25rem;
+    font-family: var(--font-ui), sans-serif;
+    font-size: 1.875rem;
+    font-weight: 600;
     font-variation-settings: normal;
-    line-height: 1;
-    letter-spacing: 0.01em;
-    text-transform: uppercase;
-    color: var(--pizarra);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--texto);
+  }
+
+  .titulo::after {
+    content: "";
+    display: block;
+    width: 2.25rem;
+    height: 2px;
+    margin-top: 0.6rem;
+    border-radius: 1px;
+    background: linear-gradient(90deg, var(--peso) 0 50%, var(--dolar) 50% 100%);
   }
 
   /* Los títulos de sección sueltos (los de adentro de una tarjeta o un
-     diálogo quedan como estaban): la misma letra condensada, en mayúsculas
-     apenas espaciadas y en el tono suave, sin placa, para que no compitan con
-     el título de la página. Los distingue una rayita vertical en los dos
-     colores de la app, celeste arriba y verde abajo: el filo bicolor de la
-     pizarra, que también recuerda la franja del medio de la camiseta.
+     diálogo quedan como estaban): la misma letra, más chica y en el tono
+     suave, para que no compitan con el título de la página. Los distingue
+     una rayita vertical en los dos colores de la app.
 
      Va en la capa de utilidades y con un selector más específico para ganarle
      a los utilitarios de tamaño y color que traen esos títulos. */
   .seccion-titulo:not(:is(.tarjeta, .lista, .dialogo, dialog, .pizarra-panel) .seccion-titulo) {
     display: flex;
     align-items: center;
-    gap: 0.5em;
-    font-family: var(--font-placa), var(--font-ui), sans-serif;
-    font-size: 1.125rem;
-    font-weight: 700;
+    gap: 0.55em;
+    font-family: var(--font-ui), sans-serif;
+    font-size: 1.0625rem;
+    font-weight: 600;
     font-variation-settings: normal;
-    line-height: 1.1;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    line-height: 1.2;
+    letter-spacing: -0.005em;
     color: var(--texto-suave);
   }
 
   .seccion-titulo:not(:is(.tarjeta, .lista, .dialogo, dialog, .pizarra-panel) .seccion-titulo)::before {
     content: "";
     width: 3px;
-    height: 0.85em;
+    height: 0.9em;
     flex-shrink: 0;
     border-radius: 1px;
     background: linear-gradient(var(--peso) 0 50%, var(--dolar) 50% 100%);
