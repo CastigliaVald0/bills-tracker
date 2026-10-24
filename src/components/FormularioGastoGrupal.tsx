@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Category } from "@/lib/types";
-import { CampoMonto, Conmutador } from "@/components/CamposGasto";
-import { Insignia } from "@/components/Insignia";
+import { CampoCategoria, CampoMonto, Conmutador } from "@/components/CamposGasto";
 import { Aviso, enfocarCampoConError } from "@/components/Aviso";
 import { NuevaCategoria } from "@/components/NuevaCategoria";
 import { EditorSeccion } from "@/components/EditorSeccion";
@@ -150,7 +149,6 @@ export function FormularioGastoGrupal({
       ? gasto.miCategoriaId
       : (categorias[0]?.id ?? "")
   );
-  const categoriaElegida = listaCategorias.find((c) => c.id === categoriaId) ?? null;
   const [pagadorId, setPagadorId] = useState(gasto?.pagadorId ?? yo);
   /** A quiénes les toca una parte, en el orden de la lista. */
   const [para, setPara] = useState<string[]>(inicial.para);
@@ -373,44 +371,16 @@ export function FormularioGastoGrupal({
             )}
 
             <div className="flex flex-col gap-2">
-              {/* Un menú desplegable y no fichas: con muchas categorías, las
-                  fichas ocupaban media pantalla. Si la que buscás no está, se
-                  crea con "+ Nueva". */}
-              <label htmlFor="categoria-gasto-grupo" className="rotulo">
-                {compartido ? "Tu categoría" : "Categoría"}
-              </label>
-              <div className="flex items-center gap-2">
-                {categoriaElegida && (
-                  <Insignia
-                    nombre={categoriaElegida.name}
-                    color={categoriaElegida.color}
-                    emoji={categoriaElegida.emoji}
-                    chica
-                  />
-                )}
-                {listaCategorias.length > 0 && (
-                  <select
-                    id="categoria-gasto-grupo"
-                    value={categoriaId}
-                    onChange={(e) => setCategoriaId(e.target.value)}
-                    className="campo min-w-0 flex-1"
-                  >
-                    {listaCategorias.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.emoji ? `${c.emoji}  ${c.name}` : c.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setCreando("categoria")}
-                  aria-haspopup="dialog"
-                  className="ficha-nueva shrink-0"
-                >
-                  + Nueva
-                </button>
-              </div>
+              {/* El mismo selector que el resto de la app: muestra solo la
+                  elegida y despliega la lista; si no está, "+ Nueva categoría". */}
+              <CampoCategoria
+                categorias={listaCategorias}
+                valor={categoriaId}
+                alCambiar={setCategoriaId}
+                nombreGrupo="categoria-gasto-grupo"
+                etiqueta={compartido ? "Tu categoría" : "Categoría"}
+                alCrearNueva={() => setCreando("categoria")}
+              />
               {compartido && (
                 <p className="text-xs text-tenue">
                   Es para tu parte. Las de los demás caen en su categoría «Gastos grupales».

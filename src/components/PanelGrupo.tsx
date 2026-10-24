@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Category } from "@/lib/types";
 import { Aviso, useAvisoTemporal } from "@/components/Aviso";
@@ -73,6 +73,7 @@ export function PanelGrupo({
   saldos,
   personasDelGrupo,
   ajustes,
+  abrirFormulario = false,
 }: {
   grupo: {
     id: string;
@@ -100,6 +101,8 @@ export function PanelGrupo({
   personasDelGrupo?: React.ReactNode;
   /** La tuerca de ajustes (solo el administrador), al final de la pestaña Grupo. */
   ajustes?: React.ReactNode;
+  /** Llegó desde la opción "Grupal" del +: abre el formulario de gasto nuevo. */
+  abrirFormulario?: boolean;
 }) {
   const router = useRouter();
   const [aviso, mostrarAviso] = useAvisoTemporal();
@@ -111,8 +114,15 @@ export function PanelGrupo({
     gasto: GastoDeGrupo | null;
     /** La caja del botón que lo abrió: el formulario se expande desde ahí. */
     origen?: { x: number; y: number; ancho: number; alto: number };
-  } | null>(null);
+  } | null>(abrirFormulario && !grupo.archivado ? { gasto: null } : null);
   const compartido = personas.length > 1;
+
+  // El ?cargar=1 de la dirección ya cumplió: se saca, para que recargar la
+  // página no vuelva a abrir el formulario.
+  useEffect(() => {
+    if (abrirFormulario) router.replace(`/grupos/${grupo.id}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** El editor de secciones abierto: para una nueva (seccion null) o para editar una. */
   const [editorSeccion, setEditorSeccion] = useState<{ seccion: SeccionEditable | null } | null>(null);

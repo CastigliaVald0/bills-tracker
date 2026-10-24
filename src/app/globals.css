@@ -620,16 +620,41 @@
     appearance: textfield;
   }
 
-  /* --- conmutador de dos opciones --------------------------------------
-     Dos opciones excluyentes se eligen de una vez, no desplegando una lista.
-     Cada moneda se prende en su color, el mismo de la pizarra. */
+  /* --- conmutador -------------------------------------------------------
+     Opciones excluyentes que se eligen de una vez, como una perilla: una
+     pastilla hundida con una ficha en relieve que se desliza hasta la opción
+     elegida, con un leve rebote al llegar. Las opciones miden lo mismo, así
+     la ficha se mueve de a un ancho (`--i` es la elegida y `--n` cuántas
+     hay). Si la opción tiene color (pesos, dólares), la ficha toma su tinte. */
   .segmentos {
-    display: flex;
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr));
     flex-shrink: 0;
-    gap: 2px;
-    border-radius: var(--radio-control);
-    background-color: var(--superficie-alta);
+    border-radius: 9999px;
+    background-color: var(--fondo);
+    box-shadow: inset 0 0 0 1px var(--borde), inset 0 1px 3px rgb(0 0 0 / 0.35);
     padding: 3px;
+  }
+
+  .segmentos::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 3px auto 3px 3px;
+    width: calc((100% - 6px) / var(--n, 2));
+    border-radius: 9999px;
+    background-color: color-mix(in srgb, var(--color, var(--texto)) 13%, var(--superficie-alta));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.4),
+      0 0 0 1px color-mix(in srgb, var(--color, var(--texto)) 22%, transparent);
+    transform: translateX(calc(var(--i, 0) * 100%));
+    transition: transform 0.34s cubic-bezier(0.34, 1.35, 0.64, 1), background-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .segmentos:not([data-elegido])::before {
+    opacity: 0;
   }
 
   .segmento {
@@ -638,26 +663,125 @@
 
   .segmento > span {
     display: block;
-    border-radius: 5px;
-    padding: 0.375rem 0.6875rem;
-    font-family: var(--font-num), ui-monospace, monospace;
-    font-size: 0.75rem;
+    border-radius: 9999px;
+    padding: 0.4375rem 1rem;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 0.875rem;
     font-weight: 500;
-    letter-spacing: 0.06em;
     color: var(--texto-tenue);
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: color 0.2s ease;
   }
 
-  .segmento:hover > span {
+  .segmento:hover > span,
+  .segmento input:checked + span {
     color: var(--texto);
   }
 
   /* el radio real va oculto pero sigue ahí: el teclado y el lector de
      pantalla lo manejan solo, sin que haya que reponer nada a mano */
-  /* adentro del campo de monto, el color de la moneda; afuera, el neutro */
   .segmento input:focus-visible + span {
     outline: 2px solid var(--moneda, var(--foco));
     outline-offset: 1px;
+  }
+
+  /* Adentro del campo de monto queda el de siempre (ver "lo que no cambia"):
+     UYU y USD en la letra de las cifras, sobre la superficie del campo, sin
+     ficha que se deslice: la moneda elegida se prende en su color. */
+  .campo-monto .segmentos {
+    display: flex;
+    gap: 2px;
+    border-radius: var(--radio-control);
+    background-color: var(--superficie-alta);
+    box-shadow: none;
+  }
+
+  .campo-monto .segmentos::before {
+    content: none;
+  }
+
+  .campo-monto .segmento > span {
+    border-radius: 5px;
+    padding: 0.375rem 0.6875rem;
+    font-family: var(--font-num), ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .campo-monto .segmento input:checked + span {
+    background-color: color-mix(in srgb, var(--moneda) 16%, transparent);
+    color: var(--moneda);
+  }
+
+  /* --- selector de categoría -------------------------------------------
+     La hoja que sube al tocar el campo de categoría (ver CampoCategoria):
+     una grilla de fichas iguales, el emoji arriba y el nombre abajo, que se
+     tocan cómodas con el dedo. La elegida se marca con el color de su
+     categoría. Las fichas entran de a una (`--i` es su orden). */
+  .grilla-categorias {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr));
+    gap: 0.5rem;
+  }
+
+  .ficha-categoria {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    background-color: var(--fondo);
+    padding: 0.875rem 0.5rem 0.75rem;
+    color: var(--texto-suave);
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+    animation: aparece-opcion 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.08s + var(--i, 0) * 0.02s) both;
+  }
+
+  .ficha-categoria-nombre {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  .ficha-categoria[aria-checked="true"] {
+    border-color: var(--cat);
+    background-color: color-mix(in srgb, var(--cat) 14%, var(--fondo));
+    color: var(--texto);
+  }
+
+  .ficha-categoria:focus-visible {
+    outline: 2px solid var(--foco);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) {
+    .ficha-categoria:hover {
+      border-color: var(--borde-fuerte);
+      color: var(--texto);
+    }
+
+    .ficha-categoria[aria-checked="true"]:hover {
+      border-color: var(--cat);
+    }
+  }
+
+  .ficha-categoria-nueva {
+    border-style: dashed;
+    border-color: var(--borde-fuerte);
+    background-color: transparent;
+  }
+
+  .ficha-categoria-nueva .insignia {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px var(--borde-fuerte);
+    color: var(--texto-suave);
+    font-size: 1.125rem;
   }
 
   /* --- ficha de categoría ----------------------------------------------
@@ -723,7 +847,8 @@
       padding-block: 0.75rem;
     }
 
-    .segmento > span {
+    .segmento > span,
+    .campo-monto .segmento > span {
       padding-block: 0.8125rem;
     }
   }
@@ -938,6 +1063,11 @@
     .hoja[open]:not(.hoja-expandida) {
       animation-name: hoja-sube;
     }
+  }
+
+  /* la confirmación que queda flotando al cerrar la ventana del + */
+  .aviso-flotante {
+    animation: subir 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
   /* --- la tuerca de ajustes del grupo ---------------------------------
@@ -1362,6 +1492,8 @@
   .menu-sube > *,
   .ajustes-panel,
   .ajustes-panel li,
+  .aviso-flotante,
+  .ficha-categoria,
   .hoja[open],
   .hoja[open] > *,
   .hoja[open]::backdrop,

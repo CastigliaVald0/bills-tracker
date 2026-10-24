@@ -9,7 +9,7 @@ export default async function NuevoGrupoPage() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <p className="rotulo">Nombre, color y secciones</p>
+        <p className="rotulo">Nombre, color, secciones y meta</p>
         <h1 className="titulo">Nuevo grupo</h1>
       </header>
 

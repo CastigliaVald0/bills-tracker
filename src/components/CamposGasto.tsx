@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { Category } from "@/lib/types";
+import { Insignia } from "@/components/Insignia";
 import { formatMoneyInput } from "@/lib/format";
 
 export type Moneda = "UYU" | "USD";
@@ -40,11 +42,27 @@ export function Conmutador<T extends string>({
   valor: T;
   alCambiar: (valor: T) => void;
 }) {
+  const elegido = opciones.findIndex((o) => o.valor === valor);
+  const colorElegido = opciones[elegido]?.color;
+
+  // `--n`, `--i` y `--color` mueven y tiñen la ficha que se desliza debajo de
+  // la opción elegida (ver .segmentos en globals.css).
   return (
-    <span className="segmentos" role="group" aria-label={etiqueta}>
+    <span
+      className="segmentos"
+      role="group"
+      aria-label={etiqueta}
+      style={
+        {
+          "--n": opciones.length,
+          "--i": Math.max(elegido, 0),
+          ...(colorElegido ? { "--color": colorElegido } : {}),
+        } as React.CSSProperties
+      }
+      data-elegido={elegido >= 0 ? "" : undefined}
+    >
       {opciones.map((opcion) => {
         const activo = opcion.valor === valor;
-        const color = opcion.color ?? "var(--texto)";
         return (
           <label key={opcion.valor} className="segmento">
             <input
@@ -55,18 +73,7 @@ export function Conmutador<T extends string>({
               onChange={() => alCambiar(opcion.valor)}
               className="sr-only"
             />
-            <span
-              style={
-                activo
-                  ? {
-                      backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`,
-                      color,
-                    }
-                  : undefined
-              }
-            >
-              {opcion.texto}
-            </span>
+            <span style={activo && opcion.color ? { color: opcion.color } : undefined}>{opcion.texto}</span>
           </label>
         );
       })}
@@ -139,7 +146,14 @@ export function CampoMonto({
   );
 }
 
-/** Categorías como fichas de color en vez de un desplegable. */
+/**
+ * La categoría, como un campo: cerrado muestra solo la elegida (su emoji o su
+ * color y el nombre). Al tocarlo sube una hoja propia, encima del formulario,
+ * con todas las categorías en una grilla de fichas y "+ Nueva" al final;
+ * tocar una la elige y cierra la hoja. Antes eran fichas con todas a la
+ * vista (media pantalla) y después una lista que se abría adentro de la
+ * ventana y quedaba cortada por sus botones.
+ */
 export function CampoCategoria({
   categorias,
   valor,
@@ -153,56 +167,120 @@ export function CampoCategoria({
   alCambiar: (id: string) => void;
   nombreGrupo: string;
   etiqueta?: string;
-  /** Si viene, al final va una ficha "+ Nueva" que la llama (crear sin salir del formulario). */
+  /** Si viene, al final va "+ Nueva", que la llama (crear sin salir del formulario). */
   alCrearNueva?: () => void;
 }) {
+  const [abierto, setAbierto] = useState(false);
+  const boton = useRef<HTMLButtonElement>(null);
+  const hoja = useRef<HTMLDialogElement>(null);
+  const elegida = categorias.find((c) => c.id === valor) ?? null;
+
+  useEffect(() => {
+    if (abierto) hoja.current?.showModal();
+  }, [abierto]);
+
+  function cerrar() {
+    hoja.current?.close();
+    setAbierto(false);
+    boton.current?.focus();
+  }
+
   if (categorias.length === 0 && !alCrearNueva) return null;
 
   return (
-    <fieldset>
-      <legend className="rotulo mb-2">{etiqueta}</legend>
+    <div className="flex flex-col gap-1.5">
+      <span id={`${nombreGrupo}-rotulo`} className="rotulo">
+        {etiqueta}
+      </span>
 
-      <div className="flex flex-wrap gap-1.5">
-        {categorias.map((cat) => {
-          const activo = cat.id === valor;
-          return (
-            <label key={cat.id} className="ficha">
-              <input
-                type="radio"
-                name={nombreGrupo}
-                value={cat.id}
-                checked={activo}
-                onChange={() => alCambiar(cat.id)}
-                className="sr-only"
-              />
-              <span
-                style={
-                  activo
-                    ? {
-                        borderColor: cat.color,
-                        backgroundColor: `color-mix(in srgb, ${cat.color} 12%, transparent)`,
-                        color: "var(--texto)",
-                      }
-                    : undefined
-                }
-              >
-                {/* Con emoji, el emoji; si no, el punto de su color. */}
-                {cat.emoji ? (
-                  <span aria-hidden className="text-base leading-none">{cat.emoji}</span>
-                ) : (
-                  <span aria-hidden className="punto" style={{ backgroundColor: cat.color }} />
-                )}
-                {cat.name}
-              </span>
-            </label>
-          );
-        })}
-        {alCrearNueva && (
-          <button type="button" onClick={alCrearNueva} aria-haspopup="dialog" className="ficha-nueva">
-            + Nueva
-          </button>
+      <button
+        ref={boton}
+        type="button"
+        onClick={() => setAbierto(true)}
+        aria-haspopup="dialog"
+        aria-labelledby={`${nombreGrupo}-rotulo ${nombreGrupo}-valor`}
+        className="campo flex items-center gap-3 text-left"
+      >
+        {elegida ? (
+          <Insignia nombre={elegida.name} color={elegida.color} emoji={elegida.emoji} chica />
+        ) : (
+          <span aria-hidden className="punto bg-borde-fuerte" />
         )}
-      </div>
-    </fieldset>
+        <span id={`${nombreGrupo}-valor`} className={`min-w-0 flex-1 truncate ${elegida ? "text-texto" : "text-tenue"}`}>
+          {elegida ? elegida.name : "Elegí una categoría"}
+        </span>
+        <span aria-hidden className="shrink-0 text-xs font-medium text-tenue">
+          Cambiar
+        </span>
+      </button>
+
+      {abierto && (
+        <dialog
+          ref={hoja}
+          className="dialogo hoja"
+          aria-labelledby={`${nombreGrupo}-hoja-titulo`}
+          onCancel={(e) => {
+            // Escape cierra esta hoja, no el formulario de abajo.
+            e.preventDefault();
+            e.stopPropagation();
+            cerrar();
+          }}
+          onClick={(e) => {
+            // Un toque en el fondo oscuro (fuera de la hoja) la cierra.
+            if (e.target === e.currentTarget) cerrar();
+          }}
+        >
+          <div className="flex max-h-[inherit] flex-col">
+            <div className="flex items-center justify-between gap-3 border-b border-borde px-5 py-4">
+              <h2 id={`${nombreGrupo}-hoja-titulo`} className="seccion-titulo">
+                {etiqueta}
+              </h2>
+              <button type="button" onClick={cerrar} aria-label="Cerrar" className="boton-mini -mr-2">
+                <span aria-hidden>✕</span>
+              </button>
+            </div>
+
+            <div role="radiogroup" aria-label={etiqueta} className="grilla-categorias overflow-y-auto p-4 sm:p-5">
+              {categorias.map((cat, i) => {
+                const activo = cat.id === valor;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={activo}
+                    autoFocus={activo}
+                    onClick={() => {
+                      alCambiar(cat.id);
+                      cerrar();
+                    }}
+                    className="ficha-categoria"
+                    style={{ "--cat": cat.color, "--i": Math.min(i, 12) } as React.CSSProperties}
+                  >
+                    <Insignia nombre={cat.name} color={cat.color} emoji={cat.emoji} />
+                    <span className="ficha-categoria-nombre">{cat.name}</span>
+                  </button>
+                );
+              })}
+              {alCrearNueva && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    cerrar();
+                    alCrearNueva();
+                  }}
+                  aria-haspopup="dialog"
+                  className="ficha-categoria ficha-categoria-nueva"
+                  style={{ "--i": Math.min(categorias.length, 12) } as React.CSSProperties}
+                >
+                  <span aria-hidden className="insignia">+</span>
+                  <span className="ficha-categoria-nombre">Nueva</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </dialog>
+      )}
+    </div>
   );
 }

@@ -17,11 +17,12 @@ import { SaldosGrupo } from "@/components/SaldosGrupo";
 
 const nombreDe = (u: { name: string | null }) => u.name?.trim() || "Sin nombre";
 
-export default async function GrupoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function GrupoPage({ params, searchParams }: PageProps<"/grupos/[id]">) {
   const userId = await requireUserId();
   if (!userId) redirect("/login");
 
   const { id } = await params;
+  const { cargar } = await searchParams;
   const acceso = await accesoAGrupo(userId, id);
   if (!acceso) notFound();
   const esAdmin = acceso.rol === "admin";
@@ -156,6 +157,7 @@ export default async function GrupoPage({ params }: { params: Promise<{ id: stri
       )}
 
       <PanelGrupo
+        abrirFormulario={cargar === "1"}
         grupo={{
           id: grupo.id,
           nombre: grupo.nombre,

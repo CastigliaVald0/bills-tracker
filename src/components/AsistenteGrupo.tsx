@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Aviso } from "@/components/Aviso";
-import { Conmutador } from "@/components/CamposGasto";
+import { CampoMonto, Conmutador } from "@/components/CamposGasto";
+import { formatMoney, parseMoneyInput } from "@/lib/format";
 import {
   COLORES_DE_GRUPO,
   MAXIMO_NOMBRE_GRUPO,
@@ -17,11 +18,11 @@ import { trazarMosaico } from "@/lib/mosaico";
 import estilos from "./PanelGrupo.module.css";
 
 /**
- * Crear un grupo, en una sola pantalla: el nombre, el color y si se divide en
- * secciones (y cuáles).
+ * Crear un grupo, en una sola pantalla: el nombre, el color, si se divide en
+ * secciones (y cuáles) y si es para juntar plata hacia una meta.
  *
- * No se pregunta "para qué es": todos los grupos arrancan igual, y lo que haga
- * falta (sumar amigos, una meta) se prende después adentro del grupo. A la
+ * Las dos opciones arrancan apagadas (sin secciones, sin meta): es el grupo
+ * más simple, y las dos se pueden prender después en los ajustes del grupo. A la
  * derecha (abajo en el celular) se ve el grupo armándose con el mismo mosaico
  * de secciones que va a tener su página, así se entiende qué se está creando.
  */
@@ -30,7 +31,10 @@ export function AsistenteGrupo() {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [color, setColor] = useState(COLORES_DE_GRUPO[0]);
-  const [conSecciones, setConSecciones] = useState(true);
+  const [conSecciones, setConSecciones] = useState(false);
+  const [conMeta, setConMeta] = useState(false);
+  const [meta, setMeta] = useState("");
+  const [monedaMeta, setMonedaMeta] = useState<"UYU" | "USD">("UYU");
   const [secciones, setSecciones] = useState<string[]>([]);
   const [nueva, setNueva] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +61,13 @@ export function AsistenteGrupo() {
       return;
     }
 
+    const montoMeta = parseMoneyInput(meta);
+    if (conMeta && !(Number.isFinite(montoMeta) && montoMeta > 0)) {
+      setError("Escribí cuánto quieren juntar, o elegí \"Sin meta\".");
+      document.getElementById("monto-meta-nuevo")?.focus();
+      return;
+    }
+
     setGuardando(true);
     try {
       // Lo que quedó escrito sin agregar también cuenta: es fácil olvidarse
@@ -74,6 +85,7 @@ export function AsistenteGrupo() {
           // "Sin sección" que parecía una sección más.
           usaSecciones: seccionesFinales.length > 0,
           secciones: seccionesFinales,
+          ...(conMeta ? { metaMonto: montoMeta, metaMoneda: monedaMeta } : {}),
         }),
       });
       const datos = await res.json().catch(() => ({}));
@@ -160,8 +172,8 @@ export function AsistenteGrupo() {
                 nombreGrupo="usa-secciones"
                 etiqueta="¿Se divide en secciones?"
                 opciones={[
-                  { valor: "si", texto: "Con secciones" },
                   { valor: "no", texto: "Sin secciones" },
+                  { valor: "si", texto: "Con secciones" },
                 ]}
                 valor={conSecciones ? "si" : "no"}
                 alCambiar={(v) => setConSecciones(v === "si")}
@@ -240,6 +252,43 @@ export function AsistenteGrupo() {
           )}
         </div>
 
+        <div className="flex flex-col gap-3 border-t border-borde pt-5">
+          <div className="flex flex-col gap-2.5">
+            <p className="rotulo">Meta de ahorro</p>
+            <div className="flex">
+              <Conmutador<"si" | "no">
+                nombreGrupo="usa-meta"
+                etiqueta="¿Tiene una meta de ahorro?"
+                opciones={[
+                  { valor: "no", texto: "Sin meta" },
+                  { valor: "si", texto: "Con meta" },
+                ]}
+                valor={conMeta ? "si" : "no"}
+                alCambiar={(v) => setConMeta(v === "si")}
+              />
+            </div>
+            <p className="text-sm text-suave">
+              {conMeta
+                ? "Para juntar plata entre todos: el viaje, un regalo. Cada uno anota lo que pone y se ve cuánto falta."
+                : "Solo para anotar gastos. Si después quieren juntar plata, la meta se pone en los ajustes del grupo."}
+            </p>
+          </div>
+
+          {conMeta && (
+            <div className="flex flex-col gap-1.5">
+              <CampoMonto
+                id="monto-meta-nuevo"
+                monto={meta}
+                alCambiarMonto={setMeta}
+                moneda={monedaMeta}
+                alCambiarMoneda={setMonedaMeta}
+                nombreGrupo="moneda-meta-nuevo"
+              />
+              <p className="text-xs text-tenue">Lo que quieren juntar entre todos. En pesos o en dólares.</p>
+            </div>
+          )}
+        </div>
+
         {error && <Aviso tono="error">{error}</Aviso>}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-borde pt-5">
@@ -271,6 +320,18 @@ export function AsistenteGrupo() {
                 ? `${secciones.length} ${secciones.length === 1 ? "sección" : "secciones"}`
                 : "Sin secciones")}
           </p>
+
+          {conMeta && (
+            <div className="mt-3">
+              <div className="flex items-baseline justify-between gap-2 text-xs">
+                <span className="text-tenue">Meta</span>
+                <span className={`monto font-medium ${monedaMeta === "UYU" ? "text-peso" : "text-dolar"}`}>
+                  {parseMoneyInput(meta) > 0 ? formatMoney(parseMoneyInput(meta), monedaMeta) : "—"}
+                </span>
+              </div>
+              <div aria-hidden className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-borde" />
+            </div>
+          )}
 
           <div className="mt-4">
             {!conSecciones ? (

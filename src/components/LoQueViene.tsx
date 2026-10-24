@@ -79,7 +79,7 @@ export function LoQueViene({
         )}
 
         <Link
-          href="/recurring"
+          href="/expenses?ver=fijos"
           className="mt-auto flex items-center justify-center gap-1.5 border-t border-borde py-3.5 text-sm font-medium text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
         >
           Ver gastos fijos <span aria-hidden>→</span>

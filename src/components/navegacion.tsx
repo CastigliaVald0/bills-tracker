@@ -112,12 +112,6 @@ const GASTOS: EntradaNav = {
   icono: <IconoTicket />,
 };
 
-const GASTOS_FIJOS: EntradaNav = {
-  href: "/recurring",
-  label: "Gastos fijos",
-  icono: <IconoCalendario />,
-};
-
 /** Una carpeta: los gastos de algo puntual, guardados juntos. */
 export function IconoGrupo({ className }: { className?: string }) {
   return (
@@ -180,7 +174,7 @@ const CONVERSOR: EntradaNav = {
 /* --- cómo se agrupan en cada lado -------------------------------------- */
 
 /** El cajón de PC: todo, en tres bloques. */
-export const CAJON_DIARIO = [INICIO, GASTOS, GASTOS_FIJOS, GRUPOS, CATEGORIAS];
+export const CAJON_DIARIO = [INICIO, GASTOS, GRUPOS, CATEGORIAS];
 export const CAJON_RESUMENES = [RESUMEN_MENSUAL, RESUMEN_ANUAL];
 export const CAJON_HERRAMIENTAS = [CONVERSOR];
 

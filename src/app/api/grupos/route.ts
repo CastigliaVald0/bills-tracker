@@ -16,6 +16,9 @@ const createSchema = z.object({
   descripcion: z.string().trim().max(200).optional(),
   usaSecciones: z.boolean().default(true),
   secciones: z.array(z.string().max(MAXIMO_NOMBRE_SECCION)).max(MAXIMO_SECCIONES).default([]),
+  /** Un grupo para juntar plata: nace con su meta de ahorro. */
+  metaMonto: z.number().positive().max(9_999_999_999).optional(),
+  metaMoneda: z.enum(["UYU", "USD"]).default("UYU"),
 });
 
 /** Los grupos del usuario, con sus secciones, para elegir dónde cargar un gasto. */
@@ -24,7 +27,12 @@ export async function GET() {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const grupos = await prisma.grupo.findMany({
-    where: { creadorId: userId, archivadoEn: null },
+    // Los abiertos donde se puede cargar: los propios y aquellos de los que
+    // es integrante (la ventana del + los lista para elegir).
+    where: {
+      archivadoEn: null,
+      OR: [{ creadorId: userId }, { miembros: { some: { userId, estado: "aceptado" } } }],
+    },
     include: { secciones: { orderBy: { orden: "asc" } } },
     orderBy: { createdAt: "desc" },
   });
@@ -40,7 +48,7 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Revisá los datos del grupo." }, { status: 400 });
   }
-  const { nombre, color, descripcion } = parsed.data;
+  const { nombre, color, descripcion, metaMonto, metaMoneda } = parsed.data;
 
   // Un grupo sin secciones no guarda ninguna, aunque vengan en el pedido. Y
   // uno que pidió secciones pero no trae ninguna queda sin secciones: se
@@ -55,6 +63,7 @@ export async function POST(request: Request) {
       color: color.toLowerCase(),
       descripcion: descripcion || null,
       usaSecciones,
+      ...(metaMonto !== undefined ? { metaMonto, metaMoneda } : {}),
       secciones: { create: secciones.map((nombreSeccion, orden) => ({ nombre: nombreSeccion, orden })) },
     },
   });

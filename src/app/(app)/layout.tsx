@@ -7,6 +7,7 @@ import { Marca } from "@/components/Marca";
 import { BotonAgregar } from "@/components/BotonAgregar";
 import { CargarGastoPc } from "@/components/CargarGastoPc";
 import { ActivarNotificaciones } from "@/components/ActivarNotificaciones";
+import { AvisoGlobal } from "@/components/AvisoGlobal";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -40,6 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <main className="mx-auto max-w-3xl px-4 py-7 sm:py-10">{children}</main>
 
       <ActivarNotificaciones />
+      <AvisoGlobal />
 
       {/* Barra flotante del celular: una pastilla despegada de los bordes, con
           el alta de gastos en el centro, la navegación a la izquierda y la
