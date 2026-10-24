@@ -13,7 +13,8 @@ export type FijoPendiente = {
 /**
  * Los gastos fijos que todavía no cayeron este mes. El total de la pizarra
  * dice lo que ya gastaste; esto dice lo que falta, que es la otra mitad de
- * "cómo viene el mes".
+ * "cómo viene el mes". Cada uno lleva su día como la hoja de un almanaque,
+ * con el color de su categoría debajo del número.
  */
 export function LoQueViene({
   pendientes,
@@ -28,63 +29,63 @@ export function LoQueViene({
 }) {
   const falta = { UYU: 0, USD: 0 };
   for (const p of pendientes) falta[p.moneda] += p.monto;
+  const textoFalta = [falta.UYU > 0 && formatMoney(falta.UYU, "UYU"), falta.USD > 0 && formatMoney(falta.USD, "USD")]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <section className="flex min-w-0 flex-col gap-3">
-      <h2 className="seccion-titulo px-1">Lo que viene</h2>
-
-      <div className="tarjeta aparece flex flex-col overflow-hidden">
-        {pendientes.length === 0 ? (
-          <p className="px-4 py-4 text-sm leading-relaxed text-suave">
-            No te queda ningún gasto fijo por pagar en {nombreMes}.
+    <section aria-labelledby="viene-titulo" className="tarjeta aparece flex min-w-0 flex-col overflow-hidden">
+      <header className="panel-cabeza">
+        <div className="min-w-0">
+          <h2 id="viene-titulo" className="panel-titulo">
+            Lo que viene
+          </h2>
+          <p className="panel-dato">
+            {pendientes.length === 0 ? (
+              `Nada más en ${nombreMes}`
+            ) : (
+              <>
+                Falta pagar <span className="monto text-texto">{textoFalta}</span>
+              </>
+            )}
           </p>
-        ) : (
-          <>
-            <ul className="lista rounded-none border-0 bg-transparent shadow-none">
-              {pendientes.map((p) => {
-                const dias = p.dia - hoy;
-                return (
-                  <li key={p.id} className="flex items-center gap-3 px-4 py-3">
-                    {/* el día en que cae, como la hoja de un almanaque */}
-                    <span className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl bg-fondo/70 ring-1 ring-borde">
-                      <span className="monto text-[15px] font-semibold leading-none text-texto">{p.dia}</span>
-                      <span className="mt-0.5 h-[3px] w-3 rounded-full" style={{ backgroundColor: p.color }} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-texto">{p.nombre}</p>
-                      <p className="mt-0.5 text-xs text-tenue">
-                        {dias === 1 ? "Mañana" : `En ${dias} días`}
-                      </p>
-                    </div>
-                    <span
-                      className={`monto shrink-0 text-sm font-medium ${
-                        p.moneda === "UYU" ? "text-peso" : "text-dolar"
-                      }`}
-                    >
-                      {formatMoney(p.monto, p.moneda)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="flex items-baseline justify-between gap-3 border-t border-borde bg-fondo/35 px-4 py-3">
-              <span className="text-sm text-suave">Falta pagar</span>
-              <span className="monto flex flex-col items-end text-sm font-semibold text-texto">
-                {falta.UYU > 0 && <span>{formatMoney(falta.UYU, "UYU")}</span>}
-                {falta.USD > 0 && <span>{formatMoney(falta.USD, "USD")}</span>}
-              </span>
-            </div>
-          </>
-        )}
-
-        <Link
-          href="/expenses?ver=fijos"
-          className="mt-auto flex items-center justify-center gap-1.5 border-t border-borde py-3.5 text-sm font-medium text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
-        >
-          Ver gastos fijos <span aria-hidden>→</span>
+        </div>
+        <Link href="/expenses?ver=fijos" className="panel-enlace">
+          Fijos <span aria-hidden>→</span>
         </Link>
-      </div>
+      </header>
+
+      {pendientes.length === 0 ? (
+        <p className="px-4 py-5 text-sm leading-relaxed text-suave">
+          No te queda ningún gasto fijo por pagar en {nombreMes}.
+        </p>
+      ) : (
+        <ul className="panel-filas">
+          {pendientes.map((p) => {
+            const dias = p.dia - hoy;
+            return (
+              <li key={p.id} className="panel-fila">
+                <span className="almanaque" aria-hidden>
+                  <span className="monto">{p.dia}</span>
+                  <span className="almanaque-color" style={{ backgroundColor: p.color }} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-texto">{p.nombre}</p>
+                  <p className="mt-0.5 text-xs text-tenue">
+                    <span className="sr-only">Día {p.dia}, </span>
+                    {dias === 1 ? "Mañana" : `En ${dias} días`}
+                  </p>
+                </div>
+                <span
+                  className={`monto shrink-0 text-sm font-semibold ${p.moneda === "UYU" ? "text-peso" : "text-dolar"}`}
+                >
+                  {formatMoney(p.monto, p.moneda)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }

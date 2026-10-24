@@ -90,7 +90,7 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-5">
       <Pizarra
         rotulo="Gastado este mes"
         titulo={monthLabel(month)}
@@ -124,11 +124,11 @@ export default async function DashboardPage() {
 
           {/* En PC, lo último y lo que falta van lado a lado: lo que ya pasó a
               la izquierda, lo que viene a la derecha. */}
-          <div className="grid grid-cols-1 items-start gap-8 sm:grid-cols-[minmax(0,1fr)_17.5rem] sm:gap-6">
+          <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-[minmax(0,1fr)_18.5rem] sm:gap-5">
             <UltimosGastos
               totalDelMes={expenses.length}
               hoy={new Date(Date.UTC(hoy.anio, hoy.mes - 1, hoy.dia))}
-              gastos={expenses.slice(0, 8).map((expense) => ({
+              gastos={expenses.slice(0, 5).map((expense) => ({
                 id: expense.id,
                 fecha: expense.date,
                 monto: Number(expense.amount),
