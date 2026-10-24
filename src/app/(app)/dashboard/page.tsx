@@ -6,7 +6,7 @@ import { BrouLink } from "@/components/BrouLink";
 import { Pizarra } from "@/components/Pizarra";
 import { Vacio, IconoTicket } from "@/components/Vacio";
 import { UltimosGastos } from "@/components/UltimosGastos";
-import { TiraDelMes, type DiaDelMes } from "@/components/TiraDelMes";
+import { TarjetaDelMes, type DiaDelMes } from "@/components/TarjetaDelMes";
 import { LoQueViene } from "@/components/LoQueViene";
 import { fechaEnUruguay } from "@/lib/monthly-summary";
 
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   const inicioAnterior = new Date(Date.UTC(year, mon - 2, 1));
   const topeAnterior = new Date(Date.UTC(year, mon - 2, hoy.dia + 1));
 
-  const [expenses, anteriores, fijos] = await Promise.all([
+  const [expenses, anteriores, fijos, mesAnterior] = await Promise.all([
     prisma.expense.findMany({
       where: { userId, date: { gte: start, lt: end } },
       include: { category: true, grupo: { select: { nombre: true } } },
@@ -51,6 +51,11 @@ export default async function DashboardPage() {
       include: { category: true },
       orderBy: { dayOfMonth: "asc" },
     }),
+    // El mes pasado entero, día por día, para la línea de fondo de la tarjeta.
+    prisma.expense.findMany({
+      where: { userId, currency: "UYU", date: { gte: inicioAnterior, lt: start } },
+      select: { date: true, amount: true },
+    }),
   ]);
 
   const diasDelMes = new Date(Date.UTC(year, mon, 0)).getUTCDate();
@@ -62,6 +67,10 @@ export default async function DashboardPage() {
     porDia[expense.date.getUTCDate() - 1][expense.currency] += monto;
   }
 
+  const diasAnterior = new Date(Date.UTC(year, mon - 1, 0)).getUTCDate();
+  const pesosPorDiaAnterior = Array.from({ length: diasAnterior }, () => 0);
+  for (const g of mesAnterior) pesosPorDiaAnterior[g.date.getUTCDate() - 1] += Number(g.amount);
+
   const nombreMes = monthLabel(month).split(" de ")[0];
   const nombreAnterior = monthLabel(
     `${inicioAnterior.getUTCFullYear()}-${String(inicioAnterior.getUTCMonth() + 1).padStart(2, "0")}`
@@ -69,15 +78,7 @@ export default async function DashboardPage() {
 
   // Solo en pesos: es la moneda del día a día, y las dos no se suman.
   const pesosAnterior = Number(anteriores.find((g) => g.currency === "UYU")?._sum.amount ?? 0);
-  const diferencia = totals.UYU - pesosAnterior;
-  const comparacion =
-    pesosAnterior === 0
-      ? null
-      : Math.abs(diferencia) < 1
-        ? `Vas igual que en ${nombreAnterior} a esta altura.`
-        : `Vas ${formatMoney(Math.abs(diferencia), "UYU")} ${
-            diferencia > 0 ? "por encima" : "por debajo"
-          } de ${nombreAnterior} a esta altura.`;
+  const comparacion = pesosAnterior === 0 ? null : { diferencia: totals.UYU - pesosAnterior, mes: nombreAnterior };
 
   const pendientes = fijos.map((f) => ({
     id: f.id,
@@ -112,13 +113,13 @@ export default async function DashboardPage() {
         </>
       ) : (
         <>
-          <TiraDelMes
+          <TarjetaDelMes
             dias={porDia}
             hoy={hoy.dia}
             nombreMes={nombreMes}
             comparacion={comparacion}
-            // getUTCDay: 0 = domingo. Se corre para que el lunes sea la primera columna.
-            huecoInicial={(start.getUTCDay() + 6) % 7}
+            anterior={comparacion && mesAnterior.length > 0 ? pesosPorDiaAnterior : null}
+            pendientes={pendientes.filter((p) => p.moneda === "UYU").reduce((t, p) => t + p.monto, 0)}
           />
 
           {/* En PC, lo último y lo que falta van lado a lado: lo que ya pasó a
