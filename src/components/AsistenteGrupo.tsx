@@ -296,7 +296,7 @@ export function AsistenteGrupo() {
             Después, adentro del grupo, vas a poder sumar a tus amigos.
           </p>
           <div className="flex gap-2">
-            <Link href="/grupos" className="boton-linea">
+            <Link href="/expenses?ver=grupales" className="boton-linea">
               Cancelar
             </Link>
             <button type="submit" disabled={guardando} className="boton">

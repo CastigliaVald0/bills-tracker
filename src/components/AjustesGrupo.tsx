@@ -79,7 +79,7 @@ export function AjustesGrupo({
     try {
       const res = await fetch(`/api/grupos/${grupo.id}`, { method: "DELETE" });
       if (res.ok) {
-        router.push("/grupos");
+        router.push("/expenses?ver=grupales");
         router.refresh();
       }
     } finally {

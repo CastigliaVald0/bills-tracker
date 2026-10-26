@@ -108,7 +108,7 @@ export default async function GrupoPage({ params, searchParams }: PageProps<"/gr
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
         <Link
-          href="/grupos"
+          href="/expenses?ver=grupales"
           className="rotulo flex items-center gap-1.5 self-start transition-colors hover:text-texto"
         >
           <span aria-hidden>←</span> Gastos grupales

@@ -179,7 +179,7 @@ export function PersonasGrupo({
           setPorSacar(null);
           if (!persona) return;
           const ok = await pedir(`/api/grupos/${grupoId}/miembros/${persona.id}`, "DELETE");
-          if (ok && persona.id === yo) router.push("/grupos");
+          if (ok && persona.id === yo) router.push("/expenses?ver=grupales");
         }}
         alCancelar={() => setPorSacar(null)}
       />

@@ -9,7 +9,7 @@ import { EsqueletoLista } from "@/components/Esqueleto";
 import Link from "next/link";
 import { formatMoney, currentMonth } from "@/lib/format";
 
-/** La pestaña "Del mes" de Gastos: lo cargado este mes, con borrar y deshacer. */
+/** La pestaña "Comunes" de Gastos: lo cargado este mes fuera de los grupos, con borrar y deshacer. */
 export function ListaGastosMes() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +22,8 @@ export function ListaGastosMes() {
   async function load() {
     const res = await fetch(`/api/expenses?month=${currentMonth()}`);
     const datos: Expense[] = await res.json();
-    setExpenses(datos);
+    // La parte de un gasto grupal se ve en la pestaña Grupales, dentro de su grupo.
+    setExpenses(datos.filter((e) => !e.grupo));
     setLoading(false);
   }
 

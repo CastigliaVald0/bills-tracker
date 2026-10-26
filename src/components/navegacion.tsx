@@ -124,12 +124,6 @@ export function IconoGrupo({ className }: { className?: string }) {
   );
 }
 
-const GRUPOS: EntradaNav = {
-  href: "/grupos",
-  label: "Gastos grupales",
-  icono: <IconoGrupo />,
-};
-
 const CATEGORIAS: EntradaNav = {
   href: "/categories",
   label: "Categorías",
@@ -174,13 +168,13 @@ const CONVERSOR: EntradaNav = {
 /* --- cómo se agrupan en cada lado -------------------------------------- */
 
 /** El cajón de PC: todo, en tres bloques. */
-export const CAJON_DIARIO = [INICIO, GASTOS, GRUPOS, CATEGORIAS];
+export const CAJON_DIARIO = [INICIO, GASTOS, CATEGORIAS];
 export const CAJON_RESUMENES = [RESUMEN_MENSUAL, RESUMEN_ANUAL];
 export const CAJON_HERRAMIENTAS = [CONVERSOR];
 
 /**
  * El menú del celular: lo mismo, menos lo que ya está en la barra de abajo
- * (inicio y conversor tienen su propio ícono) y menos cargar gastos, que se
- * hace desde el botón + del centro.
+ * (inicio y conversor tienen su propio ícono). Gastos (comunes, fijos y
+ * grupales) va primero: cargarlos es el +, pero verlos y manejarlos es acá.
  */
-export const MENU_CELULAR = [CATEGORIAS, RESUMEN_MENSUAL, RESUMEN_ANUAL];
+export const MENU_CELULAR = [GASTOS, CATEGORIAS, RESUMEN_MENSUAL, RESUMEN_ANUAL];

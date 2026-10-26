@@ -57,8 +57,8 @@ export function UltimosGastos({
             {totalDelMes} {totalDelMes === 1 ? "gasto" : "gastos"} este mes
           </p>
         </div>
-        <Link href="/monthly" className="panel-enlace">
-          Ver todos <span aria-hidden>→</span>
+        <Link href="/expenses" className="panel-enlace">
+          Comunes <span aria-hidden>→</span>
         </Link>
       </header>
 
