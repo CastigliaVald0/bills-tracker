@@ -25,6 +25,10 @@ Next.js (App Router) + TypeScript + Tailwind · Prisma + PostgreSQL · Auth.js (
    ```
 5. Abrí [http://localhost:3000](http://localhost:3000), registrate y empezá a cargar gastos.
 
+## Conexión con Central
+
+`/api/central/resumen` devuelve el resumen del mes en curso (total en pesos y dólares, el mes pasado a igual altura y las 3 categorías con más gasto) de la cuenta de `CENTRAL_USER_EMAIL`. Solo responde a quien manda `Authorization: Bearer <CENTRAL_API_TOKEN>`; sin esa variable rechaza todo. En Vercel hay que cargar las dos variables y en Central el mismo token como `BILLIONS_TOKEN`.
+
 ## Gastos recurrentes
 
 `/api/cron/generate-recurring` recorre los gastos fijos activos y, si hoy coincide con su día del mes, genera el gasto del mes (una sola vez). En producción lo dispara el cron de Vercel definido en `vercel.json` (todos los días 06:00 UTC).
