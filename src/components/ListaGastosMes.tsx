@@ -136,7 +136,7 @@ export function ListaGastosMes() {
                     </p>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+                <div className="fila-lado">
                   <span
                     className={`monto text-[15px] font-medium ${
                       expense.currency === "UYU" ? "text-peso" : "text-dolar"
@@ -146,18 +146,20 @@ export function ListaGastosMes() {
                   </span>
                   {/* La parte de un gasto de grupo se borra desde el grupo:
                       acá descuadraría las cuentas de los demás. */}
-                  {expense.grupo ? (
-                    <Link href={`/grupos/${expense.grupo.id}`} className="boton-mini">
-                      Ver grupo
-                    </Link>
-                  ) : (
-                    <button
-                      onClick={() => handleDelete(expense)}
-                      className="boton-mini boton-mini-peligro"
-                    >
-                      Eliminar
-                    </button>
-                  )}
+                  <div className="fila-acciones">
+                    {expense.grupo ? (
+                      <Link href={`/grupos/${expense.grupo.id}`} className="boton-mini">
+                        Ver grupo
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => handleDelete(expense)}
+                        className="boton-mini boton-mini-peligro"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

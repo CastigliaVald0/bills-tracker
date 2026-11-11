@@ -285,6 +285,62 @@
     background-color: color-mix(in srgb, var(--superficie-alta) 70%, transparent);
   }
 
+  /* El lado derecho de una fila: el monto y las acciones. En el celular van
+     en dos renglones, el monto arriba y las acciones debajo, alineados a la
+     derecha: en una sola línea se comían el ancho y el nombre del gasto
+     quedaba en "Cuo…". En PC entran en una línea. */
+  .fila-lado {
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
+  }
+
+  .fila-acciones {
+    display: flex;
+    align-items: center;
+    /* el texto del botón queda a ras del monto; su relleno sobresale */
+    margin-right: -0.625rem;
+  }
+
+  /* Bajo el monto, el botón no puede sumar 44px de alto: crece hacia el
+     relleno de la fila con margen negativo y sigue tocándose cómodo. */
+  @media (pointer: coarse) {
+    .fila-acciones .boton-mini {
+      min-height: 2.25rem;
+      margin-block: -0.5rem;
+    }
+  }
+
+  @media (min-width: 40rem) {
+    .fila-lado {
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .fila-acciones {
+      gap: 0.25rem;
+    }
+
+    @media (pointer: coarse) {
+      .fila-acciones .boton-mini {
+        min-height: 44px;
+        margin-block: 0;
+      }
+    }
+  }
+
+  /* Un enlace suelto y chico (volver, "¿La olvidaste?"): con el dedo, el área
+     que se toca crece por arriba y por abajo sin mover nada de lugar. */
+  @media (pointer: coarse) {
+    .toque {
+      padding-block: 0.75rem;
+      margin-block: -0.75rem;
+    }
+  }
+
   /* --- insignia de categoría ------------------------------------------
      El color de la categoría en un círculo con su inicial: se reconoce de
      lejos y el color queda como acento, sin teñir la fila. El fondo es el
@@ -304,7 +360,7 @@
     font-size: 0.9375rem;
     font-weight: 600;
     line-height: 1;
-    color: color-mix(in srgb, var(--cat) 55%, var(--texto));
+    color: color-mix(in srgb, var(--cat) 35%, var(--texto));
   }
 
   /* el emoji va un poco más grande que la letra: tiene su propio color */
@@ -741,7 +797,7 @@
 
   .tarjeta-mes-flecha.sube {
     background-color: color-mix(in srgb, var(--alerta) 18%, transparent);
-    color: var(--alerta);
+    color: color-mix(in srgb, var(--alerta) 75%, var(--texto));
   }
 
   /* la curva del mes: lo gastado acumulado, el mes pasado de fondo y, desde
@@ -1592,8 +1648,16 @@
     outline-offset: 4px;
   }
 
-  /* En pantalla táctil la perilla crece hasta un objetivo cómodo. */
+  /* En pantalla táctil la perilla crece hasta un objetivo cómodo, y la
+     barra suma aire transparente arriba y abajo: el degradé sigue midiendo
+     14px, pero lo que se puede tocar mide 30px. */
   @media (pointer: coarse) {
+    .deslizador {
+      height: 30px;
+      padding-block: 8px;
+      background-clip: content-box;
+    }
+
     .deslizador::-webkit-slider-thumb {
       width: 30px;
       height: 30px;

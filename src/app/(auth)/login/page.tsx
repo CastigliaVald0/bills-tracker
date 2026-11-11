@@ -65,7 +65,7 @@ function LoginPageForm() {
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-3">
             <label htmlFor="password" className="rotulo">Contraseña</label>
-            <Link href="/forgot-password" className="text-xs text-suave hover:text-texto">
+            <Link href="/forgot-password" className="toque text-xs text-suave hover:text-texto">
               ¿La olvidaste?
             </Link>
           </div>

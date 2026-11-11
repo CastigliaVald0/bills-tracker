@@ -211,7 +211,7 @@ export function TarjetaDelMes({
             <dd className="monto">{mayor ? `el ${mayor.dia}` : "—"}</dd>
           </div>
         </dl>
-        <Link href="/monthly" className="tarjeta-mes-enlace">
+        <Link href="/monthly" className="tarjeta-mes-enlace toque">
           Ver el mes <span aria-hidden>→</span>
         </Link>
       </div>

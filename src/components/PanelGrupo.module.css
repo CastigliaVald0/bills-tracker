@@ -73,8 +73,10 @@
   cursor: pointer;
 }
 
+/* El foco va en el color de foco de la app: acá --peso no es el celeste sino
+   cuánto pesa la sección (un número), y el anillo no se dibujaba. */
 .seleccionar:focus-visible {
-  outline: 2px solid var(--peso);
+  outline: 2px solid var(--foco);
   outline-offset: -2px;
 }
 
@@ -123,14 +125,19 @@
   color: var(--alerta);
 }
 
+/* Hasta dos renglones: "Nafta y peajes" en una pieza angosta se lee entero
+   en vez de quedar en "Naf…". */
 .seccionNombre {
+  display: -webkit-box;
   min-width: 0;
   overflow: hidden;
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .chica .seccionCaja {

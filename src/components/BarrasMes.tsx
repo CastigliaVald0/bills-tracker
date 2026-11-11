@@ -45,22 +45,27 @@ export function BarrasMes({
       </div>
 
       {/* Versión en tabla para lectores de pantalla: el gráfico es un SVG sin
-          texto accesible y los montos exactos solo aparecen al pasar el mouse. */}
-      <table className="sr-only">
-        <caption>
-          {combinado
-            ? "Gasto combinado por mes, pesos y dólares convertidos"
-            : `Gasto por mes en ${moneda === "UYU" ? "pesos" : "dólares"}`}
-        </caption>
-        <tbody>
-          {meses.map((m) => (
-            <tr key={m.mes}>
-              <th scope="row">{monthShortLabel(m.mes)}</th>
-              <td>{formatMoney(m.monto, moneda)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          texto accesible y los montos exactos solo aparecen al pasar el mouse.
+          El sr-only va en un div y no en la tabla: una tabla no respeta el
+          ancho de 1px ni el overflow, se estiraba con los montos y corría la
+          página de costado en el celular. */}
+      <div className="sr-only">
+        <table>
+          <caption>
+            {combinado
+              ? "Gasto combinado por mes, pesos y dólares convertidos"
+              : `Gasto por mes en ${moneda === "UYU" ? "pesos" : "dólares"}`}
+          </caption>
+          <tbody>
+            {meses.map((m) => (
+              <tr key={m.mes}>
+                <th scope="row">{monthShortLabel(m.mes)}</th>
+                <td>{formatMoney(m.monto, moneda)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }

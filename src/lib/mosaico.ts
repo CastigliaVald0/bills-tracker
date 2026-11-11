@@ -11,6 +11,14 @@ export type Pieza<T> = { dato: T; x: number; y: number; ancho: number; alto: num
 
 /** Ninguna pieza baja de esta parte del mosaico: si no, no entra ni el nombre. */
 const PARTE_MINIMA = 0.08;
+/**
+ * En cada corte, ninguna de las dos mitades se queda con menos que esto del
+ * lado que se corta. El piso de arriba asegura área pero no forma: con una
+ * sección que se lleva casi todo, las demás quedaban en una tira de 46px en
+ * el celular, donde no entraba ni la inicial del nombre. Las piezas chicas
+ * ocupan un poco más de lo que les toca, a cambio de que se puedan leer.
+ */
+const CORTE_MINIMO = 0.28;
 
 export function trazarMosaico<T>(
   datos: { dato: T; peso: number }[],
@@ -50,7 +58,10 @@ export function trazarMosaico<T>(
 
     const primera = grupo.slice(0, corte);
     const segunda = grupo.slice(corte);
-    const parte = primera.reduce((suma, p) => suma + p.peso, 0) / peso;
+    const parte = Math.min(
+      1 - CORTE_MINIMO,
+      Math.max(CORTE_MINIMO, primera.reduce((suma, p) => suma + p.peso, 0) / peso)
+    );
 
     // Se corta el lado más largo, medido en pantalla y no en porcentaje.
     if (ancho * proporcion >= alto) {

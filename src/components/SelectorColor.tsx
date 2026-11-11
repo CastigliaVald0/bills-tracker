@@ -95,7 +95,7 @@ export function SelectorColor({
           onChange={(e) => cambiar(Number(e.target.value), luz)}
           aria-label="Color"
           className="deslizador"
-          style={{ background: `linear-gradient(90deg, ${colores})` }}
+          style={{ backgroundImage: `linear-gradient(90deg, ${colores})` }}
         />
         <input
           type="range"
@@ -106,7 +106,7 @@ export function SelectorColor({
           aria-label="Tono: más oscuro o más claro"
           className="deslizador"
           style={{
-            background: `linear-gradient(90deg, hsl(${tono} ${SATURACION}% ${LUZ_MINIMA}%), hsl(${tono} ${SATURACION}% ${LUZ_MAXIMA}%))`,
+            backgroundImage: `linear-gradient(90deg, hsl(${tono} ${SATURACION}% ${LUZ_MINIMA}%), hsl(${tono} ${SATURACION}% ${LUZ_MAXIMA}%))`,
           }}
         />
       </div>

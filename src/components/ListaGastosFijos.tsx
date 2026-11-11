@@ -135,21 +135,29 @@ export function ListaGastosFijos() {
                       )}
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-                    <span className="monto text-sm text-texto">
+                  <div className="fila-lado">
+                    {/* En el color de su moneda, como en el resto de la app; el
+                        pausado o terminado se apaga junto con su nombre. */}
+                    <span
+                      className={`monto text-sm ${
+                        atenuado ? "text-apagado" : item.currency === "UYU" ? "text-peso" : "text-dolar"
+                      }`}
+                    >
                       {formatMoney(item.amount, item.currency)}
                     </span>
-                    {!finalizado && (
-                      <button onClick={() => handleToggle(item)} className="boton-mini">
-                        {item.active ? "Pausar" : "Reactivar"}
+                    <div className="fila-acciones">
+                      {!finalizado && (
+                        <button onClick={() => handleToggle(item)} className="boton-mini">
+                          {item.active ? "Pausar" : "Reactivar"}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setPorEliminar(item)}
+                        className="boton-mini boton-mini-peligro"
+                      >
+                        Eliminar
                       </button>
-                    )}
-                    <button
-                      onClick={() => setPorEliminar(item)}
-                      className="boton-mini boton-mini-peligro"
-                    >
-                      Eliminar
-                    </button>
+                    </div>
                   </div>
                 </div>
               );
