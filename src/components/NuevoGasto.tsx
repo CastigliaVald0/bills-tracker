@@ -248,7 +248,7 @@ export function NuevoGasto({ origen = null, alCerrar }: { origen?: Origen | null
                         className="peer sr-only"
                       />
                       <span
-                        className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-foco ${
+                        className={`flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-center transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-foco ${
                           activo
                             ? "border-foco/70 bg-foco/10 text-texto"
                             : "border-borde bg-fondo text-suave hover:border-borde-fuerte hover:text-texto"

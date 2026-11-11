@@ -69,7 +69,7 @@ export function CurrencyConverter({ rate }: { rate: UsdRate | null }) {
           <div
             role="group"
             aria-label="Sentido de la conversión"
-            className="flex rounded-lg border border-borde p-0.5"
+            className="flex rounded-xl border border-borde p-0.5"
           >
             <SegmentoDireccion
               activo={direction === "USD_TO_UYU"}
@@ -105,7 +105,7 @@ export function CurrencyConverter({ rate }: { rate: UsdRate | null }) {
         <div className="flex items-baseline justify-between gap-3 border-t border-borde pt-4">
           <span className="rotulo">Son</span>
           <span
-            className={`monto font-light leading-none ${
+            className={`monto font-bold leading-none ${
               converted !== null ? "text-texto" : "text-tenue"
             }`}
             style={{ fontSize: "clamp(1.25rem, 6vw, 1.75rem)" }}
@@ -140,7 +140,7 @@ function SegmentoDireccion({
       type="button"
       onClick={onClick}
       aria-pressed={activo}
-      className={`monto rounded-[3px] px-2.5 py-1.5 text-xs transition-colors ${
+      className={`monto rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
         activo
           ? "bg-accion text-accion-texto"
           : "text-suave hover:text-texto"

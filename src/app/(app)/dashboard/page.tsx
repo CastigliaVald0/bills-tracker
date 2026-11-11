@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { formatMoney, currentMonth, monthLabel } from "@/lib/format";
 import { BrouLink } from "@/components/BrouLink";
 import { Pizarra } from "@/components/Pizarra";
+import { BotonNuevoGasto } from "@/components/BotonNuevoGasto";
 import { Vacio, IconoTicket } from "@/components/Vacio";
 import { UltimosGastos } from "@/components/UltimosGastos";
 import { TarjetaDelMes, type DiaDelMes } from "@/components/TarjetaDelMes";
@@ -105,7 +106,7 @@ export default async function DashboardPage() {
             icono={<IconoTicket />}
             titulo="Todavía no hay nada este mes"
             detalle="Cargá tu primer gasto y acá vas a ver lo último que anotaste, día por día y con cada moneda por separado."
-            accion={{ href: "/expenses", texto: "Cargar un gasto" }}
+            accion={<BotonNuevoGasto texto="Cargar un gasto" />}
           />
           {pendientes.length > 0 && (
             <LoQueViene pendientes={pendientes} hoy={hoy.dia} nombreMes={nombreMes} />

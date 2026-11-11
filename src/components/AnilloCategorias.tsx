@@ -11,9 +11,17 @@ const TAMANO = 240;
 const CENTRO = TAMANO / 2;
 const RADIO = 91;
 const GROSOR = 26;
-/** Lo mínimo que ocupa una porción. Tiene que ser más que la punta redonda
-    de la anterior, que se le apoya encima: si no, la taparía entera. */
-const BARRIDO_MINIMO = 14;
+/** El hueco entre una porción y la siguiente, en grados. */
+const HUECO = 3;
+/** Cuántos grados ocupa la punta redonda de una porción: medio grosor sobre
+    el radio medio del anillo (unos 8°). */
+const PUNTA = (GROSOR / 2 / RADIO) * (180 / Math.PI);
+/** Lo mínimo que ocupa una porción redondeada: las dos puntas, el hueco y un
+    poco de cuerpo. Una más chica que esto se vería como un punto suelto. */
+const MINIMO_REDONDEADA = 2 * PUNTA + HUECO + 1.5;
+/** Con porciones rectas alcanza con que se vea un poco de color además del
+    hueco. */
+const MINIMO_RECTA = HUECO + 2;
 
 /**
  * Math.sin y Math.cos pueden diferir en el último dígito entre el servidor y
@@ -42,10 +50,10 @@ function trazo(inicio: number, fin: number) {
  * quede corta. Antes el mínimo se agregaba encima y la porción chica se metía
  * sobre la de al lado.
  */
-function repartirAngulos(montos: number[]): number[] {
+function repartirAngulos(montos: number[], minimoDeseado: number): number[] {
   if (montos.length === 1) return [360];
   // Con muchísimas categorías el mínimo se achica para que entren todas.
-  const minimo = Math.min(BARRIDO_MINIMO, (360 / montos.length) * 0.6);
+  const minimo = Math.min(minimoDeseado, (360 / montos.length) * 0.6);
   const chicas = new Set<number>();
   for (;;) {
     const libres = 360 - chicas.size * minimo;
@@ -59,7 +67,11 @@ function repartirAngulos(montos: number[]): number[] {
 
 /**
  * En qué se fue la plata: un anillo con una porción por categoría, cada una en
- * su color, con la punta final redondeada apoyada sobre la siguiente. En el centro va el total; al pasar el
+ * su color. Cada porción es una pastilla redondeada en las dos puntas y
+ * separada de la siguiente por un hueco: ninguna se apoya sobre otra, así una
+ * categoría chica no queda tapada por la punta de su vecina. Si hay tantas que
+ * las pastillas no entran, las porciones pasan a ser rectas, con el mismo
+ * hueco. En el centro va el total; al pasar el
  * mouse o tocar una porción (o su nombre en la leyenda), el centro muestra qué
  * parte del total se llevó esa categoría.
  *
@@ -81,7 +93,16 @@ export function AnilloCategorias({ categorias }: { categorias: TotalCategoria[] 
 
   // Cada porción con su ángulo. Una sola categoría ocupa el anillo entero.
   const porciones: ((typeof filas)[number] & { inicio: number; fin: number; porcentaje: number })[] = [];
-  const barridos = repartirAngulos(filas.map((f) => f.monto));
+  // Redondeadas solo si todas entran con su mínimo, contando que el reparto
+  // achica el mínimo al 60 % de una porción pareja; si no, rectas.
+  const redondeadas = filas.length * MINIMO_REDONDEADA <= 360 * 0.6;
+  const barridos = repartirAngulos(
+    filas.map((f) => f.monto),
+    redondeadas ? MINIMO_REDONDEADA : MINIMO_RECTA
+  );
+  // Cuánto se recorta cada porción en cada extremo: medio hueco y, si es
+  // redondeada, la punta, que se dibuja por fuera del trazo.
+  const recorte = HUECO / 2 + (redondeadas ? PUNTA : 0);
   let angulo = 0;
   filas.forEach((f, i) => {
     porciones.push({
@@ -95,8 +116,7 @@ export function AnilloCategorias({ categorias }: { categorias: TotalCategoria[] 
 
   const elegida = porciones.find((p) => p.nombre === activa) ?? null;
   // Con una categoría elegida, las demás se apagan mezclando su color con el
-  // fondo, no con transparencia: transparentes, las puntas que se apoyan unas
-  // sobre otras dejaban ver la superposición.
+  // fondo.
   const tono = (p: { nombre: string; color: string }) =>
     elegida && elegida.nombre !== p.nombre ? `color-mix(in srgb, ${p.color} 28%, var(--fondo))` : p.color;
   const porcentajeTexto = (p: number) => (p < 1 ? "<1%" : `${Math.round(p)}%`);
@@ -136,11 +156,10 @@ export function AnilloCategorias({ categorias }: { categorias: TotalCategoria[] 
             aria-label={`Gasto por categoría en ${moneda === "UYU" ? "pesos" : "dólares"}`}
             onMouseLeave={() => setActiva(null)}
           >
-            {/* Cada porción es un trazo, y su punta final es un círculo de su
-                color que se apoya sobre el comienzo de la siguiente: así cada
-                categoría termina redondeada, tocando a la que viene. Primero
-                van todos los trazos y después todas las puntas, para que cada
-                punta quede por encima de su vecina. */}
+            {/* Cada porción es un trazo recortado en los dos extremos: el
+                recorte deja el hueco y, en las redondeadas, el lugar de la
+                punta. Una porción tan chica que el recorte se la come entera
+                queda como un trazo mínimo: con punta redonda, un círculo. */}
             {filas.length === 1 ? (
               <circle
                 cx={CENTRO}
@@ -155,45 +174,24 @@ export function AnilloCategorias({ categorias }: { categorias: TotalCategoria[] 
               />
             ) : (
               <>
-                {porciones.map((p) => (
-                  <path
-                    key={p.nombre}
-                    d={trazo(p.inicio, p.fin)}
-                    fill="none"
-                    strokeWidth={GROSOR}
-                    style={{ stroke: tono(p) }}
-                    className="cursor-pointer transition-[stroke] duration-200"
-                    onMouseEnter={() => setActiva(p.nombre)}
-                    onClick={() => setActiva(elegida?.nombre === p.nombre ? null : p.nombre)}
-                  />
-                ))}
                 {porciones.map((p) => {
-                  const [x, y] = punto(RADIO, p.fin);
+                  const medio = (p.inicio + p.fin) / 2;
+                  const desde = Math.min(p.inicio + recorte, medio - 0.01);
+                  const hasta = Math.max(p.fin - recorte, medio + 0.01);
                   return (
-                    <circle
-                      key={`punta-${p.nombre}`}
-                      cx={x}
-                      cy={y}
-                      r={GROSOR / 2}
-                      style={{ fill: tono(p) }}
-                      className="cursor-pointer transition-[fill] duration-200"
+                    <path
+                      key={p.nombre}
+                      d={trazo(desde, hasta)}
+                      fill="none"
+                      strokeWidth={GROSOR}
+                      strokeLinecap={redondeadas ? "round" : "butt"}
+                      style={{ stroke: tono(p) }}
+                      className="cursor-pointer transition-[stroke] duration-200"
                       onMouseEnter={() => setActiva(p.nombre)}
                       onClick={() => setActiva(elegida?.nombre === p.nombre ? null : p.nombre)}
                     />
                   );
                 })}
-                {/* La elegida se vuelve a dibujar arriba de todo, redondeada en
-                    los dos extremos: así se lee entera, sin la punta de la
-                    anterior mordiéndole el comienzo. */}
-                {elegida && (
-                  <g pointerEvents="none">
-                    <path d={trazo(elegida.inicio, elegida.fin)} fill="none" stroke={elegida.color} strokeWidth={GROSOR} />
-                    {[elegida.inicio, elegida.fin].map((grados) => {
-                      const [x, y] = punto(RADIO, grados);
-                      return <circle key={grados} cx={x} cy={y} r={GROSOR / 2} fill={elegida.color} />;
-                    })}
-                  </g>
-                )}
               </>
             )}
           </svg>
@@ -241,7 +239,7 @@ export function AnilloCategorias({ categorias }: { categorias: TotalCategoria[] 
                   onFocus={() => setActiva(p.nombre)}
                   onBlur={() => setActiva(null)}
                   onClick={() => setActiva(esLaElegida ? null : p.nombre)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors ${
+                  className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-sm transition-colors ${
                     esLaElegida ? "bg-superficie-alta text-texto" : "text-suave hover:text-texto"
                   } ${elegida && !esLaElegida ? "opacity-60" : ""}`}
                 >

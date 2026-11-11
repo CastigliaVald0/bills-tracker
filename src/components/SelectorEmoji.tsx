@@ -50,7 +50,7 @@ export function SelectorEmoji({
   const elegido = (
     <span
       aria-live="polite"
-      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl ${
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl ${
         valor ? "bg-superficie-alta" : "border border-borde text-xs text-tenue"
       }`}
     >
@@ -84,7 +84,7 @@ export function SelectorEmoji({
             const emoji = ultimoEmoji(e.target.value);
             if (emoji) alCambiar(emoji);
           }}
-          className="h-12 w-12 shrink-0 cursor-pointer rounded-xl border border-dashed border-borde-fuerte bg-fondo text-center text-2xl text-transparent caret-transparent transition-colors placeholder:text-suave hover:border-texto/60 focus:border-solid focus:border-foco focus:outline-none"
+          className="h-12 w-12 shrink-0 cursor-pointer rounded-2xl border border-dashed border-borde-fuerte bg-fondo text-center text-2xl text-transparent caret-transparent transition-colors placeholder:text-suave hover:border-texto/60 focus:border-solid focus:border-foco focus:outline-none"
         />
 
         {/* El elegido, en su propio cuadrado. */}
@@ -109,7 +109,7 @@ export function SelectorEmoji({
           aria-expanded={abierto}
           aria-controls={`${id}-panel`}
           aria-label={abierto ? "Cerrar los emojis" : valor ? "Cambiar el emoji" : "Elegir un emoji"}
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border text-2xl transition-colors ${
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-2xl transition-colors ${
             abierto
               ? "border-foco bg-superficie-alta text-texto"
               : "border-dashed border-borde-fuerte bg-fondo text-suave hover:border-texto/60 hover:text-texto"
@@ -152,7 +152,7 @@ export function SelectorEmoji({
                 aria-label={c.nombre}
                 title={c.nombre}
                 onClick={() => setTema(i)}
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg transition-[background-color,opacity] ${
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg transition-[background-color,opacity] ${
                   i === tema ? "bg-superficie-alta" : "opacity-55 hover:opacity-100"
                 }`}
               >
@@ -176,7 +176,7 @@ export function SelectorEmoji({
                   setAbierto(false);
                 }}
                 aria-pressed={valor === emoji}
-                className={`flex aspect-square items-center justify-center rounded-lg text-2xl transition-colors ${
+                className={`flex aspect-square items-center justify-center rounded-xl text-2xl transition-colors ${
                   valor === emoji ? "bg-superficie-alta ring-2 ring-foco" : "hover:bg-superficie-alta"
                 }`}
               >

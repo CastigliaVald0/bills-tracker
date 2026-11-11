@@ -41,7 +41,7 @@
   gap: 0.25rem;
   overflow: hidden;
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: 16px;
   /* --peso va de 0 a 1 según cuánto del grupo se llevó la sección: las que
      más pesan quedan apenas más claras, sin cambiar de color */
   background-color: color-mix(in srgb, var(--texto) calc(var(--peso) * 5%), var(--superficie));
@@ -105,7 +105,7 @@
 /* los botones de la barra de la sección elegida */
 .accionSeccion {
   border: 1px solid var(--borde-fuerte);
-  border-radius: 7px;
+  border-radius: 10px;
   background-color: var(--fondo);
   padding: 0.3125rem 0.75rem;
   font-size: 0.75rem;

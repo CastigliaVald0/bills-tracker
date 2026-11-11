@@ -279,7 +279,7 @@ export default function AccountPage() {
 
       <section>
         <h2 className="seccion-titulo mb-3 px-1 text-alerta">Zona de peligro</h2>
-        <div className="max-w-sm rounded-md border border-alerta/40 bg-alerta-fondo p-4 sm:p-5">
+        <div className="max-w-sm rounded-lg border border-alerta/40 bg-alerta-fondo p-4 sm:p-5">
           <p className="text-sm leading-relaxed text-suave">
             Eliminar tu cuenta borra permanentemente todos tus gastos, categorías y gastos fijos.
             No se puede deshacer.
@@ -289,7 +289,7 @@ export default function AccountPage() {
             <button
               type="button"
               onClick={() => setDeleteOpen(true)}
-              className="mt-4 rounded-[5px] border border-alerta/50 px-4 py-2 text-sm font-medium text-alerta transition-colors hover:bg-alerta hover:text-superficie"
+              className="mt-4 rounded-2xl border border-alerta/50 px-4 py-2 text-sm font-medium text-alerta transition-colors hover:bg-alerta hover:text-superficie"
             >
               Eliminar cuenta
             </button>
@@ -314,7 +314,7 @@ export default function AccountPage() {
                 <button
                   type="submit"
                   disabled={deleteLoading}
-                  className="rounded-[5px] bg-alerta px-4 py-2 text-sm font-medium text-superficie transition-opacity hover:opacity-90 disabled:opacity-50"
+                  className="rounded-2xl bg-alerta px-4 py-2 text-sm font-medium text-superficie transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   {deleteLoading ? "Eliminando..." : "Sí, eliminar mi cuenta"}
                 </button>

@@ -19,7 +19,8 @@ const TAMANO = "h-[22px] w-[22px]";
  *
  * `accion` solo se pasa donde el usuario no tiene el formulario a la vista; en
  * las páginas que ya lo muestran arriba, el texto alcanza y un botón sería
- * mandarlo a donde ya está.
+ * mandarlo a donde ya está. Puede ser un enlace ({ href, texto }) o un botón
+ * ya armado, como el que abre la ventana de nuevo gasto.
  */
 export function Vacio({
   icono,
@@ -30,7 +31,7 @@ export function Vacio({
   icono: React.ReactNode;
   titulo: string;
   detalle: string;
-  accion?: { href: string; texto: string };
+  accion?: { href: string; texto: string } | React.ReactElement;
 }) {
   return (
     <section className="tarjeta filo aparece flex flex-col items-center gap-3.5 px-6 py-10 text-center">
@@ -46,11 +47,14 @@ export function Vacio({
         <p className="max-w-[34ch] text-balance text-sm leading-relaxed text-suave">{detalle}</p>
       </div>
 
-      {accion && (
-        <Link href={accion.href} className="boton mt-1">
-          {accion.texto}
-        </Link>
-      )}
+      {accion &&
+        ("href" in accion ? (
+          <Link href={accion.href} className="boton mt-1">
+            {accion.texto}
+          </Link>
+        ) : (
+          <div className="mt-1">{accion}</div>
+        ))}
     </section>
   );
 }

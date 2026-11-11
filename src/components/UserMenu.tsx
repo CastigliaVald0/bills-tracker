@@ -8,7 +8,7 @@ import { IconoAmigos, IconoCuenta, IconoSalir } from "@/components/navegacion";
 
 const TAMANO_ICONO = "h-[18px] w-[18px] shrink-0";
 const FILA =
-  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto";
+  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-suave transition-colors hover:bg-superficie-alta hover:text-texto";
 
 export function UserMenu({
   name,
@@ -60,7 +60,7 @@ export function UserMenu({
         <div
           // En el celular sube desde el botón con las opciones de a una; en PC
           // baja desde la esquina, como el menú de "Cargar gasto".
-          className={`absolute right-0 z-30 flex w-60 flex-col gap-0.5 rounded-xl border border-borde bg-superficie p-1.5 shadow-[var(--sombra-flotante)] ${
+          className={`absolute right-0 z-30 flex w-60 flex-col gap-0.5 rounded-2xl border border-borde bg-superficie p-1.5 shadow-[var(--sombra-flotante)] ${
             menuDirection === "up" ? "menu-sube origin-bottom-right bottom-full mb-4" : "desplegar top-full mt-3"
           }`}
         >

@@ -90,15 +90,15 @@ export default async function ReportsPage({
     <div className="flex shrink-0 items-center gap-1">
       <Link
         href={`/reports?year=${year - 1}`}
-        className="flex h-8 w-8 items-center justify-center rounded border border-pizarra-borde text-pizarra-suave transition-colors hover:border-peso-luz hover:text-pizarra-texto"
+        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-pizarra-borde text-pizarra-suave transition-colors hover:border-peso-luz hover:text-pizarra-texto"
         aria-label={`Ir a ${year - 1}`}
       >
         ←
       </Link>
-      <span className="monto px-2 text-sm font-light text-pizarra-texto">{year}</span>
+      <span className="monto px-2 text-sm font-bold text-pizarra-texto">{year}</span>
       <Link
         href={`/reports?year=${year + 1}`}
-        className="flex h-8 w-8 items-center justify-center rounded border border-pizarra-borde text-pizarra-suave transition-colors hover:border-dolar-luz hover:text-pizarra-texto"
+        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-pizarra-borde text-pizarra-suave transition-colors hover:border-dolar-luz hover:text-pizarra-texto"
         aria-label={`Ir a ${year + 1}`}
       >
         →
@@ -160,7 +160,7 @@ export default async function ReportsPage({
           {mesesVisibles > 0 && (
             <section>
               <h2 className="seccion-titulo mb-3 px-1">
-                Mes a mes <span className="text-peso">· pesos</span>
+                <span>Mes a mes <span className="text-peso">· pesos</span></span>
               </h2>
               <div className="tarjeta px-2 pt-3 pb-1 sm:px-3">
                 <BarrasMes meses={barrasUYU} moneda="UYU" />
@@ -171,7 +171,7 @@ export default async function ReportsPage({
           {mesesVisibles > 0 && hayUSD && (
             <section>
               <h2 className="seccion-titulo mb-3 px-1">
-                Mes a mes <span className="text-dolar">· dólares</span>
+                <span>Mes a mes <span className="text-dolar">· dólares</span></span>
               </h2>
               <div className="tarjeta px-2 pt-3 pb-1 sm:px-3">
                 <BarrasMes meses={barrasUSD} moneda="USD" />

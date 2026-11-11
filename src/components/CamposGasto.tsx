@@ -73,7 +73,9 @@ export function Conmutador<T extends string>({
               onChange={() => alCambiar(opcion.valor)}
               className="sr-only"
             />
-            <span style={activo && opcion.color ? { color: opcion.color } : undefined}>{opcion.texto}</span>
+            {/* La ficha de abajo ya lleva el color de la opción; la letra de
+                la elegida va en tinta encima (ver .segmento en globals.css). */}
+            <span>{opcion.texto}</span>
           </label>
         );
       })}

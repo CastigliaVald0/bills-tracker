@@ -66,7 +66,7 @@ export function PersonasGrupo({
     <section aria-labelledby="titulo-personas">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="titulo-personas" className="seccion-titulo">
-          Personas <span className="text-suave">· {todos.length}</span>
+          <span>Personas <span className="text-suave">· {todos.length}</span></span>
         </h2>
         {esAdmin && !archivado && (
           <button

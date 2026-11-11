@@ -49,7 +49,7 @@ export function CajonMenu() {
         aria-label="Abrir menú"
         title="Menú"
         aria-expanded={abierto}
-        className="flex h-9 w-9 items-center justify-center rounded-md text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
       >
         <svg
           viewBox="0 0 24 24"
@@ -85,7 +85,7 @@ export function CajonMenu() {
               type="button"
               onClick={() => setAbierto(false)}
               aria-label="Cerrar menú"
-              className="flex h-8 w-8 items-center justify-center rounded-md text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-suave transition-colors hover:bg-superficie-alta hover:text-texto"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -131,7 +131,7 @@ function Grupo({
             key={entrada.href}
             href={entrada.href}
             aria-current={activo ? "page" : undefined}
-            className={`relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors ${
+            className={`relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
               activo
                 ? "bg-superficie-alta font-medium text-texto"
                 : "text-suave hover:bg-superficie-alta hover:text-texto"

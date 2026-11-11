@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           tres barritas van antes del nombre, que es de donde se las espera, y
           el nombre lleva al inicio. Así la cabecera queda con lo justo y el
           menú tiene lugar para agrupar las siete pantallas. */}
-      <header className="sticky top-0 z-20 hidden border-b border-borde bg-fondo/80 px-4 backdrop-blur-md sm:block">
+      <header className="sticky top-0 z-20 hidden border-b border-borde/60 bg-fondo/85 px-4 backdrop-blur-md sm:block">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <CajonMenu />
@@ -54,7 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           circular alrededor del botón: si el recorte se aplicara a la barra
           entera, también cortaría el botón y los menús que se abren arriba. */}
       <nav className="barra-flotante fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-20 grid h-14 grid-cols-[1fr_auto_1fr] items-center px-2 sm:hidden">
-        <div aria-hidden className="absolute inset-0 -z-10 drop-shadow-[0_8px_18px_rgb(0_0_0/0.45)]">
+        <div aria-hidden className="absolute inset-0 -z-10 drop-shadow-[0_10px_22px_rgb(16_11_36/0.65)]">
           {/* Dos capas con el mismo recorte, la de adentro 1px más chica: lo que
               asoma de la de atrás es el borde, que así sigue también la curva. */}
           <div className="barra-muesca absolute inset-0 rounded-full bg-borde" />

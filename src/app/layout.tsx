@@ -1,27 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Familjen_Grotesk, Azeret_Mono, Bricolage_Grotesque } from "next/font/google";
+import { Plus_Jakarta_Sans, Azeret_Mono } from "next/font/google";
 import "./globals.css";
 
-const familjenGrotesk = Familjen_Grotesk({
+// Una sola letra, geométrica y redonda, para la interfaz, los títulos y las
+// cifras (tiene números tabulares). Es variable: se carga entera en vez de
+// pedir pesos sueltos, que rompía el build de producción de Turbopack
+// ("next/font/google queries have exactly one entry").
+const jakarta = Plus_Jakarta_Sans({
   variable: "--font-ui",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
+// Solo para las casillas del código de amigo, que se dicta letra por letra.
 const azeretMono = Azeret_Mono({
   variable: "--font-num",
   subsets: ["latin"],
   weight: ["300", "400", "500"],
-});
-
-// Solo para los títulos de página y de sección: una voz con más carácter que
-// la letra de todos los días, usada poco para que no canse.
-// Es una fuente variable: se carga entera (todos los pesos en un archivo) en
-// vez de pedir pesos sueltos. Pedir pesos sueltos rompía el build de
-// producción de Turbopack ("next/font/google queries have exactly one entry").
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-display",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -32,7 +26,7 @@ export const metadata: Metadata = {
 // La app es siempre oscura: la barra del navegador y los controles nativos
 // acompañan, sin importar el tema del dispositivo.
 export const viewport: Viewport = {
-  themeColor: "#0f2322",
+  themeColor: "#3a325e",
   colorScheme: "dark",
 };
 
@@ -40,11 +34,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${familjenGrotesk.variable} ${azeretMono.variable} ${bricolage.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${azeretMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {/* Toda la app va en una "ventana" al 90 % sobre un paisaje borroso,
-            como una ventana de escritorio con transparencia (ver .ventana). */}
         <div className="ventana flex flex-1 flex-col">{children}</div>
       </body>
     </html>

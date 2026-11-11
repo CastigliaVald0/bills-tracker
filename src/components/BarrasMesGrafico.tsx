@@ -47,11 +47,11 @@ export default function BarrasMesGrafico({
   combinado?: boolean;
 }) {
   const opciones = useMemo<ApexOptions>(() => {
-    const colorPeso = leerToken("--peso", "#6fbee4");
-    const colorDolar = leerToken("--dolar", "#7fc895");
+    const colorPeso = leerToken("--peso", "#80ccf0");
+    const colorDolar = leerToken("--dolar", "#8bd6a1");
     const color = moneda === "UYU" ? colorPeso : colorDolar;
-    const texto = leerToken("--texto-suave", "#9aacb2");
-    const grilla = leerToken("--borde", "#243540");
+    const texto = leerToken("--texto-suave", "#d2cae8");
+    const grilla = leerToken("--borde", "#4a4176");
     const fuente = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
 
     return {
@@ -121,6 +121,15 @@ export default function BarrasMesGrafico({
           style: { colors: etiquetas.map(() => texto), fontSize: "11px" },
         },
       },
+      // En el celular cinco montos ("$ 20.000 … $ 80.000") no entran a lo
+      // ancho y se pisan entre sí: quedan tres marcas, el cero, la mitad y el
+      // tope.
+      responsive: [
+        {
+          breakpoint: 640,
+          options: { xaxis: { tickAmount: 2 } },
+        },
+      ],
       tooltip: {
         theme: "dark",
         marker: { show: false },

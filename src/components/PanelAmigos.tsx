@@ -311,7 +311,7 @@ export function PanelAmigos({
                     Nadie con ese nombre se deja encontrar. Pedile su código.
                   </p>
                 ) : (
-                  <ul className="mt-2 flex flex-col overflow-hidden rounded-lg border border-borde">
+                  <ul className="mt-2 flex flex-col overflow-hidden rounded-xl border border-borde">
                     {hallazgos.map((h) => (
                       <FilaPersona
                         key={h.id}

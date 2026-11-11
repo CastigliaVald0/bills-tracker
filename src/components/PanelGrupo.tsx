@@ -367,7 +367,7 @@ export function PanelGrupo({
         </div>
 
         {elegida && (
-          <div className="desplegar mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[10px] border border-borde bg-superficie px-4 py-2.5">
+          <div className="desplegar mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-borde bg-superficie px-4 py-2.5">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-texto">
                 {elegida.dato.emoji && `${elegida.dato.emoji} `}
@@ -688,7 +688,7 @@ export function PanelGrupo({
                                   className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-superficie-alta/60"
                                 >
                                 {/* el día, como la hoja de un almanaque */}
-                                <span className="monto flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl bg-fondo/70 ring-1 ring-borde">
+                                <span className="monto flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-2xl bg-fondo/70 ring-1 ring-borde">
                                   <span className="text-[15px] font-semibold leading-none text-texto">
                                     {Number(gasto.fecha.slice(8, 10))}
                                   </span>

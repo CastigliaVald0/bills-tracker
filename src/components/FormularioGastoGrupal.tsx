@@ -477,7 +477,7 @@ export function FormularioGastoGrupal({
                             />
                             <span
                               aria-hidden
-                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                                 incluida ? "border-transparent bg-foco text-fondo" : "border-borde-fuerte"
                               }`}
                             >

@@ -3,13 +3,13 @@
 /* ==========================================================================
    Billions Tracker — sistema visual
 
-   La app es siempre oscura y la pizarra de pesos y dólares es lo único que
-   se permite gritar. Todo lo demás habla claro: frases en minúscula en vez de
-   rótulos en mayúsculas de máquina de escribir, tarjetas blandas, los montos
-   en la misma letra que el resto. La pizarra, el campo de monto, el cajón y
-   la barra del celular conservan su propio estilo (ver "lo que no cambia").
+   Violeta profundo y durazno. La pantalla es un violeta parejo; las tarjetas
+   van un tono más hundidas, blandas y muy redondeadas, con una sombra corta
+   debajo. El durazno es el color de la acción y de la tarjeta principal (la
+   pizarra), donde la letra pasa a tinta violeta.
    Las dos monedas nunca se suman, así que nunca comparten color: el peso es
-   celeste, el dólar es verde.
+   celeste y el dólar es verde, sobre violeta en su tono claro y sobre durazno
+   en su tono hondo (--peso-tinta, --dolar-tinta).
    ========================================================================== */
 
 :root {
@@ -17,66 +17,68 @@
      autocompletado) también tienen que dibujarse oscuros. */
   color-scheme: dark;
 
-  /* las capas, de la más hundida a la más alta */
-  --fondo: #0b1318;
-  --superficie: #15212a;
-  --superficie-alta: #1c2b35;
-  --borde: #243540;
-  --borde-fuerte: #364a55;
+  /* las capas: la pantalla, la tarjeta hundida y lo que sube encima */
+  --fondo: #3a325e;
+  --superficie: #2e2750;
+  --superficie-alta: #463d70;
+  --borde: #4a4176;
+  --borde-fuerte: #62578f;
 
-  /* la letra */
-  --texto: #e7ece6;
-  --texto-suave: #a5b6bb;
-  /* Subido un punto: la fecha y la categoría debajo de cada gasto van en
-     12px y con el tenue anterior quedaban justo en el límite, sobre todo de
-     día en el celular. Ahora da 6,6:1 sobre el fondo y 5,7:1 sobre las
-     tarjetas (antes 5,3:1 y 4,6:1), y sigue por debajo del suave para no perder la jerarquía. */
-  --texto-tenue: #8a9ca2;
-  /* Para lo pausado o vencido. Antes se resolvía con opacity, que apilaba
-     transparencia sobre texto ya suave y hundía el contraste a 2,3:1. */
-  --texto-apagado: #7f9096;
+  /* la letra: tintas lavanda, todas por encima de 4,5:1 sobre la tarjeta y
+     sobre la pantalla */
+  --texto: #f5f1fc;
+  --texto-suave: #d2cae8;
+  --texto-tenue: #b9b0d6;
+  --texto-apagado: #ada3cc;
 
-  /* la pizarra es una superficie propia */
-  --pizarra: #08161f;
-  --pizarra-alta: #12242f;
-  --pizarra-borde: #24363f;
-  --pizarra-texto: #edf1ec;
-  --pizarra-suave: #91a7b2;
+  /* el durazno y su tinta */
+  --durazno: #f4c58f;
+  --durazno-alta: #f9d6aa;
+  --tinta: #261f45;
 
-  /* las dos monedas */
-  --peso: #6fbee4;
-  --dolar: #7fc895;
-  --peso-luz: #6ec3e8;
-  --dolar-luz: #7ec894;
+  /* la pizarra es la tarjeta durazno */
+  --pizarra: var(--durazno);
+  --pizarra-alta: var(--durazno-alta);
+  --pizarra-borde: rgb(38 31 69 / 0.16);
+  --pizarra-texto: var(--tinta);
+  --pizarra-suave: #5b4a5e;
+
+  /* las dos monedas: claras sobre violeta, hondas sobre durazno */
+  --peso: #80ccf0;
+  --dolar: #8bd6a1;
+  --peso-luz: #8dd3f3;
+  --dolar-luz: #97dcab;
+  --peso-tinta: #0f4a68;
+  --dolar-tinta: #1b5530;
 
   /* acción y estado */
-  --accion: #dfe7e0;
-  --accion-alta: #ffffff;
-  --accion-texto: #101c22;
-  /* El estado de la interfaz (foco, activo, encendido) va en un claro
-     neutro: el celeste y el verde quedan solo para pesos y dólares. Donde
-     se carga un monto, el foco toma el color de la moneda (ver .campo-monto). */
-  --foco: #dfe7e0;
-  --alerta: #e4705c;
-  --alerta-fondo: #2c1b18;
-  /* Blanco sobre este rojo da 3,1:1 y no llega al mínimo de 4,5: va en tinta. */
-  --alerta-texto: #08161f;
+  --accion: var(--durazno);
+  --accion-alta: var(--durazno-alta);
+  --accion-texto: var(--tinta);
+  /* El estado de la interfaz (foco, activo, encendido) va en durazno: el
+     celeste y el verde quedan solo para pesos y dólares. Donde se carga un
+     monto, el foco toma el color de la moneda (ver .campo-monto). */
+  --foco: var(--durazno);
+  --alerta: #f2836f;
+  --alerta-fondo: #4a2a46;
+  --alerta-texto: var(--tinta);
   /* Lo que salió bien se dice en tinta plena, no en verde: el verde es el
      dólar. */
   --ok: var(--texto);
 
-  /* Una sola escala de esquinas para toda la app: lo que se toca, lo que
+  /* Una sola escala de esquinas, grande y blanda: lo que se toca, lo que
      contiene y lo que flota encima. */
-  --radio-control: 8px;
-  --radio-tarjeta: 18px;
-  --radio-flotante: 20px;
+  --radio-control: 14px;
+  --radio-tarjeta: 26px;
+  --radio-flotante: 30px;
 
-  /* La luz viene de arriba: un filo claro en el borde superior y una sombra
-     corta debajo. Es lo que separa una tarjeta del fondo sin subirle el
-     contraste al borde. */
-  --relieve: inset 0 1px 0 rgb(255 255 255 / 0.035), 0 1px 2px rgb(0 0 0 / 0.3),
-    0 10px 24px -14px rgb(0 0 0 / 0.55);
-  --sombra-flotante: 0 2px 6px rgb(0 0 0 / 0.35), 0 24px 48px -16px rgb(0 0 0 / 0.7);
+  /* La luz viene de arriba: un filo claro arriba y una sombra blanda en
+     violeta casi negro debajo. */
+  --relieve: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 2px 4px rgb(16 11 36 / 0.25),
+    0 16px 32px -18px rgb(16 11 36 / 0.75);
+  --sombra-flotante: 0 4px 10px rgb(16 11 36 / 0.35), 0 28px 56px -18px rgb(16 11 36 / 0.8);
+  /* el velo detrás de un diálogo */
+  --velo: rgb(20 15 40 / 0.7);
 }
 
 @theme inline {
@@ -101,6 +103,12 @@
   --color-dolar: var(--dolar);
   --color-peso-luz: var(--peso-luz);
   --color-dolar-luz: var(--dolar-luz);
+  --color-peso-tinta: var(--peso-tinta);
+  --color-dolar-tinta: var(--dolar-tinta);
+
+  --color-durazno: var(--durazno);
+  --color-durazno-alta: var(--durazno-alta);
+  --color-tinta: var(--tinta);
 
   --color-accion: var(--accion);
   --color-accion-alta: var(--accion-alta);
@@ -113,48 +121,32 @@
   --color-foco: var(--foco);
 
   --font-sans: var(--font-ui);
-  --font-display: var(--font-display);
+  --font-display: var(--font-ui);
   --font-mono: var(--font-num);
 }
 
 @layer base {
-  /* El resplandor de la pizarra en la pared: celeste desde la izquierda, verde
-     desde la derecha, los dos colores de la marca. Muy tenue y fijo, para que
-     el fondo no sea un plano muerto sin competir con el contenido. */
-  /* La pared detrás de la ventana: un paisaje verde (cielo claro arriba, un
-     sol, cerros y árboles oscuros abajo) tan desenfocado que solo quedan
-     manchas de luz. Queda fijo al desplazarse, como el fondo de pantalla. */
+  /* La pantalla es un violeta parejo, como en la referencia. Un resplandor
+     muy leve arriba (durazno a la derecha, lavanda a la izquierda) evita el
+     plano muerto sin competir con el contenido. */
   body {
-    background-color: #0c140f;
+    background-color: var(--fondo);
     color: var(--texto);
     font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
   }
-  body::before {
-    content: "";
-    position: fixed;
-    inset: -80px;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(7rem 7rem at 54% 44%, rgb(236 246 226 / 0.95), transparent 72%),
-      radial-gradient(22% 46% at 3% 66%, #0a130e 0 55%, transparent 78%),
-      radial-gradient(20% 50% at 98% 62%, #0a130e 0 55%, transparent 78%),
-      radial-gradient(70% 22% at 50% 70%, #2a6b47, transparent 72%),
-      linear-gradient(180deg, #33a67b 0%, #6cc183 30%, #95cf90 44%, #3f8f5f 58%, #12291d 74%, #0c140f 100%);
-    filter: blur(36px);
-  }
 
-  /* La app entera es una ventana al 90 %: deja pasar un poco del paisaje, lo
-     que tiñe de verde arriba y oscurece abajo sin cambiar ningún color. Los
-     diálogos van en la capa superior del navegador y no heredan esto. */
   .ventana {
-    opacity: 0.9;
     background-color: var(--fondo);
     background-image:
-      radial-gradient(60rem 26rem at 12% -8rem, rgb(111 190 228 / 0.07), transparent 70%),
-      radial-gradient(60rem 26rem at 88% -8rem, rgb(127 200 149 / 0.055), transparent 70%);
-    background-attachment: fixed;
+      radial-gradient(56rem 24rem at 10% -8rem, rgb(150 132 220 / 0.14), transparent 70%),
+      radial-gradient(44rem 22rem at 92% -8rem, rgb(244 197 143 / 0.07), transparent 70%);
     background-repeat: no-repeat;
+  }
+
+  /* las barras de scroll y el cursor también son de la casa */
+  html {
+    scrollbar-color: var(--borde-fuerte) transparent;
+    caret-color: var(--durazno);
   }
 
   input,
@@ -173,7 +165,7 @@
 
   ::selection {
     background-color: var(--foco);
-    color: var(--fondo);
+    color: var(--tinta);
   }
 
   /* color-scheme ya lo pinta claro; solo se lo baja para que no pese más que
@@ -210,10 +202,9 @@
      de sección. Va debajo de su rótulo, que dice el contexto en una línea. */
   .titulo {
     margin-top: 0.25rem;
-    font-family: var(--font-display), var(--font-ui), sans-serif;
+    font-family: var(--font-ui), sans-serif;
     font-size: 2rem;
-    font-weight: 650;
-    font-variation-settings: "opsz" 48;
+    font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.025em;
     color: var(--texto);
@@ -221,10 +212,9 @@
 
   /* título de sección: lo que antes era un rótulo gris sobre cada lista */
   .seccion-titulo {
-    font-family: var(--font-display), var(--font-ui), sans-serif;
+    font-family: var(--font-ui), sans-serif;
     font-size: 1.125rem;
-    font-weight: 600;
-    font-variation-settings: "opsz" 24;
+    font-weight: 700;
     line-height: 1.2;
     letter-spacing: -0.01em;
     color: var(--texto);
@@ -238,35 +228,34 @@
     letter-spacing: -0.01em;
   }
 
-  /* --- lo que no cambia -----------------------------------------------
-     La pizarra, el campo de monto, el cajón del menú y la barra del celular
-     conservan su letra de siempre: rótulos en mono espaciado y cifras en mono. */
+  /* --- la pizarra, el campo de monto, el cajón y la barra --------------
+     Rótulos chicos y firmes en la misma letra redonda; las cifras grandes van
+     en negrita, como el total de la referencia. */
   :is(.pizarra-panel, .campo-monto, .cajon, .barra-flotante, .clasico) .rotulo {
-    font-family: var(--font-num), ui-monospace, monospace;
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
     line-height: 1.2;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
     color: var(--texto-tenue);
   }
 
-  :is(.pizarra-panel, .campo-monto, .cajon, .barra-flotante, .clasico) .monto {
-    font-family: var(--font-num), ui-monospace, monospace;
-    letter-spacing: -0.02em;
+  :is(.pizarra-panel, .bg-pizarra, .campo-monto) .monto {
+    font-weight: 700;
+    letter-spacing: -0.025em;
   }
 
   /* --- superficies ---------------------------------------------------- */
 
   .tarjeta {
     background-color: var(--superficie);
-    border: 1px solid var(--borde);
+    border: 1px solid color-mix(in srgb, var(--borde) 55%, transparent);
     border-radius: var(--radio-tarjeta);
     box-shadow: var(--relieve);
   }
 
   .lista {
     background-color: var(--superficie);
-    border: 1px solid var(--borde);
+    border: 1px solid color-mix(in srgb, var(--borde) 55%, transparent);
     border-radius: var(--radio-tarjeta);
     box-shadow: var(--relieve);
     overflow: hidden;
@@ -310,8 +299,8 @@
     height: 2.375rem;
     width: 2.375rem;
     border-radius: 9999px;
-    background-color: color-mix(in srgb, var(--cat) 20%, var(--superficie));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cat) 35%, transparent);
+    background-color: color-mix(in srgb, var(--cat) 22%, var(--superficie-alta));
+    box-shadow: 0 0 0 2px var(--superficie), 0 0 0 3.5px color-mix(in srgb, var(--cat) 70%, transparent);
     font-size: 0.9375rem;
     font-weight: 600;
     line-height: 1;
@@ -335,13 +324,44 @@
   }
 
   /* la pizarra: el único elemento que se permite gritar */
+  /* La tarjeta durazno, la que lleva el total. Adentro las monedas pasan a
+     su tono hondo: el celeste y el verde claros no se leen sobre durazno.
+     Los rótulos y los filetes que ya usan --peso o --peso-luz lo toman solos. */
+  :is(.pizarra-panel, .bg-pizarra) {
+    --peso: var(--peso-tinta);
+    --dolar: var(--dolar-tinta);
+    --peso-luz: var(--peso-tinta);
+    --dolar-luz: var(--dolar-tinta);
+    --texto: var(--pizarra-texto);
+    --texto-suave: var(--pizarra-suave);
+    --texto-tenue: var(--pizarra-suave);
+    --foco: var(--tinta);
+    color: var(--pizarra-texto);
+  }
+
   .pizarra-panel {
     position: relative;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: var(--radio-tarjeta);
     background-color: var(--pizarra);
-    box-shadow: inset 0 0 0 1px var(--pizarra-borde);
+    background-image: radial-gradient(28rem 14rem at 100% 0%, rgb(255 255 255 / 0.22), transparent 70%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 2px 4px rgb(16 11 36 / 0.25),
+      0 22px 40px -20px rgb(16 11 36 / 0.85);
     color: var(--pizarra-texto);
+  }
+
+  /* un botón dentro de la tarjeta durazno: pastilla de tinta con letra
+     durazno, como el "Split Now" de la referencia */
+  .pizarra-panel :is(.boton, .boton-linea) {
+    border: 0;
+    background-color: var(--tinta);
+    color: var(--durazno);
+    box-shadow: 0 6px 14px -8px rgb(16 11 36 / 0.8);
+  }
+
+  .pizarra-panel :is(.boton, .boton-linea):hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--tinta) 88%, var(--durazno));
+    color: var(--durazno-alta);
   }
 
   /* La cifra se mide contra el ancho de su propia columna, no contra el de
@@ -362,11 +382,14 @@
   }
 
   /* el filo bicolor: mitad peso, mitad dólar. Se traza al cargar. */
+  /* Va adentro de la tarjeta, como una pestaña colgada del borde de
+     arriba: pegado al canto redondeado quedaba cortado en las esquinas. */
   .pizarra-panel::before {
     content: "";
     position: absolute;
-    inset: 0 0 auto 0;
-    height: 2px;
+    inset: 0 1.75rem auto;
+    height: 4px;
+    border-radius: 0 0 4px 4px;
     background: linear-gradient(
       90deg,
       var(--peso-luz) 0 50%,
@@ -385,8 +408,9 @@
   .filo::before {
     content: "";
     position: absolute;
-    inset: 0 0 auto 0;
-    height: 2px;
+    inset: 0 1.75rem auto;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
     background: linear-gradient(90deg, var(--peso) 0 50%, var(--dolar) 50% 100%);
     transform-origin: left center;
     animation: trazar 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -400,9 +424,9 @@
     width: 2.125rem;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--borde-fuerte);
-    border-radius: var(--radio-control);
-    background-color: var(--fondo);
+    border: 1.5px solid var(--borde-fuerte);
+    border-radius: 12px;
+    background-color: var(--superficie);
     font-family: var(--font-num), ui-monospace, monospace;
     font-size: 1.25rem;
     font-weight: 500;
@@ -427,7 +451,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(var(--fondo), transparent 28%, transparent 72%, var(--fondo));
+    background: linear-gradient(var(--superficie), transparent 28%, transparent 72%, var(--superficie));
     pointer-events: none;
   }
 
@@ -466,12 +490,21 @@
 
   /* --- pestañas -------------------------------------------------------
      Las partes de una página que se miran por separado (en un grupo: los
-     gastos, los saldos y las personas). Una raya clara debajo marca la
-     abierta; el color de las monedas no se usa para esto. */
+     gastos, los saldos y las personas). Una pista hundida con la abierta en
+     una pastilla durazno, como los botones de la referencia. */
   .pestanas {
     display: flex;
     gap: 0.25rem;
-    border-bottom: 1px solid var(--borde);
+    border-radius: 9999px;
+    background-color: var(--superficie);
+    box-shadow: inset 0 1px 3px rgb(16 11 36 / 0.45);
+    padding: 4px;
+  }
+
+  @media (min-width: 40rem) {
+    .pestanas {
+      width: fit-content;
+    }
   }
 
   .pestana {
@@ -481,17 +514,19 @@
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    padding: 0.75rem 0.5rem;
+    border-radius: 9999px;
+    padding: 0.625rem 0.75rem;
     font-size: 0.9375rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--texto-tenue);
-    transition: color 0.15s ease;
+    transition: color 0.2s ease, background-color 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.25s ease;
   }
 
   @media (min-width: 40rem) {
     .pestana {
       flex: 0 0 auto;
-      padding-inline: 1rem;
+      padding-inline: 1.25rem;
     }
   }
 
@@ -500,23 +535,14 @@
   }
 
   .pestana[aria-selected="true"] {
-    color: var(--texto);
+    background-color: var(--durazno);
+    color: var(--tinta);
+    box-shadow: 0 6px 14px -8px rgb(16 11 36 / 0.9);
   }
 
-  /* la raya de la abierta: se estira desde el centro al elegirla */
-  .pestana::after {
-    content: "";
-    position: absolute;
-    inset: auto 0.5rem -1px;
-    height: 2px;
-    border-radius: 2px;
-    background-color: var(--foco);
-    transform: scaleX(0);
-    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  .pestana[aria-selected="true"]::after {
-    transform: scaleX(1);
+  .pestana[aria-selected="true"] .pestana-cuenta {
+    background-color: rgb(38 31 69 / 0.14);
+    color: var(--tinta);
   }
 
   .pestana-cuenta {
@@ -535,8 +561,9 @@
     width: 100%;
     border: 1px solid var(--borde);
     border-radius: var(--radio-control);
-    background-color: var(--fondo);
-    padding: 0.5625rem 0.75rem;
+    background-color: var(--superficie);
+    box-shadow: inset 0 1px 3px rgb(16 11 36 / 0.35);
+    padding: 0.6875rem 0.875rem;
     font-size: 0.875rem;
     transition: border-color 0.15s ease, background-color 0.15s ease,
       box-shadow 0.15s ease;
@@ -552,9 +579,9 @@
 
   .campo:focus-visible {
     outline: none;
-    border-color: color-mix(in srgb, var(--foco) 70%, var(--borde));
+    border-color: color-mix(in srgb, var(--foco) 80%, var(--borde));
     background-color: var(--superficie);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--foco) 14%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--foco) 22%, transparent);
   }
 
   /* --- el campo de monto ----------------------------------------------
@@ -572,8 +599,9 @@
     width: 100%;
     border: 1px solid color-mix(in srgb, var(--moneda) 55%, var(--borde));
     border-radius: var(--radio-control);
-    background-color: color-mix(in srgb, var(--moneda) 7%, var(--fondo));
-    padding: 0.4375rem 0.4375rem 0.4375rem 0.875rem;
+    background-color: color-mix(in srgb, var(--moneda) 7%, var(--superficie));
+    box-shadow: inset 0 1px 3px rgb(16 11 36 / 0.35);
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
     transition: border-color 0.15s ease, background-color 0.15s ease,
       box-shadow 0.15s ease;
   }
@@ -600,7 +628,9 @@
     flex: 1 1 auto;
     border: 0;
     background: transparent;
-    font-size: 1.5rem;
+    font-size: 1.625rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     line-height: 1.15;
   }
 
@@ -621,28 +651,26 @@
   }
 
   /* --- la tarjeta del mes (dashboard) -----------------------------------
-     Lo único de la app en azul pizarra: más frío y apagado que el petróleo
-     del fondo, con un acento gris azulado. Se despega de las tarjetas grises sin
-     pisar ningún color que ya significa algo (celeste pesos, verde dólares,
-     rojo alerta). Su firma es la constelación del mes: los días con gastos
-     son estrellas unidas por una línea que se dibuja al aparecer (ver
-     TarjetaDelMes). En PC la cifra y la constelación van lado a lado. */
+     La tarjeta hundida de siempre, con el durazno como acento: la curva, la
+     pastilla y el enlace. Los pesos y los dólares siguen en su color. Su
+     firma es la curva del mes, que se dibuja al aparecer (ver TarjetaDelMes).
+     En PC la cifra y la curva van lado a lado. */
   .tarjeta-mes {
-    --mes-texto: #e8eaf2;
-    --mes-suave: #aab0c6;
-    --mes-tenue: #8b92ab;
-    --mes-acento: #a9b4d8;
-    --mes-linea: rgb(169 180 216 / 0.16);
+    --mes-texto: var(--texto);
+    --mes-suave: var(--texto-suave);
+    --mes-tenue: var(--texto-tenue);
+    --mes-acento: var(--durazno);
+    --mes-linea: color-mix(in srgb, var(--borde) 70%, transparent);
+    --mes-velo: rgb(244 197 143 / 0.12);
     position: relative;
     overflow: hidden;
     border: 1px solid var(--mes-linea);
     border-radius: var(--radio-tarjeta);
     background:
-      radial-gradient(24rem 13rem at 100% 0%, rgb(169 180 216 / 0.1), transparent 70%),
-      radial-gradient(18rem 10rem at 0% 100%, rgb(111 190 228 / 0.04), transparent 70%),
-      linear-gradient(155deg, #232838 0%, #1c2030 55%, #181e2b 100%);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), var(--relieve);
-    padding: 1rem 1.125rem;
+      radial-gradient(24rem 13rem at 100% 0%, rgb(244 197 143 / 0.08), transparent 70%),
+      var(--superficie);
+    box-shadow: var(--relieve);
+    padding: 1.125rem 1.25rem;
     color: var(--mes-texto);
   }
 
@@ -673,7 +701,7 @@
     flex-shrink: 0;
     border: 1px solid var(--mes-linea);
     border-radius: 9999px;
-    background-color: rgb(169 180 216 / 0.1);
+    background-color: var(--mes-velo);
     padding: 0.1875rem 0.5625rem;
     font-size: 0.6875rem;
     color: var(--mes-suave);
@@ -685,9 +713,8 @@
 
   .tarjeta-mes-cifra {
     margin-top: 0.125rem;
-    font-family: var(--font-num), ui-monospace, monospace;
-    font-size: clamp(1.75rem, 7vw, 2.125rem);
-    font-weight: 400;
+    font-size: clamp(1.75rem, 7vw, 2.25rem);
+    font-weight: 700;
     line-height: 1.15;
     letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
@@ -708,7 +735,7 @@
   /* gastar menos que el mes pasado va en el acento de la tarjeta; más, en el
      rojo de alerta de toda la app */
   .tarjeta-mes-flecha.baja {
-    background-color: rgb(169 180 216 / 0.16);
+    background-color: var(--mes-velo);
     color: var(--mes-acento);
   }
 
@@ -742,12 +769,12 @@
   }
 
   .curva-trazos .curva-anterior {
-    stroke: rgb(169 180 216 / 0.28);
+    stroke: rgb(210 202 232 / 0.3);
     stroke-width: 1.25;
   }
 
   .curva-trazos .curva-relleno {
-    fill: rgb(169 180 216 / 0.1);
+    fill: rgb(244 197 143 / 0.1);
     stroke: none;
   }
 
@@ -770,7 +797,7 @@
     translate: -50% -50%;
     border: 1.5px solid var(--mes-acento);
     border-radius: 9999px;
-    background-color: #1c2030;
+    background-color: var(--superficie);
     animation: prender 0.35s cubic-bezier(0.34, 1.5, 0.64, 1) var(--demora, 0s) both;
   }
 
@@ -778,7 +805,7 @@
     height: 9px;
     width: 9px;
     background-color: var(--mes-acento);
-    box-shadow: 0 0 10px rgb(169 180 216 / 0.55);
+    box-shadow: 0 0 10px rgb(244 197 143 / 0.5);
   }
 
   /* hubo dólares ese día: el punto lleva un anillo verde */
@@ -793,7 +820,7 @@
     position: absolute;
     inset: -5px;
     border-radius: 9999px;
-    border: 1px solid rgb(232 234 242 / 0.6);
+    border: 1px solid rgb(244 197 143 / 0.7);
     animation: latido-punto 2.4s ease-out calc(var(--demora, 0s) + 0.4s) infinite;
   }
 
@@ -806,7 +833,7 @@
     translate: 50% -50%;
     border-radius: 9999px;
     background-color: var(--mes-texto);
-    box-shadow: 0 0 0 3px rgb(169 180 216 / 0.25);
+    box-shadow: 0 0 0 3px rgb(244 197 143 / 0.25);
     animation: prender 0.35s cubic-bezier(0.34, 1.5, 0.64, 1) 1.5s both;
   }
 
@@ -851,7 +878,7 @@
 
   .curva-leyenda i.anterior {
     border-top-width: 1.5px;
-    border-color: rgb(169 180 216 / 0.35);
+    border-color: rgb(210 202 232 / 0.35);
   }
 
   .tarjeta-mes-pie {
@@ -914,13 +941,13 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    border-bottom: 1px solid var(--borde);
-    padding: 0.875rem 1rem 0.75rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--borde) 70%, transparent);
+    padding: 1rem 1.25rem 0.875rem;
   }
 
   .panel-titulo {
-    font-size: 0.9375rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 700;
     color: var(--texto);
   }
 
@@ -936,8 +963,8 @@
     padding: 0.25rem 0.625rem;
     margin: -0.125rem -0.375rem 0 0;
     font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--texto-suave);
+    font-weight: 600;
+    color: var(--durazno);
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
@@ -955,14 +982,14 @@
     min-height: 3.5rem;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.25rem;
   }
 
   /* El separador arranca después de la insignia, como en .lista. */
   .panel-fila + .panel-fila {
     background-image: linear-gradient(var(--borde), var(--borde));
-    background-size: calc(100% - 4.125rem - 1rem) 1px;
-    background-position: 4.125rem 0;
+    background-size: calc(100% - 4.375rem - 1.25rem) 1px;
+    background-position: 4.375rem 0;
     background-repeat: no-repeat;
   }
 
@@ -976,9 +1003,9 @@
     align-items: center;
     justify-content: center;
     gap: 0.1875rem;
-    border-radius: 0.75rem;
-    background-color: var(--fondo);
-    box-shadow: inset 0 0 0 1px var(--borde);
+    border-radius: 0.875rem;
+    background-color: var(--superficie-alta);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
     font-size: 0.9375rem;
     font-weight: 600;
     line-height: 1;
@@ -1004,8 +1031,9 @@
     grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr));
     flex-shrink: 0;
     border-radius: 9999px;
-    background-color: var(--fondo);
-    box-shadow: inset 0 0 0 1px var(--borde), inset 0 1px 3px rgb(0 0 0 / 0.35);
+    background-color: var(--superficie);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--borde) 60%, transparent),
+      inset 0 1px 3px rgb(16 11 36 / 0.45);
     padding: 3px;
   }
 
@@ -1016,9 +1044,8 @@
     inset: 3px auto 3px 3px;
     width: calc((100% - 6px) / var(--n, 2));
     border-radius: 9999px;
-    background-color: color-mix(in srgb, var(--color, var(--texto)) 13%, var(--superficie-alta));
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.4),
-      0 0 0 1px color-mix(in srgb, var(--color, var(--texto)) 22%, transparent);
+    background-color: var(--color, var(--durazno));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 4px 10px -4px rgb(16 11 36 / 0.8);
     transform: translateX(calc(var(--i, 0) * 100%));
     transition: transform 0.34s cubic-bezier(0.34, 1.35, 0.64, 1), background-color 0.2s ease,
       box-shadow 0.2s ease;
@@ -1044,9 +1071,14 @@
     transition: color 0.2s ease;
   }
 
-  .segmento:hover > span,
-  .segmento input:checked + span {
+  .segmento:hover > span {
     color: var(--texto);
+  }
+
+  /* la elegida va sobre la ficha clara: letra en tinta */
+  .segmento input:checked + span {
+    color: var(--tinta);
+    font-weight: 600;
   }
 
   /* el radio real va oculto pero sigue ahí: el teclado y el lector de
@@ -1062,7 +1094,7 @@
   .campo-monto .segmentos {
     display: flex;
     gap: 2px;
-    border-radius: var(--radio-control);
+    border-radius: 10px;
     background-color: var(--superficie-alta);
     box-shadow: none;
   }
@@ -1072,17 +1104,17 @@
   }
 
   .campo-monto .segmento > span {
-    border-radius: 5px;
+    border-radius: 8px;
     padding: 0.375rem 0.6875rem;
-    font-family: var(--font-num), ui-monospace, monospace;
     font-size: 0.75rem;
-    letter-spacing: 0.06em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   .campo-monto .segmento input:checked + span {
-    background-color: color-mix(in srgb, var(--moneda) 16%, transparent);
-    color: var(--moneda);
+    background-color: var(--moneda);
+    color: var(--tinta);
   }
 
   /* --- selector de categoría -------------------------------------------
@@ -1102,9 +1134,9 @@
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    border: 1px solid var(--borde);
-    border-radius: 12px;
-    background-color: var(--fondo);
+    border: 1px solid color-mix(in srgb, var(--borde) 60%, transparent);
+    border-radius: 18px;
+    background-color: var(--superficie);
     padding: 0.875rem 0.5rem 0.75rem;
     color: var(--texto-suave);
     transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
@@ -1122,7 +1154,7 @@
 
   .ficha-categoria[aria-checked="true"] {
     border-color: var(--cat);
-    background-color: color-mix(in srgb, var(--cat) 14%, var(--fondo));
+    background-color: color-mix(in srgb, var(--cat) 16%, var(--superficie));
     color: var(--texto);
   }
 
@@ -1168,7 +1200,7 @@
     gap: 0.5rem;
     border: 1px solid var(--borde);
     border-radius: 9999px;
-    background-color: var(--fondo);
+    background-color: var(--superficie);
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
     color: var(--texto-suave);
@@ -1230,12 +1262,13 @@
     justify-content: center;
     gap: 0.5rem;
     border: 1px solid transparent;
-    border-radius: var(--radio-control);
+    border-radius: 16px;
     background-color: var(--accion);
-    padding: 0.5625rem 1.125rem;
+    padding: 0.6875rem 1.25rem;
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--accion-texto);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 8px 18px -10px rgb(16 11 36 / 0.9);
     transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
   }
 
@@ -1261,7 +1294,7 @@
   }
 
   .boton-peligro:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--alerta) 85%, #000);
+    background-color: color-mix(in srgb, var(--alerta) 88%, #fff);
   }
 
   .boton-linea {
@@ -1269,20 +1302,21 @@
     align-items: center;
     justify-content: center;
     gap: 0.375rem;
-    border: 1px solid var(--borde);
-    border-radius: var(--radio-control);
-    background-color: transparent;
-    padding: 0.5625rem 1rem;
+    border: 2px solid var(--durazno);
+    border-radius: 16px;
+    background-color: var(--superficie);
+    padding: 0.5625rem 1.125rem;
     font-size: 0.875rem;
-    color: var(--texto-suave);
+    font-weight: 700;
+    color: var(--durazno);
     transition: color 0.15s ease, border-color 0.15s ease,
       background-color 0.15s ease, transform 0.1s ease;
   }
 
   .boton-linea:hover {
-    color: var(--texto);
-    border-color: var(--borde-fuerte);
-    background-color: var(--superficie-alta);
+    color: var(--durazno-alta);
+    border-color: var(--durazno-alta);
+    background-color: color-mix(in srgb, var(--durazno) 10%, var(--superficie));
   }
 
   /* el atajo flotante: la única acción que sigue al scroll */
@@ -1380,9 +1414,9 @@
     width: calc(100% - 2rem);
     max-width: 26rem;
     padding: 0;
-    border: 1px solid var(--borde);
+    border: 1px solid color-mix(in srgb, var(--borde-fuerte) 60%, transparent);
     border-radius: var(--radio-flotante);
-    background-color: var(--superficie);
+    background-color: var(--fondo);
     box-shadow: var(--sombra-flotante);
     color: var(--texto);
   }
@@ -1470,7 +1504,7 @@
   }
 
   .dialogo::backdrop {
-    background-color: rgb(4 9 12 / 0.65);
+    background-color: var(--velo);
   }
 
   /* --- el cajón del menú ----------------------------------------------
@@ -1485,7 +1519,8 @@
     padding: 0;
     border: 0;
     border-right: 1px solid var(--borde);
-    background-color: var(--superficie);
+    border-radius: 0 var(--radio-flotante) var(--radio-flotante) 0;
+    background-color: var(--fondo);
     color: var(--texto);
     translate: -100% 0;
     /* `allow-discrete` deja animar la salida: sin eso el cajón desaparece de
@@ -1512,7 +1547,7 @@
   }
 
   .cajon[open]::backdrop {
-    background-color: rgb(4 9 12 / 0.65);
+    background-color: var(--velo);
   }
 
   @starting-style {
@@ -1540,7 +1575,7 @@
     border: 3px solid var(--texto);
     border-radius: 9999px;
     background: transparent;
-    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 2px 6px rgb(0 0 0 / 0.4);
+    box-shadow: 0 0 0 1px rgb(16 11 36 / 0.4), 0 2px 6px rgb(16 11 36 / 0.5);
   }
 
   .deslizador::-moz-range-thumb {
@@ -1568,17 +1603,18 @@
   /* --- datos ---------------------------------------------------------- */
 
   .barra-pista {
-    height: 6px;
+    height: 8px;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
-    border-radius: 3px;
-    background-color: var(--borde);
+    border-radius: 9999px;
+    background-color: var(--superficie-alta);
+    box-shadow: inset 0 1px 2px rgb(16 11 36 / 0.4);
   }
 
   .barra-valor {
     height: 100%;
-    border-radius: 3px;
+    border-radius: 9999px;
   }
 
   /* el filete de color que identifica la categoría en el borde de su fila.
@@ -1593,8 +1629,8 @@
 
   /* el hueso del esqueleto: la silueta de un dato que todavía no llegó */
   .hueso {
-    border-radius: 4px;
-    background-color: var(--borde);
+    border-radius: 10px;
+    background-color: var(--superficie-alta);
     animation: latir 1.4s ease-in-out infinite;
   }
 
@@ -1617,7 +1653,7 @@
     margin-top: 0.25rem;
     font-family: var(--font-ui), sans-serif;
     font-size: 1.875rem;
-    font-weight: 600;
+    font-weight: 700;
     font-variation-settings: normal;
     line-height: 1.15;
     letter-spacing: -0.02em;
@@ -1627,10 +1663,10 @@
   .titulo::after {
     content: "";
     display: block;
-    width: 2.25rem;
-    height: 2px;
-    margin-top: 0.6rem;
-    border-radius: 1px;
+    width: 2.5rem;
+    height: 4px;
+    margin-top: 0.65rem;
+    border-radius: 9999px;
     background: linear-gradient(90deg, var(--peso) 0 50%, var(--dolar) 50% 100%);
   }
 
@@ -1647,19 +1683,19 @@
     gap: 0.55em;
     font-family: var(--font-ui), sans-serif;
     font-size: 1.0625rem;
-    font-weight: 600;
+    font-weight: 700;
     font-variation-settings: normal;
     line-height: 1.2;
-    letter-spacing: -0.005em;
-    color: var(--texto-suave);
+    letter-spacing: -0.01em;
+    color: var(--texto);
   }
 
   .seccion-titulo:not(:is(.tarjeta, .lista, .dialogo, dialog, .pizarra-panel) .seccion-titulo)::before {
     content: "";
-    width: 3px;
+    width: 4px;
     height: 0.9em;
     flex-shrink: 0;
-    border-radius: 1px;
+    border-radius: 9999px;
     background: linear-gradient(var(--peso) 0 50%, var(--dolar) 50% 100%);
   }
 
@@ -1786,10 +1822,10 @@
 
 @keyframes hoja-fondo {
   from {
-    background-color: rgb(4 9 12 / 0);
+    background-color: rgb(20 15 40 / 0);
   }
   to {
-    background-color: rgb(4 9 12 / 0.65);
+    background-color: var(--velo);
   }
 }
 

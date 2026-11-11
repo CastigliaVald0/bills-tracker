@@ -187,14 +187,14 @@ export default async function MonthlyPage({
     <div className="flex shrink-0 items-center gap-1">
       <Link
         href={`/monthly?mes=${claveDe(mesPrevio.anio, mesPrevio.mes)}`}
-        className="flex h-8 w-8 items-center justify-center rounded border border-pizarra-borde text-pizarra-suave transition-colors hover:border-peso-luz hover:text-pizarra-texto"
+        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-pizarra-borde text-pizarra-suave transition-colors hover:border-peso-luz hover:text-pizarra-texto"
         aria-label={`Ir a ${nombreDelMes(mesPrevio.anio, mesPrevio.mes)}`}
       >
         ←
       </Link>
       {esMesActual ? (
         <span
-          className="flex h-8 w-8 items-center justify-center rounded border border-pizarra-borde text-pizarra-suave opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-pizarra-borde text-pizarra-suave opacity-40"
           aria-hidden
         >
           →
@@ -202,7 +202,7 @@ export default async function MonthlyPage({
       ) : (
         <Link
           href={`/monthly?mes=${claveDe(mesSiguiente.anio, mesSiguiente.mes)}`}
-          className="flex h-8 w-8 items-center justify-center rounded border border-pizarra-borde text-pizarra-suave transition-colors hover:border-dolar-luz hover:text-pizarra-texto"
+          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-pizarra-borde text-pizarra-suave transition-colors hover:border-dolar-luz hover:text-pizarra-texto"
           aria-label={`Ir a ${nombreDelMes(mesSiguiente.anio, mesSiguiente.mes)}`}
         >
           →

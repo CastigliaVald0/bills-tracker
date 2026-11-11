@@ -21,7 +21,7 @@ export function BotonAgregar() {
         aria-label="Agregar gasto"
         title="Agregar gasto"
         aria-haspopup="dialog"
-        className="relative flex h-full w-full items-center justify-center rounded-full bg-accion text-accion-texto shadow-lg shadow-black/25 transition-colors hover:bg-accion-alta"
+        className="relative flex h-full w-full items-center justify-center rounded-full bg-accion text-accion-texto shadow-[0_12px_26px_-8px_rgb(16_11_36/0.85)] transition-colors hover:bg-accion-alta"
       >
         <svg
           viewBox="0 0 24 24"

@@ -347,7 +347,7 @@ export function AsistenteGrupo() {
                 <p className="mt-1 text-center text-xs text-tenue">Una sola lista de gastos.</p>
               </div>
             ) : piezas.length === 0 ? (
-              <div className="flex aspect-[1.6] items-center justify-center rounded-[10px] border border-dashed border-borde-fuerte px-4 text-center text-xs text-tenue">
+              <div className="flex aspect-[1.6] items-center justify-center rounded-2xl border border-dashed border-borde-fuerte px-4 text-center text-xs text-tenue">
                 Las secciones que agregues aparecen acá.
               </div>
             ) : (

@@ -13,12 +13,12 @@ import { MENU_CELULAR } from "@/components/navegacion";
 function iconClass(active: boolean, flotante: boolean) {
   if (flotante) {
     return `flex h-11 w-14 items-center justify-center rounded-full transition-colors ${
-      active ? "bg-foco/12 text-texto" : "text-suave hover:text-texto"
+      active ? "bg-durazno/15 text-durazno" : "text-suave hover:text-texto"
     }`;
   }
   return `relative flex items-center transition-colors ${
     active
-      ? "text-texto after:absolute after:inset-x-0 after:-bottom-1.5 after:h-0.5 after:bg-foco"
+      ? "text-texto after:absolute after:inset-x-0 after:-bottom-1.5 after:h-[3px] after:rounded-full after:bg-durazno"
       : "text-suave hover:text-texto"
   }`;
 }
@@ -102,14 +102,14 @@ export function NavLinks() {
             // abre hacia arriba y hacia la derecha para no salirse.
             // `menu-sube`: crece desde el botón (abajo a la izquierda) y las
             // opciones aparecen de a una (ver globals.css).
-            className="menu-sube origin-bottom-left absolute bottom-full left-0 z-30 mb-4 flex w-52 flex-col gap-0.5 rounded-xl border border-borde bg-superficie p-1.5 shadow-[var(--sombra-flotante)]"
+            className="menu-sube origin-bottom-left absolute bottom-full left-0 z-30 mb-4 flex w-52 flex-col gap-0.5 rounded-2xl border border-borde bg-superficie p-1.5 shadow-[var(--sombra-flotante)]"
           >
             {MENU_CELULAR.map((entrada, i) => (
               <Link
                 key={entrada.href}
                 href={entrada.href}
                 style={{ "--i": i } as React.CSSProperties}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                   pathname.startsWith(entrada.href)
                     ? "bg-superficie-alta font-medium text-texto"
                     : "text-suave hover:bg-superficie-alta hover:text-texto"

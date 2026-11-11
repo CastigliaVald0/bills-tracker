@@ -24,7 +24,7 @@ function contraste(a: string, b: string) {
  * llega a 1,5:1 contra la superficie de las tarjetas.
  */
 function avisoDeContraste(hex: string) {
-  if (contraste(hex, "#15212a") < 1.5) return "Muy oscuro: casi no se va a ver sobre el fondo de la app.";
+  if (contraste(hex, "#2e2750") < 1.5) return "Muy oscuro: casi no se va a ver sobre el fondo de la app.";
   return null;
 }
 
