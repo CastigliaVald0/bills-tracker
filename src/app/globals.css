@@ -455,6 +455,298 @@
     animation: trazar 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
+  /* --- la cifra que rueda ------------------------------------------------
+     Cada dígito es una rueda con los diez números; al cambiar el total, las
+     ruedas giran hasta su valor nuevo, de derecha a izquierda (`--i` es la
+     distancia al último dígito). Mismo gesto que el rodillo del código de
+     amigo. En reposo se ve igual que el texto de siempre. */
+  .rodante {
+    position: relative;
+    display: inline-flex;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .rodante-caja {
+    display: inline-block;
+    height: 1.1em;
+    overflow: hidden;
+  }
+
+  .rodante-rueda {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rodante-rueda > span {
+    height: 1.1em;
+  }
+
+  .rodante.rodando .rodante-rueda {
+    transition: transform 0.9s cubic-bezier(0.34, 1.3, 0.64, 1) calc(var(--i, 0) * 45ms);
+  }
+
+  /* lo que se sumó, en una pastilla que sube y se va */
+  .rodante-suma {
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    margin-bottom: 0.25rem;
+    border-radius: 9999px;
+    background-color: var(--tinta);
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--durazno);
+    pointer-events: none;
+    animation: suma-sube 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* --- el ticket de un gasto cargado -------------------------------------
+     Sale de una ranura, como de una caja registradora, apenas se guarda el
+     gasto: en el centro de la pantalla, con la página detrás difuminada.
+     Dura unos segundos y vuelve a entrar; tocar en cualquier lado lo guarda
+     antes. */
+  .ticket-velo {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background-color: rgb(20 15 40 / 0.35);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    animation: ticket-velo-entra 0.25s ease-out both;
+  }
+
+  .ticket-pop {
+    position: fixed;
+    z-index: 41;
+    left: 50%;
+    top: 50%;
+    width: min(21rem, calc(100% - 2.5rem));
+    translate: -50% -50%;
+    animation: ticket-ranura 0.18s ease-out 0.08s both;
+  }
+
+  .ticket-ranura {
+    position: relative;
+    z-index: 1;
+    height: 0.75rem;
+    border-radius: 9999px;
+    background-color: color-mix(in srgb, var(--tinta) 80%, #000);
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.6), 0 6px 16px -6px rgb(16 11 36 / 0.9);
+  }
+
+  .ticket-boca {
+    overflow: hidden;
+    margin: -0.375rem 0.75rem 0;
+    padding-bottom: 0.75rem;
+  }
+
+  .ticket-papel {
+    display: grid;
+    gap: 0.625rem;
+    width: 100%;
+    background-color: var(--durazno);
+    padding: 1.125rem 1rem 1.25rem;
+    color: var(--tinta);
+    text-align: left;
+    filter: drop-shadow(0 10px 14px rgb(16 11 36 / 0.55));
+    /* el borde de abajo, dentado como el de un ticket cortado */
+    -webkit-mask:
+      linear-gradient(#000 0 0) top / 100% calc(100% - 7px) no-repeat,
+      radial-gradient(circle at 50% 100%, transparent 5px, #000 5.5px) bottom / 13px 7px repeat-x;
+    mask:
+      linear-gradient(#000 0 0) top / 100% calc(100% - 7px) no-repeat,
+      radial-gradient(circle at 50% 100%, transparent 5px, #000 5.5px) bottom / 13px 7px repeat-x;
+    animation: ticket-imprime 0.55s cubic-bezier(0.3, 0.7, 0.2, 1) 0.1s both;
+  }
+
+  .ticket-saliendo .ticket-papel {
+    animation: ticket-guarda 0.24s cubic-bezier(0.5, 0, 0.75, 0) both;
+  }
+
+  .ticket-saliendo .ticket-pop {
+    animation: ticket-ranura-va 0.2s ease-in 0.2s both;
+  }
+
+  .ticket-saliendo .ticket-velo {
+    animation: ticket-velo-sale 0.3s ease-in 0.15s both;
+  }
+
+  .ticket-renglon {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .ticket-tenue {
+    color: var(--pizarra-suave);
+  }
+
+  .ticket-total {
+    border-top: 1.5px dashed rgb(38 31 69 / 0.28);
+    padding-top: 0.625rem;
+    font-size: 1.125rem;
+    font-weight: 800;
+  }
+
+  /* lo que pasa con el gasto, dicho en una línea: una franja de tinta con
+     el ícono del tipo de gasto, no un sello */
+  .ticket-pie {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 12px;
+    background-color: var(--tinta);
+    padding: 0.4375rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--durazno);
+    animation: aparece-opcion 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s both;
+  }
+
+  /* --- cuotas en pastillas ------------------------------------------------
+     Una pastilla por cuota: las cobradas llenas en el color de la moneda, la
+     que viene con un borde durazno que late. De a seis se separan un poco más
+     para poder contarlas. */
+  .cuotas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    max-width: 15rem;
+  }
+
+  .cuota {
+    position: relative;
+    height: 8px;
+    min-width: 6px;
+    flex: 1 1 0;
+    max-width: 1.25rem;
+    overflow: hidden;
+    border-radius: 9999px;
+    background-color: var(--superficie-alta);
+    box-shadow: inset 0 1px 2px rgb(16 11 36 / 0.4);
+  }
+
+  .cuota.sexta {
+    margin-right: 3px;
+  }
+
+  .cuota.cobrada::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--moneda, var(--peso));
+    transform-origin: left center;
+    animation: cuota-llena 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.1s + var(--n, 0) * 50ms) both;
+  }
+
+  .cuota.proxima {
+    box-shadow: inset 0 0 0 1.5px var(--durazno);
+    animation: cuota-late 2s ease-in-out 1s infinite;
+  }
+
+  /* --- vencimientos del mes ----------------------------------------------
+     Los fijos que faltan, cada uno en su tarjetita con el día grande. En el
+     celular es una tira que se desliza; en la columna de PC, una grilla de
+     dos. El más cercano va en durazno, con una onda que lo marca. */
+  .vencimientos {
+    display: flex;
+    gap: 0.625rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1rem;
+    padding: 0.875rem 1rem 1rem;
+    scrollbar-width: none;
+  }
+
+  .vencimientos::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (min-width: 40rem) {
+    .vencimientos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+      overflow: visible;
+    }
+  }
+
+  .vto {
+    position: relative;
+    display: grid;
+    flex: 0 0 8.25rem;
+    align-content: start;
+    gap: 0.25rem;
+    border-radius: 18px;
+    background-color: var(--superficie-alta);
+    padding: 0.75rem 0.8125rem 0.8125rem;
+    scroll-snap-align: start;
+    animation: vto-entra 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.08s + var(--n, 0) * 60ms) both;
+  }
+
+  .vto-dia {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-size: 1.625rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .vto-dia small {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: var(--texto-tenue);
+  }
+
+  .vto-color {
+    height: 3px;
+    width: 1.25rem;
+    border-radius: 9999px;
+    margin-block: 0.125rem 0.25rem;
+  }
+
+  .vto-nombre {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+
+  .vto-falta {
+    font-size: 0.6875rem;
+    color: var(--texto-tenue);
+  }
+
+  /* el más cercano: durazno, con la tinta y las monedas en su tono hondo */
+  .vto.cerca {
+    --peso: var(--peso-tinta);
+    --dolar: var(--dolar-tinta);
+    --texto-tenue: var(--pizarra-suave);
+    background-color: var(--durazno);
+    color: var(--tinta);
+  }
+
+  .vto.cerca::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border: 2px solid var(--durazno);
+    border-radius: 21px;
+    pointer-events: none;
+    animation: vto-onda 2.4s ease-out 1s infinite;
+  }
+
   /* el mismo filo bicolor, para una tarjeta común */
   .filo {
     position: relative;
@@ -1970,6 +2262,97 @@
   }
 }
 
+@keyframes suma-sube {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  18%,
+  72% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes ticket-velo-entra {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ticket-velo-sale {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ticket-ranura {
+  from {
+    opacity: 0;
+    transform: scaleX(0.6);
+  }
+}
+
+@keyframes ticket-ranura-va {
+  to {
+    opacity: 0;
+    transform: scaleX(0.6);
+  }
+}
+
+@keyframes ticket-imprime {
+  0% {
+    transform: translateY(-104%);
+  }
+  75% {
+    transform: translateY(2%);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes ticket-guarda {
+  to {
+    transform: translateY(-104%);
+  }
+}
+
+@keyframes cuota-llena {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes cuota-late {
+  50% {
+    box-shadow: inset 0 0 0 1.5px var(--durazno), 0 0 0 3px color-mix(in srgb, var(--durazno) 30%, transparent);
+  }
+}
+
+@keyframes vto-entra {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+@keyframes vto-onda {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.97);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: scale(1.07);
+  }
+}
+
 @keyframes aparece {
   from {
     opacity: 0;
@@ -2003,8 +2386,21 @@
   .casilla-rodillo,
   .casilla-tira,
   .burbuja,
-  .anillo-trazar {
+  .anillo-trazar,
+  .rodante-suma,
+  .ticket-pop,
+  .ticket-velo,
+  .ticket-papel,
+  .ticket-pie,
+  .cuota,
+  .cuota::after,
+  .vto,
+  .vto::after {
     animation: none;
+  }
+
+  .rodante .rodante-rueda {
+    transition: none;
   }
 
   .cajon,

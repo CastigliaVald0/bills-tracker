@@ -1,3 +1,5 @@
+import { CifraRodante } from "@/components/CifraRodante";
+
 /**
  * Pizarra: el tablero de tinta donde se publican los totales, como la pizarra
  * de cotizaciones de un banco. Las dos monedas van en columnas separadas por
@@ -43,10 +45,19 @@ export function Pizarra({
       </div>
 
       <div className="mt-6 grid grid-cols-2 sm:mt-7">
-        <Columna etiqueta="Pesos" monto={pesos} color="var(--peso-luz)" nota={notaPesos} />
+        <Columna
+          etiqueta="Pesos"
+          monto={pesos}
+          moneda="UYU"
+          clave={`${rotulo}|${titulo}|UYU`}
+          color="var(--peso-luz)"
+          nota={notaPesos}
+        />
         <Columna
           etiqueta="Dólares"
           monto={dolares}
+          moneda="USD"
+          clave={`${rotulo}|${titulo}|USD`}
           color="var(--dolar-luz)"
           nota={notaDolares}
           separador
@@ -110,12 +121,16 @@ export function ColumnaPizarra({
 function Columna({
   etiqueta,
   monto,
+  moneda,
+  clave,
   color,
   nota,
   separador = false,
 }: {
   etiqueta: string;
   monto: string;
+  moneda: "UYU" | "USD";
+  clave: string;
   color: string;
   nota?: React.ReactNode;
   separador?: boolean;
@@ -130,8 +145,10 @@ function Columna({
       <p className="rotulo" style={{ color }}>
         {etiqueta}
       </p>
+      {/* Cuando el total cambia (acabás de cargar un gasto), rueda hasta
+          el valor nuevo: ver CifraRodante. */}
       <p className="pizarra-cifra monto mt-2.5 leading-[0.95] text-pizarra-texto">
-        {monto}
+        <CifraRodante texto={monto} moneda={moneda} clave={clave} />
       </p>
       {nota && <p className="mt-2 text-xs text-pizarra-suave">{nota}</p>}
     </div>

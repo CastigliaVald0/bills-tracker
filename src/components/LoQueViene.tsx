@@ -13,8 +13,9 @@ export type FijoPendiente = {
 /**
  * Los gastos fijos que todavía no cayeron este mes. El total de la pizarra
  * dice lo que ya gastaste; esto dice lo que falta, que es la otra mitad de
- * "cómo viene el mes". Cada uno lleva su día como la hoja de un almanaque,
- * con el color de su categoría debajo del número.
+ * "cómo viene el mes". Cada uno es una tarjetita con su día grande, el color
+ * de su categoría y cuánto falta; el más cercano va en durazno. En el celular
+ * se deslizan de costado; en la columna de PC van de a dos.
  */
 export function LoQueViene({
   pendientes,
@@ -32,6 +33,8 @@ export function LoQueViene({
   const textoFalta = [falta.UYU > 0 && formatMoney(falta.UYU, "UYU"), falta.USD > 0 && formatMoney(falta.USD, "USD")]
     .filter(Boolean)
     .join(" · ");
+
+  const mesCorto = nombreMes.slice(0, 3);
 
   return (
     <section aria-labelledby="viene-titulo" className="tarjeta aparece flex min-w-0 flex-col overflow-hidden">
@@ -60,27 +63,28 @@ export function LoQueViene({
           No te queda ningún gasto fijo por pagar en {nombreMes}.
         </p>
       ) : (
-        <ul className="panel-filas">
-          {pendientes.map((p) => {
+        // Una tarjetita por fijo, con el día grande. El más cercano va en
+        // durazno (ver .vencimientos y .vto en globals.css).
+        <ul className="vencimientos" aria-label={`Gastos fijos que faltan en ${nombreMes}`}>
+          {pendientes.map((p, n) => {
             const dias = p.dia - hoy;
+            const cerca = n === 0;
             return (
-              <li key={p.id} className="panel-fila">
-                <span className="almanaque" aria-hidden>
+              <li
+                key={p.id}
+                className={`vto ${cerca ? "cerca" : ""}`}
+                style={{ "--n": n } as React.CSSProperties}
+              >
+                <span className="vto-dia">
                   <span className="monto">{p.dia}</span>
-                  <span className="almanaque-color" style={{ backgroundColor: p.color }} />
+                  <small>{mesCorto}</small>
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-texto">{p.nombre}</p>
-                  <p className="mt-0.5 text-xs text-tenue">
-                    <span className="sr-only">Día {p.dia}, </span>
-                    {dias === 1 ? "Mañana" : `En ${dias} días`}
-                  </p>
-                </div>
-                <span
-                  className={`monto shrink-0 text-sm font-semibold ${p.moneda === "UYU" ? "text-peso" : "text-dolar"}`}
-                >
+                <span aria-hidden className="vto-color" style={{ backgroundColor: p.color }} />
+                <span className="vto-nombre">{p.nombre}</span>
+                <span className={`monto text-sm font-semibold ${p.moneda === "UYU" ? "text-peso" : "text-dolar"}`}>
                   {formatMoney(p.monto, p.moneda)}
                 </span>
+                <span className="vto-falta">{dias <= 0 ? "Hoy" : dias === 1 ? "Mañana" : `En ${dias} días`}</span>
               </li>
             );
           })}

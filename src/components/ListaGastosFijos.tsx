@@ -107,29 +107,46 @@ export function ListaGastosFijos() {
 
                       {/* El progreso va en su propio renglón y no pegado a la
                           categoría: en el celular no entraban los dos juntos y
-                          se cortaba justo el dato de las cuotas. */}
+                          se cortaba justo el dato de las cuotas. Una pastilla
+                          por cuota: las cobradas en el color de la moneda y la
+                          que viene marcada en durazno (ver .cuotas). */}
                       {progreso && (
-                        <span className="mt-1.5 flex items-center gap-2">
+                        <span className="mt-2 flex flex-col gap-1.5">
                           {!finalizado && (
                             <span
                               aria-hidden
-                              className="h-[3px] w-14 shrink-0 overflow-hidden rounded-full bg-borde sm:w-24"
+                              className="cuotas"
+                              style={{ "--moneda": item.currency === "UYU" ? "var(--peso)" : "var(--dolar)" } as React.CSSProperties}
                             >
-                              <span
-                                className="block h-full rounded-full"
-                                style={{
-                                  width: `${(progreso.actual / progreso.total) * 100}%`,
-                                  backgroundColor: item.category.color,
-                                }}
-                              />
+                              {Array.from({ length: progreso.total }, (_, n) => (
+                                <span
+                                  key={n}
+                                  style={{ "--n": n } as React.CSSProperties}
+                                  className={`cuota ${n < progreso.actual ? "cobrada" : ""} ${
+                                    n === progreso.actual && item.active ? "proxima" : ""
+                                  } ${progreso.total > 12 && n % 6 === 5 && n < progreso.total - 1 ? "sexta" : ""}`}
+                                />
+                              ))}
                             </span>
                           )}
-                          <span className="truncate text-xs text-tenue">
+                          {/* Sin recorte: si "faltan $ …" no entra, baja de renglón. */}
+                          <span className="text-xs text-tenue">
                             {finalizado
                               ? `${progreso.total} cuotas, terminado`
                               : progreso.actual === 0
                                 ? `0 de ${progreso.total} cuotas`
                                 : `cuota ${progreso.actual} de ${progreso.total}`}
+                            {!finalizado && progreso.actual < progreso.total && (
+                              <>
+                                {" · "}
+                                <span className="whitespace-nowrap">
+                                  faltan{" "}
+                                  <span className="monto text-suave">
+                                    {formatMoney(Number(item.amount) * (progreso.total - progreso.actual), item.currency)}
+                                  </span>
+                                </span>
+                              </>
+                            )}
                           </span>
                         </span>
                       )}

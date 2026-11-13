@@ -8,6 +8,7 @@ import type { Category } from "@/lib/types";
 import { CampoMonto, CampoCategoria, Conmutador } from "@/components/CamposGasto";
 import { Aviso, enfocarCampoConError } from "@/components/Aviso";
 import { NuevaCategoria } from "@/components/NuevaCategoria";
+import type { DatosTicket } from "@/components/TicketGasto";
 import { IconoTicket, IconoCalendario, IconoGrupo } from "@/components/navegacion";
 import { formatMoney, parseMoneyInput } from "@/lib/format";
 import { monthYearLabel, dateToMonthInput, primerMesDeCobro, mesFinalDeCuotas, diaDeCobroYaPaso } from "@/lib/month";
@@ -194,7 +195,30 @@ export function NuevoGasto({ origen = null, alCerrar }: { origen?: Origen | null
           : modoFijo === "cuotas"
             ? `Gasto fijo en ${cantidadCuotas} cuotas creado.`
             : "Gasto fijo creado.";
-      window.dispatchEvent(new CustomEvent(EVENTO_GASTO_CARGADO, { detail: { tipo, mensaje } }));
+
+      // Los datos del ticket que sale al guardar (ver TicketGasto).
+      const categoria = categorias?.find((c) => c.id === categoriaId);
+      const nombreCategoria = categoria?.name ?? "Gasto";
+      const diaDeFecha = new Date(`${fecha}T00:00:00Z`);
+      const ticket: DatosTicket = {
+        tipo: tipo === "comun" ? "comun" : "fijo",
+        titulo: descripcion.trim() || nombreCategoria,
+        categoria: nombreCategoria,
+        emoji: categoria?.emoji ?? null,
+        monto: montoNumerico,
+        moneda,
+        cuando:
+          tipo === "comun"
+            ? new Intl.DateTimeFormat("es-UY", { day: "numeric", month: "short", timeZone: "UTC" }).format(diaDeFecha)
+            : `Día ${numeroDia}`,
+        pie:
+          tipo === "comun"
+            ? `Suma a ${new Intl.DateTimeFormat("es-UY", { month: "long", timeZone: "UTC" }).format(diaDeFecha).toLowerCase()}`
+            : modoFijo === "cuotas" && mesFinal
+              ? `${cantidadCuotas} ${cantidadCuotas === 1 ? "cuota" : "cuotas"}, hasta ${monthYearLabel(mesFinal)}`
+              : `Se carga solo el ${numeroDia} de cada mes`,
+      };
+      window.dispatchEvent(new CustomEvent(EVENTO_GASTO_CARGADO, { detail: { tipo, mensaje, ticket } }));
       router.refresh();
       alCerrar();
     } finally {

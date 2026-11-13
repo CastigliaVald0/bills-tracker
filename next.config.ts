@@ -17,6 +17,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // No anunciar el framework en las respuestas.
   poweredByHeader: false,
+  // Solo en desarrollo: deja abrir `npm run dev` desde el celular, por la red
+  // de casa o por Tailscale. Sin esto Next bloquea sus archivos para cualquier
+  // dirección que no sea localhost y la página carga pero no funciona.
+  allowedDevOrigins: ["192.168.0.*", "100.90.139.84"],
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
