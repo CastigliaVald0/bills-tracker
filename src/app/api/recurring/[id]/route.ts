@@ -48,7 +48,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   return NextResponse.json(recurring);
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -56,6 +56,18 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const existing = await prisma.recurringExpense.findFirst({ where: { id, userId } });
   if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
-  await prisma.recurringExpense.delete({ where: { id } });
+  // "Deshacer" desde el ticket: el fijo recién creado puede haber generado ya
+  // el gasto de este mes (si su día había pasado). Ese gasto se va con él.
+  // Solo lo que se generó en los últimos minutos, para que borrar un fijo
+  // viejo nunca se lleve gastos de meses anteriores.
+  const deshacer = new URL(request.url).searchParams.get("deshacer") === "1";
+  await prisma.$transaction(async (tx) => {
+    if (deshacer) {
+      await tx.expense.deleteMany({
+        where: { userId, recurringExpenseId: id, createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) } },
+      });
+    }
+    await tx.recurringExpense.delete({ where: { id } });
+  });
   return NextResponse.json({ ok: true });
 }

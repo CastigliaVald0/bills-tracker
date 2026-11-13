@@ -575,6 +575,19 @@
     animation: ticket-velo-sale 0.3s ease-in 0.15s both;
   }
 
+  /* Deshacer y Cargar otro, debajo del ticket */
+  .ticket-acciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    animation: aparece-opcion 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both;
+  }
+
+  .ticket-saliendo .ticket-acciones {
+    animation: ticket-velo-sale 0.15s ease-in both;
+  }
+
   .ticket-renglon {
     display: flex;
     align-items: baseline;
@@ -984,6 +997,20 @@
 
   .campo-monto input:focus-visible {
     outline: none;
+  }
+
+  /* el "0,00" de ejemplo: más claro que el tenue, que sobre el campo teñido
+     daba 3,9:1 */
+  .campo-monto input::placeholder {
+    color: color-mix(in srgb, var(--texto-tenue) 85%, var(--texto));
+  }
+
+  /* con error, el campo entero se pone en coral: se ve dónde está el
+     problema sin leer el aviso de abajo */
+  .campo-monto:has(input[aria-invalid="true"]) {
+    /* el color de la moneda viene en línea desde el componente: sin esto no
+       se pisaría */
+    --moneda: var(--alerta) !important;
   }
 
   /* las flechitas del input numérico al lado de una cifra grande quedan mal */
@@ -1465,6 +1492,116 @@
     color: var(--tinta);
   }
 
+  /* --- las categorías recientes ----------------------------------------
+     En el formulario de gasto, las últimas usadas como fichas de un toque;
+     "Otra" abre la grilla completa. La elegida se marca con su color. */
+  .fichas-recientes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ficha-reciente {
+    --cat: var(--borde-fuerte);
+    display: inline-flex;
+    min-width: 0;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--borde) 70%, transparent);
+    border-radius: 9999px;
+    background-color: var(--superficie);
+    padding: 0.3125rem 0.875rem 0.3125rem 0.3125rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--texto-suave);
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease,
+      transform 0.1s ease;
+  }
+
+  .ficha-reciente:active {
+    transform: scale(0.97);
+  }
+
+  .ficha-reciente[aria-checked="true"] {
+    border-color: var(--cat);
+    background-color: color-mix(in srgb, var(--cat) 16%, var(--superficie));
+    color: var(--texto);
+  }
+
+  .ficha-reciente .insignia {
+    box-shadow: none;
+  }
+
+  .ficha-reciente-otra {
+    border-style: dashed;
+    border-color: var(--borde-fuerte);
+    background-color: transparent;
+    padding-inline: 1rem;
+  }
+
+  @media (hover: hover) {
+    .ficha-reciente:hover {
+      color: var(--texto);
+      border-color: var(--borde-fuerte);
+    }
+
+    .ficha-reciente[aria-checked="true"]:hover {
+      border-color: var(--cat);
+    }
+  }
+
+  @media (pointer: coarse) {
+    .ficha-reciente {
+      min-height: 44px;
+    }
+  }
+
+  /* --- fecha y nota del gasto común ------------------------------------
+     Casi siempre es hoy y casi nunca lleva nota: en vez de dos campos
+     abiertos, dos fichas chicas. La fecha abre el calendario del teléfono;
+     la nota abre su campo. */
+  .ficha-extra {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    border: 1px solid color-mix(in srgb, var(--borde) 70%, transparent);
+    border-radius: 9999px;
+    background-color: var(--superficie);
+    padding: 0.4375rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--texto-suave);
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .ficha-extra:hover,
+  .ficha-extra:focus-within {
+    border-color: var(--borde-fuerte);
+    color: var(--texto);
+  }
+
+  /* el input de fecha va encima, invisible: el toque abre el calendario */
+  .ficha-extra input[type="date"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .ficha-extra:has(input:focus-visible) {
+    outline: 2px solid var(--foco);
+    outline-offset: 2px;
+  }
+
+  @media (pointer: coarse) {
+    .ficha-extra {
+      min-height: 44px;
+    }
+  }
+
   /* --- selector de categoría -------------------------------------------
      La hoja que sube al tocar el campo de categoría (ver CampoCategoria):
      una grilla de fichas iguales, el emoji arriba y el nombre abajo, que se
@@ -1740,7 +1877,9 @@
     .boton-mini {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       min-height: 44px;
+      min-width: 44px;
     }
   }
 
@@ -1804,10 +1943,14 @@
   }
 
   @media (max-width: 39.99rem) {
+    /* `--teclado` lo pone el formulario mientras el teclado del teléfono está
+       abierto: la hoja sube por encima y achica su alto, así el botón de
+       guardar sigue a la vista. */
     .hoja {
-      margin: auto 0 0;
+      margin: auto 0 var(--teclado, 0px);
       width: 100%;
       max-width: none;
+      max-height: calc(min(92dvh, 52rem) - var(--teclado, 0px));
       border-radius: var(--radio-flotante) var(--radio-flotante) 0 0;
       border-bottom: 0;
       padding-bottom: env(safe-area-inset-bottom);
@@ -2392,6 +2535,7 @@
   .ticket-velo,
   .ticket-papel,
   .ticket-pie,
+  .ticket-acciones,
   .cuota,
   .cuota::after,
   .vto,

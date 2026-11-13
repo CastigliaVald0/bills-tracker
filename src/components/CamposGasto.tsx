@@ -130,9 +130,9 @@ export function CampoMonto({
           placeholder="0,00"
           value={monto}
           onChange={(e) => alCambiarMonto(formatMoneyInput(e.target.value))}
+          enterKeyHint="done"
           aria-describedby={idError}
           aria-invalid={idError ? true : undefined}
-          required
           className="monto text-texto"
         />
 
@@ -163,6 +163,7 @@ export function CampoCategoria({
   nombreGrupo,
   etiqueta = "Categoría",
   alCrearNueva,
+  recientes = [],
 }: {
   categorias: Category[];
   valor: string;
@@ -171,6 +172,9 @@ export function CampoCategoria({
   etiqueta?: string;
   /** Si viene, al final va "+ Nueva", que la llama (crear sin salir del formulario). */
   alCrearNueva?: () => void;
+  /** Las últimas usadas (ids). Si hay, se muestran como fichas para elegir
+      de un toque, y la grilla completa queda detrás de "Otra". */
+  recientes?: string[];
 }) {
   const [abierto, setAbierto] = useState(false);
   const boton = useRef<HTMLButtonElement>(null);
@@ -189,12 +193,50 @@ export function CampoCategoria({
 
   if (categorias.length === 0 && !alCrearNueva) return null;
 
+  // Las fichas: las recientes en un orden fijo (tocar una no la mueve de
+  // debajo del dedo) y, si la elegida no está entre ellas, adelante.
+  const fichas = (recientes.includes(valor) ? recientes : [valor, ...recientes])
+    .map((id) => categorias.find((c) => c.id === id))
+    .filter((c): c is Category => Boolean(c))
+    .slice(0, 4);
+  const conFichas = recientes.length > 0 && fichas.length > 1;
+
   return (
     <div className="flex flex-col gap-1.5">
       <span id={`${nombreGrupo}-rotulo`} className="rotulo">
         {etiqueta}
       </span>
 
+      {conFichas ? (
+        <div role="radiogroup" aria-labelledby={`${nombreGrupo}-rotulo`} className="fichas-recientes">
+          {fichas.map((cat) => {
+            const activo = cat.id === valor;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                role="radio"
+                aria-checked={activo}
+                onClick={() => alCambiar(cat.id)}
+                className="ficha-reciente"
+                style={{ "--cat": cat.color } as React.CSSProperties}
+              >
+                <Insignia nombre={cat.name} color={cat.color} emoji={cat.emoji} chica />
+                <span className="min-w-0 truncate">{cat.name}</span>
+              </button>
+            );
+          })}
+          <button
+            ref={boton}
+            type="button"
+            onClick={() => setAbierto(true)}
+            aria-haspopup="dialog"
+            className="ficha-reciente ficha-reciente-otra"
+          >
+            Otra
+          </button>
+        </div>
+      ) : (
       <button
         ref={boton}
         type="button"
@@ -215,6 +257,7 @@ export function CampoCategoria({
           Cambiar
         </span>
       </button>
+      )}
 
       {abierto && (
         <dialog

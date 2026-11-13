@@ -22,7 +22,12 @@ export default async function GrupoPage({ params, searchParams }: PageProps<"/gr
   if (!userId) redirect("/login");
 
   const { id } = await params;
-  const { cargar } = await searchParams;
+  const { cargar, monto, moneda } = await searchParams;
+  // El monto que se venía escribiendo en la ventana del + (ver NuevoGasto).
+  const montoInicial =
+    cargar === "1" && typeof monto === "string" && Number(monto) > 0
+      ? { monto: Number(monto), moneda: moneda === "USD" ? ("USD" as const) : ("UYU" as const) }
+      : null;
   const acceso = await accesoAGrupo(userId, id);
   if (!acceso) notFound();
   const esAdmin = acceso.rol === "admin";
@@ -158,6 +163,7 @@ export default async function GrupoPage({ params, searchParams }: PageProps<"/gr
 
       <PanelGrupo
         abrirFormulario={cargar === "1"}
+        montoInicial={montoInicial}
         grupo={{
           id: grupo.id,
           nombre: grupo.nombre,

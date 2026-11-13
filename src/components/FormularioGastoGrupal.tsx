@@ -60,6 +60,7 @@ export function FormularioGastoGrupal({
   secciones,
   categorias,
   gasto,
+  montoInicial = null,
   seccionInicial,
   origen = null,
   puedeCrearSecciones = false,
@@ -76,6 +77,8 @@ export function FormularioGastoGrupal({
   categorias: Category[];
   /** El gasto a editar; sin esto, se carga uno nuevo. */
   gasto: GastoParaEditar | null;
+  /** Un monto ya escrito en la ventana del +, para un gasto nuevo. */
+  montoInicial?: { monto: number; moneda: Moneda } | null;
   /** La sección elegida en el mosaico, para un gasto nuevo. */
   seccionInicial: string | null;
   /** El botón que lo abrió (su caja en la pantalla): el formulario nace de él. */
@@ -130,8 +133,10 @@ export function FormularioGastoGrupal({
     };
   })();
 
-  const [monto, setMonto] = useState(gasto ? aTexto(gasto.monto) : "");
-  const [moneda, setMoneda] = useState<Moneda>(gasto?.moneda ?? "UYU");
+  const [monto, setMonto] = useState(
+    gasto ? aTexto(gasto.monto) : montoInicial ? aTexto(montoInicial.monto) : ""
+  );
+  const [moneda, setMoneda] = useState<Moneda>(gasto?.moneda ?? montoInicial?.moneda ?? "UYU");
   const [descripcion, setDescripcion] = useState(gasto?.descripcion ?? "");
   const [fecha, setFecha] = useState(gasto ? gasto.fecha.slice(0, 10) : hoyLocal());
   // Lo que se cree desde acá ("+ Nueva") se suma a lo que vino de la página,

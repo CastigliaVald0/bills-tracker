@@ -74,6 +74,7 @@ export function PanelGrupo({
   personasDelGrupo,
   ajustes,
   abrirFormulario = false,
+  montoInicial = null,
 }: {
   grupo: {
     id: string;
@@ -103,6 +104,8 @@ export function PanelGrupo({
   ajustes?: React.ReactNode;
   /** Llegó desde la opción "Grupal" del +: abre el formulario de gasto nuevo. */
   abrirFormulario?: boolean;
+  /** El monto que se venía escribiendo en la ventana del +, para no perderlo. */
+  montoInicial?: { monto: number; moneda: "UYU" | "USD" } | null;
 }) {
   const router = useRouter();
   const [aviso, mostrarAviso] = useAvisoTemporal();
@@ -781,6 +784,7 @@ export function PanelGrupo({
           secciones={grupo.usaSecciones ? secciones : []}
           categorias={categorias}
           gasto={formulario.gasto}
+          montoInicial={formulario.gasto ? null : montoInicial}
           seccionInicial={seccionDelGasto}
           origen={formulario.origen ?? null}
           puedeCrearSecciones={esAdmin && grupo.usaSecciones}
